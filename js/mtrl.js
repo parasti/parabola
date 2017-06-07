@@ -12,7 +12,20 @@ var Mtrl = function () {
   this.f = '';
 };
 
+/*
+ * Material type flags.
+ */
+Mtrl.PARTICLE = (1 << 10);
 Mtrl.ALPHA_TEST = (1 << 9);
+Mtrl.REFLECTIVE = (1 << 8);
+Mtrl.TRANSPARENT = (1 << 7);
+Mtrl.SHADOWED = (1 << 6);
+Mtrl.DECAL = (1 << 5);
+Mtrl.ENVIRONMENT = (1 << 4);
+Mtrl.TWO_SIDED = (1 << 3);
+Mtrl.ADDITIVE = (1 << 2);
+Mtrl.CLAMP_S = (1 << 1);
+Mtrl.CLAMP_T = (1 << 0);
 
 Mtrl.load = function (stream) {
   return (new Mtrl()).load(stream);
@@ -53,6 +66,15 @@ Mtrl.prototype.createTexture = function (gl, img) {
   var tex = gl.createTexture();
 
   gl.bindTexture(gl.TEXTURE_2D, tex);
+
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,
+      this.fl & Mtrl.CLAMP_S ? gl.CLAMP_TO_EDGE : gl.REPEAT);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T,
+      this.fl & Mtrl.CLAMP_T ? gl.CLAMP_TO_EDGE : gl.REPEAT);
+
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
   gl.generateMipmap(gl.TEXTURE_2D);
   gl.bindTexture(gl.TEXTURE_2D, null);
@@ -64,6 +86,11 @@ Mtrl.prototype.createTexture = function (gl, img) {
  * Download material image and create a texture.
  */
 Mtrl.prototype.loadTexture = function (gl) {
+  if (this.tex) {
+    console.log('Attempted to load ' + this + ' again');
+    return;
+  }
+
   var self = this;
   var img = new Image();
 
