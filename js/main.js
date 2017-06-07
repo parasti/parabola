@@ -53,18 +53,18 @@ void main() {
 }
 `;
 
-state.bodyMeshes = [];
+state.bodies = [];
 
 state.mvpMatrix = mat4.create();
 
 function loadBodyMeshes(gl) {
-  var bodyMeshes = state.bodyMeshes;
+  var bodies = state.bodies;
 
-  for (var bi = 0; bi < bodyMeshes.length; ++bi) {
-    var meshes = bodyMeshes[bi];
+  for (var i = 0; i < bodies.length; ++i) {
+    var meshes = bodies[i];
 
-    for (var mi = 0; mi < meshes.length; ++mi) {
-      var mesh = meshes[mi];
+    for (var j = 0; j < meshes.length; ++j) {
+      var mesh = meshes[j];
       mesh.createVBO(gl);
     }
   }
@@ -74,14 +74,12 @@ function loadBodyMeshes(gl) {
 
 function loadTextures(gl) {
   // Body.prototype.loadMeshMaterials?
-  var bodyMeshes = state.bodyMeshes;
+  var bodies = state.bodies;
 
-  for (var i = 0; i < bodyMeshes.length; ++i) {
-    var meshes = bodyMeshes[i];
-
+  for (var i = 0; i < bodies.length; ++i) {
+    var meshes = bodies[i];
     for (var j = 0; j < meshes.length; ++j) {
       var mesh = meshes[j];
-
       mesh.mtrl.loadTexture(gl);
     }
   }
@@ -195,10 +193,9 @@ function init() {
       gl.uniformMatrix4fv(state.mvpUniformLoc, false, state.mvpMatrix);
       gl.uniform1i(state.textureUniformLoc, 0);
 
-      var bodyMeshes = state.bodyMeshes;
-      for (var i = 0; i < bodyMeshes.length; ++i) {
-        var meshes = bodyMeshes[i];
-
+      var bodies = state.bodies;
+      for (var i = 0; i < bodies.length; ++i) {
+        var meshes = bodies[i];
         for (var j = 0; j < meshes.length; ++j) {
           meshes[j].draw(gl, state);
         }
@@ -223,11 +220,11 @@ function init() {
       var sol = this.result;
 
       // TODO, don't do this here.
-      state.bodyMeshes = [];
+      state.bodies = [];
       for (var i = 0; i < sol.bc; ++i) {
         // TODO transforms for moving bodies
         if (sol.bv[i].pi < 0)
-          state.bodyMeshes.push(sol.getBodyMeshes(sol.bv[i]));
+          state.bodies.push(sol.getBodyMeshes(sol.bv[i]));
       }
       loadBodyMeshes(gl);
 
