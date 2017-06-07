@@ -1,0 +1,14 @@
+{
+  "name": "parabola",
+  "version": "0.0.1",
+  "description": "A WebGL port of Neverball",
+  "main": "js/parabola.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Jānis Rūcis",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "gl-matrix": "^2.3.2"
+  }
+}
