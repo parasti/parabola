@@ -175,7 +175,7 @@ function initGL(canvas) {
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
   gl.depthFunc(gl.LEQUAL);
 
-  // Such magic.
+  // Fix arrows pointing backwards.
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
