@@ -225,6 +225,7 @@ function init() {
       // TODO, don't do this here.
       state.bodyMeshes = [];
       for (var i = 0; i < sol.bc; ++i) {
+        // TODO transforms for moving bodies
         if (sol.bv[i].pi < 0)
           state.bodyMeshes.push(sol.getBodyMeshes(sol.bv[i]));
       }
