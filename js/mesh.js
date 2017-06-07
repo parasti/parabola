@@ -37,12 +37,7 @@ Mesh.prototype.createVBO = function (gl) {
  * Setup material and draw the mesh.
  */
 Mesh.prototype.draw = function (gl, state) {
-  // Mtrl.prototype.draw?
-  if (this.mtrl.tex) {
-    gl.bindTexture(gl.TEXTURE_2D, this.mtrl.tex);
-  } else {
-    gl.bindTexture(gl.TEXTURE_2D, state.defaultTexture);
-  }
+  this.mtrl.draw(gl, state);
 
   if (this.vbo) {
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);

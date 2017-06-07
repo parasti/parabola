@@ -67,7 +67,7 @@ Mtrl.prototype.createTexture = function (gl, img) {
 
   gl.bindTexture(gl.TEXTURE_2D, tex);
 
-  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S,
       this.fl & Mtrl.CLAMP_S ? gl.CLAMP_TO_EDGE : gl.REPEAT);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T,
       this.fl & Mtrl.CLAMP_T ? gl.CLAMP_TO_EDGE : gl.REPEAT);
@@ -80,6 +80,24 @@ Mtrl.prototype.createTexture = function (gl, img) {
   gl.bindTexture(gl.TEXTURE_2D, null);
 
   this.tex = tex;
+};
+
+/*
+ * Apply material state.
+ */
+Mtrl.prototype.draw = function (gl, state) {
+  if (this.tex) {
+    gl.bindTexture(gl.TEXTURE_2D, this.tex);
+  } else {
+    gl.bindTexture(gl.TEXTURE_2D, state.defaultTexture);
+  }
+
+  if (this.fl & Mtrl.DECAL) {
+    gl.enable(gl.POLYGON_OFFSET_FILL);
+    gl.polygonOffset(-1.0, -2.0);
+  } else {
+    gl.disable(gl.POLYGON_OFFSET_FILL);
+  }
 };
 
 /*
