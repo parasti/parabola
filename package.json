@@ -4,7 +4,7 @@
   "description": "A WebGL port of Neverball",
   "main": "js/parabola.js",
   "scripts": {
-    "start": "beefy js/parabola.js:parabola.js --live"
+    "start": "node node_modules/beefy/bin/beefy js/parabola.js:parabola.js --live"
   },
   "author": "Jānis Rūcis",
   "license": "GPL-3.0",
@@ -12,6 +12,7 @@
     "gl-matrix": "^2.3.2"
   },
   "devDependencies": {
+    "beefy": "^2.1.8",
     "browserify-data": "^0.2.0"
   }
 }
