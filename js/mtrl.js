@@ -107,7 +107,7 @@ Mtrl.prototype.draw = function (gl, state) {
  * Download material image and create a texture.
  */
 Mtrl.prototype.loadTexture = function (gl) {
-  if (this.tex) {
+  if (this.tex || this.img) {
     console.log('Attempted to load ' + this + ' again');
     return;
   }
@@ -116,12 +116,12 @@ Mtrl.prototype.loadTexture = function (gl) {
     return;
   }
 
-  var img = new Image();
+  this.img = new Image();
   var self = this;
-  img.onload = function () {
+  this.img.onload = function () {
     self.createTexture(gl, this);
   };
-  img.src = 'data/' + mtrlImages[this];
+  this.img.src = 'data/' + mtrlImages[this];
 };
 
 /*
