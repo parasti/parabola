@@ -522,7 +522,10 @@ SolReader.prototype.read = function (file) {
     if (self.onload)
       self.onload.call(self);
   });
-  reader.readAsArrayBuffer(file);
+  try {
+    reader.readAsArrayBuffer(file);
+  } catch (e) {
+  }
 };
 
 /*

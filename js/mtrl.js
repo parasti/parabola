@@ -11,6 +11,8 @@ var Mtrl = function () {
   this.h = new Float32Array([0]);
   this.fl = 0;
   this.f = '';
+
+  this.tex = null;
 };
 
 /*
