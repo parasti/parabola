@@ -1,9 +1,7 @@
 'use strict';
 
-var glMatrix = require('gl-matrix');
-
-var vec3 = glMatrix.vec3;
-var mat4 = glMatrix.mat4;
+var vec3 = require('gl-matrix').vec3;
+var mat4 = require('gl-matrix').mat4;
 
 var View = function (p, c) {
   this.p = (p && vec3.clone(p) || vec3.fromValues(0, View.DC, 0));

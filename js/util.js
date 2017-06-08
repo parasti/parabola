@@ -87,6 +87,39 @@ util.getCString = function (byteArray, fromIndex) {
 };
 
 /*
+ * Calculate a perspective matrix.
+ */
+util.calcPersp = function(M, w, h) {
+  var a = w / h;
+  var fov = 50;
+  var n = 0.1;
+  var f = 512.0;
+
+  var r = fov / 2 * Math.PI / 180;
+  var s = Math.sin(r);
+  var c = Math.cos(r) / s;
+
+  M[0] = c / a;
+  M[1] = 0;
+  M[2] = 0;
+  M[3] = 0;
+  M[4] = 0;
+  M[5] = c;
+  M[6] = 0;
+  M[7] = 0;
+  M[8] = 0;
+  M[9] = 0;
+  M[10] = -(f + n) / (f - n);
+  M[11] = -1.0;
+  M[12] = 0;
+  M[13] = 0;
+  M[14] = -2.0 * n * f / (f - n);
+  M[15] = 0;
+
+  return M;
+};
+
+/*
  * Node.js export.
  */
 module.exports = util;
