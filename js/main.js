@@ -54,7 +54,7 @@ function initGL(canvas) {
 
   state_wip.createDefaultTexture(gl);
   state_wip.createShaders(gl);
-  state_wip.calcPersp(canvas.width, canvas.height);
+  state_wip.calcPerspective(canvas.width, canvas.height);
 
   gl.enable(gl.CULL_FACE);
   gl.enable(gl.DEPTH_TEST);

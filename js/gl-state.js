@@ -110,7 +110,7 @@ GLState.prototype.createShaders = function(gl) {
   this.textureUniformLoc = gl.getUniformLocation(this.prog, GLState.textureUniform);
 }
 
-GLState.prototype.calcPersp = function(w, h) {
+GLState.prototype.calcPerspective = function(w, h) {
   util.calcPersp(this.perspMatrix, 800, 600);
 }
 
