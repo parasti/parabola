@@ -48,6 +48,13 @@ void main() {
 }
 `;
 
+GLState.defaultTextureData = [
+  0xff, 0x00, 0xff, 0xff,
+  0xff, 0xff, 0x00, 0xff,
+  0x00, 0xff, 0xff, 0xff,
+  0xff, 0x00, 0xff, 0xff,
+];
+
 GLState.loadShader = function(gl, type, source) {
   var shader = gl.createShader(type);
 
@@ -73,7 +80,9 @@ GLState.prototype.createDefaultTexture = function(gl) {
   
   var tex = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, tex);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0xff, 0x00, 0xff, 0xff]));
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 2, 2, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(GLState.defaultTextureData));
   gl.bindTexture(gl.TEXTURE_2D, null);
   this.defaultTexture = tex;
 }
