@@ -1,6 +1,7 @@
 'use strict';
 
 var util = require('./util.js');
+var mtrlImages = require('./mtrl-images.json');
 
 var Mtrl = function () {
   this.d = new Float32Array([0.8, 0.8, 0.8, 1.0]);
@@ -115,14 +116,7 @@ Mtrl.prototype.loadTexture = function (gl) {
   img.onload = function () {
     self.createTexture(gl, this);
   };
-  img.onerror = function () {
-    // TODO, this is dumb and results in lots of 404s.
-    // Instead, pre-make a table that maps mtrls to images.
-    if (!this.src.endsWith('.png')) {
-      this.src = 'data/textures/' + self + '.png';
-    }
-  };
-  img.src = 'data/textures/' + self + '.jpg';
+  img.src = 'data/' + mtrlImages[self.f];
 };
 
 /*
