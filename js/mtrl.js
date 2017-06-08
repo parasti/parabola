@@ -109,14 +109,17 @@ Mtrl.prototype.loadTexture = function (gl) {
     console.log('Attempted to load ' + this + ' again');
     return;
   }
+  if (!mtrlImages[this]) {
+    console.log('Didn\'t recognize material ' + this);
+    return;
+  }
 
-  var self = this;
   var img = new Image();
-
+  var self = this;
   img.onload = function () {
     self.createTexture(gl, this);
   };
-  img.src = 'data/' + mtrlImages[self.f];
+  img.src = 'data/' + mtrlImages[this];
 };
 
 /*
