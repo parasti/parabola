@@ -21,7 +21,7 @@ state.positionAttrLoc = 0;
 state.normalAttrLoc = 1;
 state.texCoordAttrLoc = 2;
 
-var textureUniform = 'uTexture'; // FIXME. We're not even using this.
+var textureUniform = 'uTexture';
 var mvpUniform = 'uMvp';
 var positionAttr = 'aPosition';
 var normalAttr = 'aNormal';
@@ -190,11 +190,21 @@ function init() {
     if (state.prog) {
       gl.useProgram(state.prog);
 
-      gl.uniformMatrix4fv(state.mvpUniformLoc, false, state.mvpMatrix);
       gl.uniform1i(state.textureUniformLoc, 0);
 
       var bodies = state.bodies;
       for (var i = 0; i < bodies.length; ++i) {
+        // TODO
+        var bp = bodies[i].bp;
+        if (bp.pi >= 0) {
+          var bodyTransform = state.sol.getBodyTransform(bp);
+          var mvpFinal = mat4.create();
+          mat4.multiply(mvpFinal, state.mvpMatrix, bodyTransform);
+          gl.uniformMatrix4fv(state.mvpUniformLoc, false, mvpFinal);
+        } else {
+          gl.uniformMatrix4fv(state.mvpUniformLoc, false, state.mvpMatrix);
+        }
+
         var meshes = bodies[i];
         for (var j = 0; j < meshes.length; ++j) {
           meshes[j].draw(gl, state);
@@ -220,11 +230,12 @@ function init() {
       var sol = this.result;
 
       // TODO, don't do this here.
+      state.sol = sol;
       state.bodies = [];
       for (var i = 0; i < sol.bc; ++i) {
-        // TODO transforms for moving bodies
-        if (sol.bv[i].pi < 0)
-          state.bodies.push(sol.getBodyMeshes(sol.bv[i]));
+        state.bodies.push(sol.getBodyMeshes(sol.bv[i]));
+        // FIXME this is dumb.
+        state.bodies[i].bp = sol.bv[i];
       }
       loadBodyMeshes(gl);
 

@@ -1,5 +1,7 @@
 'use strict';
 
+var mat4 = require('gl-matrix').mat4;
+
 var util = require('./util.js');
 
 var Mtrl = require('./mtrl.js');
@@ -474,6 +476,24 @@ Solid.prototype.getView = function () {
     return new View(this.wv[0].p, this.wv[0].q);
   else
     return new View();
+};
+
+Solid.prototype.getBodyPosition = function (body) {
+  var p = [0, 0, 0];
+  
+  // TODO very incomplete without movers.
+  if (body.pi >= 0) {
+    var path = this.pv[body.pi];
+    p = path.p;
+  }
+  
+  return p;
+};
+
+Solid.prototype.getBodyTransform = function (body) {
+  var transform = mat4.create();
+  mat4.fromTranslation(transform, this.getBodyPosition(body));
+  return transform;
 };
 
 /*----------------------------------------------------------------------------*/
