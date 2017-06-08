@@ -92,23 +92,26 @@ GLState.prototype.createShaders = function(gl) {
   var vs = GLState.loadShader(gl, gl.VERTEX_SHADER, GLState.vertShader);
   var fs = GLState.loadShader(gl, gl.FRAGMENT_SHADER, GLState.fragShader);
 
-  this.prog = gl.createProgram();
+  var prog = gl.createProgram();
 
-  gl.attachShader(this.prog, vs);
-  gl.attachShader(this.prog, fs);
+  gl.attachShader(prog, vs);
+  gl.attachShader(prog, fs);
 
-  gl.bindAttribLocation(this.prog, this.positionAttrLoc, GLState.positionAttr);
-  gl.bindAttribLocation(this.prog, this.normalAttrLoc, GLState.normalAttr);
-  gl.bindAttribLocation(this.prog, this.texCoordAttrLoc, GLState.texCoordAttr);
+  gl.bindAttribLocation(prog, this.positionAttrLoc, GLState.positionAttr);
+  gl.bindAttribLocation(prog, this.normalAttrLoc, GLState.normalAttr);
+  gl.bindAttribLocation(prog, this.texCoordAttrLoc, GLState.texCoordAttr);
 
-  gl.linkProgram(this.prog);
+  gl.linkProgram(prog);
 
-  if (!gl.getProgramParameter(this.prog, gl.LINK_STATUS)) {
-    console.log(gl.getProgramInfoLog(this.prog));
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+    console.log(gl.getProgramInfoLog(prog));
+    return;
   }
 
-  this.mvpUniformLoc = gl.getUniformLocation(this.prog, GLState.mvpUniform);
-  this.textureUniformLoc = gl.getUniformLocation(this.prog, GLState.textureUniform);
+  this.mvpUniformLoc = gl.getUniformLocation(prog, GLState.mvpUniform);
+  this.textureUniformLoc = gl.getUniformLocation(prog, GLState.textureUniform);
+
+  this.prog = prog;
 }
 
 GLState.prototype.calcPerspective = function(w, h) {
