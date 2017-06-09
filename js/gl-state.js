@@ -8,24 +8,17 @@ function GLState() {
 
   this.prog = null;
 
-  this.perspUniformLoc = null;
-  this.modelViewUniformLoc = null;
-  this.textureUniformLoc = null;
+  this.uPerspID = null;
+  this.uModelViewID = null;
+  this.uTextureID = null;
 
-  this.positionAttrLoc = 0;
-  this.normalAttrLoc = 1;
-  this.texCoordAttrLoc = 2;
+  this.aPositionID = 0;
+  this.aNormalID = 1;
+  this.aTexCoordID = 2;
 
   this.perspMatrix = mat4.create();
   this.modelViewMatrix = mat4.create();
 }
-
-GLState.perspUniform = 'uPersp';
-GLState.modelViewUniform = 'uModelView';
-GLState.textureUniform = 'uTexture';
-GLState.positionAttr = 'aPosition';
-GLState.normalAttr = 'aNormal';
-GLState.texCoordAttr = 'aTexCoord';
 
 GLState.vertShader = `
 uniform mat4 uPersp;
@@ -55,13 +48,6 @@ void main() {
 }
 `;
 
-GLState.defaultTextureData = [
-  0xff, 0x00, 0xff, 0xff,
-  0xff, 0xff, 0x00, 0xff,
-  0x00, 0xff, 0xff, 0xff,
-  0xff, 0x00, 0xff, 0xff,
-];
-
 GLState.loadShader = function(gl, type, source) {
   var shader = gl.createShader(type);
 
@@ -84,12 +70,19 @@ GLState.prototype.createDefaultTexture = function(gl) {
     console.log('Attempted to remake default texture');
     return;
   }
+
+  var data = [
+    0xff, 0x00, 0xff, 0xff,
+    0xff, 0xff, 0x00, 0xff,
+    0x00, 0xff, 0xff, 0xff,
+    0xff, 0x00, 0xff, 0xff,
+  ];
   
   var tex = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, tex);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 2, 2, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(GLState.defaultTextureData));
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 2, 2, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(data));
   gl.bindTexture(gl.TEXTURE_2D, null);
   this.defaultTexture = tex;
 }
@@ -103,9 +96,9 @@ GLState.prototype.createShaders = function(gl) {
   gl.attachShader(prog, vs);
   gl.attachShader(prog, fs);
 
-  gl.bindAttribLocation(prog, this.positionAttrLoc, GLState.positionAttr);
-  gl.bindAttribLocation(prog, this.normalAttrLoc, GLState.normalAttr);
-  gl.bindAttribLocation(prog, this.texCoordAttrLoc, GLState.texCoordAttr);
+  gl.bindAttribLocation(prog, this.aPositionID, 'aPosition');
+  gl.bindAttribLocation(prog, this.aNormalID, 'aNormal');
+  gl.bindAttribLocation(prog, this.aTexCoordID, 'aTexCoord');
 
   gl.linkProgram(prog);
 
@@ -114,9 +107,9 @@ GLState.prototype.createShaders = function(gl) {
     return;
   }
 
-  this.perspUniformLoc = gl.getUniformLocation(prog, GLState.perspUniform);
-  this.modelViewUniformLoc = gl.getUniformLocation(prog, GLState.modelViewUniform);
-  this.textureUniformLoc = gl.getUniformLocation(prog, GLState.textureUniform);
+  this.uPerspID = gl.getUniformLocation(prog, 'uPersp');
+  this.uModelViewID = gl.getUniformLocation(prog, 'uModelView');
+  this.uTextureID = gl.getUniformLocation(prog, 'uTexture');
 
   this.prog = prog;
 }

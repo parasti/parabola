@@ -1,7 +1,6 @@
 'use strict';
 
 var mat4 = require('gl-matrix').mat4;
-var util = require('./util.js');
 var SolReader = require('./solid.js').SolReader;
 var GLState = require('./gl-state.js');
 
@@ -41,6 +40,7 @@ function loadTextures(gl) {
     var meshes = bodies[i];
     for (var j = 0; j < meshes.length; ++j) {
       var mesh = meshes[j];
+      // FIXME this attempts to load anew for every body
       mesh.mtrl.loadTexture(gl);
     }
   }
@@ -80,13 +80,13 @@ function init() {
     if (state.prog) {
       gl.useProgram(state.prog);
 
-      gl.uniform1i(state.textureUniformLoc, 0);
-      gl.uniformMatrix4fv(state.perspUniformLoc, false, state.perspMatrix)
+      gl.uniform1i(state.uTextureID, 0);
+      gl.uniformMatrix4fv(state.uPerspID, false, state.perspMatrix);
 
       // TODO
       if (sol) {
         mat4.copy(state.modelViewMatrix, sol.getView().getMatrix());
-        gl.uniformMatrix4fv(state.modelViewUniformLoc, false, state.modelViewMatrix);
+        gl.uniformMatrix4fv(state.uModelViewID, false, state.modelViewMatrix);
       }
 
       for (var i = 0; i < bodies.length; ++i) {
@@ -94,7 +94,7 @@ function init() {
         var bp = bodies[i].bp;
         if (bp.pi >= 0) {
           mat4.multiply(state.modelViewMatrix, state.modelViewMatrix, sol.getBodyTransform(bp));
-          gl.uniformMatrix4fv(state.modelViewUniformLoc, false, state.modelViewMatrix);
+          gl.uniformMatrix4fv(state.uModelViewID, false, state.modelViewMatrix);
         }
 
         var meshes = bodies[i];

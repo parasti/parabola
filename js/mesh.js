@@ -42,13 +42,13 @@ Mesh.prototype.draw = function (gl, state) {
   if (this.vbo) {
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
 
-    gl.vertexAttribPointer(state.positionAttrLoc, 3, gl.FLOAT, false, Mesh.stride * 4, 0);
-    gl.vertexAttribPointer(state.normalAttrLoc, 3, gl.FLOAT, false, Mesh.stride * 4, 12);
-    gl.vertexAttribPointer(state.texCoordAttrLoc, 2, gl.FLOAT, false, Mesh.stride * 4, 24);
+    gl.vertexAttribPointer(state.aPositionID, 3, gl.FLOAT, false, Mesh.stride * 4, 0);
+    gl.vertexAttribPointer(state.aNormalID, 3, gl.FLOAT, false, Mesh.stride * 4, 12);
+    gl.vertexAttribPointer(state.aTexCoordID, 2, gl.FLOAT, false, Mesh.stride * 4, 24);
 
-    gl.enableVertexAttribArray(state.positionAttrLoc);
-    gl.enableVertexAttribArray(state.normalAttrLoc);
-    gl.enableVertexAttribArray(state.texCoordAttrLoc);
+    gl.enableVertexAttribArray(state.aPositionID);
+    gl.enableVertexAttribArray(state.aNormalID);
+    gl.enableVertexAttribArray(state.aTexCoordID);
 
     gl.drawArrays(gl.TRIANGLES, 0, this.count);
 
