@@ -118,7 +118,7 @@ GLState.prototype.createShaders = function(gl) {
 }
 
 GLState.prototype.calcPerspective = function(w, h) {
-  util.calcPersp(this.perspMatrix, 800, 600);
+  util.calcPersp(this.perspMatrix, w, h);
 }
 
 module.exports = GLState;
