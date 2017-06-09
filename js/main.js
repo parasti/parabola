@@ -86,7 +86,7 @@ function init() {
       if (sol) {
         mat4.multiply(mvpMatrix,
           state_wip.perspMatrix,
-          sol.getView().getModelView());
+          sol.getView().getMatrix());
       }
 
       for (var i = 0; i < bodies.length; ++i) {

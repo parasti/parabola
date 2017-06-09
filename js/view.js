@@ -45,23 +45,20 @@ View.prototype.getBasis = function () {
   return M;
 };
 
-/*
- * TODO
- */
-View.prototype.getModelView = function () {
+View.prototype.getMatrix = function () {
   // game_draw
-  var modelView = mat4.create();
+  var viewMat = mat4.create();
 
   var M = mat4.create();
   var v = vec3.create();
 
   mat4.transpose(M, this.getBasis());
   vec3.sub(v, this.c, this.p);
-  mat4.translate(modelView, modelView, [0, 0, -vec3.len(v)]);
-  mat4.multiply(modelView, modelView, M);
-  mat4.translate(modelView, modelView, vec3.negate(v, this.c));
+  mat4.translate(viewMat, viewMat, [0, 0, -vec3.len(v)]);
+  mat4.multiply(viewMat, viewMat, M);
+  mat4.translate(viewMat, viewMat, vec3.negate(v, this.c));
 
-  return modelView;
+  return viewMat;
 };
 
 /*
