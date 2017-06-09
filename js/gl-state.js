@@ -9,7 +9,8 @@ function GLState() {
   this.prog = null;
 
   this.uPerspID = null;
-  this.uModelViewID = null;
+  this.uViewID = null;
+  this.uModelID = null;
   this.uTextureID = null;
 
   this.aPositionID = 0;
@@ -22,7 +23,8 @@ function GLState() {
 
 GLState.vertShader = `
 uniform mat4 uPersp;
-uniform mat4 uModelView;
+uniform mat4 uView;
+uniform mat4 uModel;
 
 attribute vec3 aPosition;
 attribute vec3 aNormal;
@@ -32,7 +34,7 @@ varying vec2 vTexCoord;
 
 void main() {
   vTexCoord = aTexCoord;
-  gl_Position = uPersp * uModelView * vec4(aPosition, 1.0);
+  gl_Position = uPersp * uView * uModel * vec4(aPosition, 1.0);
 }
 `;
 
@@ -108,7 +110,8 @@ GLState.prototype.createShaders = function(gl) {
   }
 
   this.uPerspID = gl.getUniformLocation(prog, 'uPersp');
-  this.uModelViewID = gl.getUniformLocation(prog, 'uModelView');
+  this.uViewID = gl.getUniformLocation(prog, 'uView');
+  this.uModelID = gl.getUniformLocation(prog, 'uModel');
   this.uTextureID = gl.getUniformLocation(prog, 'uTexture');
 
   this.prog = prog;

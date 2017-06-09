@@ -85,17 +85,12 @@ function init() {
 
       // TODO
       if (sol) {
-        mat4.copy(state.modelViewMatrix, sol.getView().getMatrix());
-        gl.uniformMatrix4fv(state.uModelViewID, false, state.modelViewMatrix);
+        gl.uniformMatrix4fv(state.uViewID, false, sol.getView().getMatrix());
       }
 
       for (var i = 0; i < bodies.length; ++i) {
         // TODO
-        var bp = bodies[i].bp;
-        if (bp.pi >= 0) {
-          mat4.multiply(state.modelViewMatrix, state.modelViewMatrix, sol.getBodyTransform(bp));
-          gl.uniformMatrix4fv(state.uModelViewID, false, state.modelViewMatrix);
-        }
+        gl.uniformMatrix4fv(state.uModelID, false, sol.getBodyTransform(bodies[i].bp));
 
         var meshes = bodies[i];
         for (var j = 0; j < meshes.length; ++j) {
