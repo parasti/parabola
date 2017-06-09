@@ -1,6 +1,7 @@
 'use strict';
 
 var mat4 = require('gl-matrix').mat4;
+var vec3 = require('gl-matrix').vec3;
 
 var util = require('./util.js');
 
@@ -471,11 +472,39 @@ Solid.prototype.getBodyMeshes = function (body) {
   return meshes;
 };
 
-Solid.prototype.getView = function () {
-  if (this.wv.length)
-    return new View(this.wv[0].p, this.wv[0].q);
-  else
-    return new View();
+Solid.prototype.getView = function (k) {
+  // game_view_fly
+  var view0 = new View();
+  var view1 = new View();
+
+  if (this.uc > 0) {
+    vec3.add(view0.p, view0.p, this.uv[0].p);
+    vec3.add(view0.c, view0.c, this.uv[0].p);
+  }
+
+  if (k >= 0 && this.wc > 0) {
+    vec3.copy(view1.p, this.wv[0].p);
+    vec3.copy(view1.c, this.wv[0].q);
+  }
+  if (k <= 0 && this.wc > 1) {
+    vec3.copy(view1.p, this.wv[1].p);
+    vec3.copy(view1.c, this.wv[1].q);
+  }
+
+  // Interpolate the views.
+
+  var v = vec3.create();
+
+  vec3.sub(v, view1.p, view0.p);
+  vec3.scaleAndAdd(view0.p, view0.p, v, k * k);
+
+  vec3.sub(v, view1.c, view0.c);
+  vec3.scaleAndAdd(view0.c, view0.c, v, k * k);
+
+  // Hypothetically
+  //view0.orthonormalize();
+
+  return view0;
 };
 
 Solid.prototype.getBodyPosition = function (body) {

@@ -4,8 +4,8 @@ var vec3 = require('gl-matrix').vec3;
 var mat4 = require('gl-matrix').mat4;
 
 var View = function (p, c) {
-  this.p = (p && vec3.clone(p) || vec3.fromValues(0, View.DC, 0));
-  this.c = (c && vec3.clone(c) || vec3.fromValues(0, View.DP, View.DZ));
+  this.p = (p && vec3.clone(p) || vec3.fromValues(0, View.DP, View.DZ));
+  this.c = (c && vec3.clone(c) || vec3.fromValues(0, View.DC, 0));
   this.u = vec3.fromValues(0, 1, 0);
 };
 
@@ -30,16 +30,16 @@ View.prototype.getBasis = function () {
 
   var M = mat4.create();
 
-  /* Has auto-formatting botched this yet? */
-
   M[0] = x[0];
-  M[4] = y[0];
-  M[8 ] = z[0];
   M[1] = x[1];
-  M[5] = y[1];
-  M[9 ] = z[1];
   M[2] = x[2];
+
+  M[4] = y[0];
+  M[5] = y[1];
   M[6] = y[2];
+
+  M[8]  = z[0];
+  M[9]  = z[1];
   M[10] = z[2];
 
   return M;

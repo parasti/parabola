@@ -75,6 +75,9 @@ function init() {
   var canvas = document.getElementById('canvas');
   var gl = initGL(canvas);
 
+
+  var view_k = 1.0;
+
   function step(dt) {
     gl.clear(gl.COLOR_BUFFER_BIT);
 
@@ -86,7 +89,7 @@ function init() {
 
       // TODO
       if (sol) {
-        gl.uniformMatrix4fv(state.uViewID, false, sol.getView().getMatrix());
+        gl.uniformMatrix4fv(state.uViewID, false, sol.getView(view_k).getMatrix());
       }
 
       for (var i = 0; i < bodies.length; ++i) {
@@ -117,6 +120,11 @@ function init() {
     };
 
     reader.read(this.files[0]);
+  });
+
+  var viewPosition = document.getElementById('viewPosition');
+  viewPosition.addEventListener('input', function () {
+    view_k = this.value;
   });
 }
 
