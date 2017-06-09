@@ -4,29 +4,8 @@
   "description": "A WebGL port of Neverball",
   "main": "js/parabola.js",
   "scripts": {
-    "start": "beefy js/parabola.js --live",
+    "start": "beefy js/parabola.js:parabola.js --live",
     "check": "browserify js/parabola.js -t eslintify"
-  },
-  "browserify": {
-    "transform": [
-      [
-        "babelify",
-        {
-          "presets": [
-            [
-              "env",
-              {
-                "targets": {
-                  "browsers": [
-                    "ie 11"
-                  ]
-                }
-              }
-            ]
-          ]
-        }
-      ]
-    ]
   },
   "author": "Jānis Rūcis",
   "license": "GPL-3.0",
