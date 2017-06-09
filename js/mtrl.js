@@ -99,6 +99,7 @@ Mtrl.prototype.draw = function (gl, state) {
     gl.enable(gl.POLYGON_OFFSET_FILL);
     gl.polygonOffset(-1.0, -2.0);
   } else {
+    gl.polygonOffset(0.0, 0.0);
     gl.disable(gl.POLYGON_OFFSET_FILL);
   }
 };
