@@ -47,9 +47,10 @@ function loadTextures(gl) {
 }
 
 function initGL(canvas) {
-  var gl = canvas.getContext('webgl', {
+  var opts = {
     depth: true
-  });
+  };
+  var gl = canvas.getContext('webgl', opts) || canvas.getContext('experimental-webgl', opts);
 
   state.createDefaultTexture(gl);
   state.createShaders(gl);

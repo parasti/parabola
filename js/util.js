@@ -1,5 +1,9 @@
 'use strict';
 
+// IE 11 compatibility.
+require('string.fromcodepoint');
+require('typedarray-methods');
+
 /*
  * Utility namespace.
  */

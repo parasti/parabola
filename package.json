@@ -7,15 +7,40 @@
     "start": "beefy js/parabola.js --live",
     "check": "browserify js/parabola.js -t eslintify"
   },
+  "browserify": {
+    "transform": [
+      [
+        "babelify",
+        {
+          "presets": [
+            [
+              "env",
+              {
+                "targets": {
+                  "browsers": [
+                    "ie 11"
+                  ]
+                }
+              }
+            ]
+          ]
+        }
+      ]
+    ]
+  },
   "author": "Jānis Rūcis",
   "license": "GPL-3.0",
   "dependencies": {
     "gl-matrix": "^2.3.2"
   },
   "devDependencies": {
+    "babel-preset-env": "^1.5.2",
+    "babelify": "^7.3.0",
     "beefy": "^2.1.8",
     "browserify": "^14.4.0",
     "browserify-data": "^0.2.0",
-    "eslintify": "^3.1.0"
+    "eslintify": "^3.1.0",
+    "string.fromcodepoint": "^0.2.1",
+    "typedarray-methods": "^1.0.0"
   }
 }
