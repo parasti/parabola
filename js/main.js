@@ -109,8 +109,18 @@ function init() {
   }
   window.requestAnimationFrame(step);
 
+  var viewPosition = document.getElementById('viewPosition');
+  viewPosition.addEventListener('input', function () {
+    view_k = this.value;
+  });
+
   var fileInput = document.getElementById('fileInput');
   fileInput.addEventListener('change', function() {
+    // Convenience over logic
+    viewPosition.focus();
+    viewPosition.value = 1;
+    view_k = 1.0;
+
     var reader = new SolReader();
 
     reader.onload = function() {
@@ -122,10 +132,6 @@ function init() {
     reader.read(this.files[0]);
   });
 
-  var viewPosition = document.getElementById('viewPosition');
-  viewPosition.addEventListener('input', function () {
-    view_k = this.value;
-  });
 }
 
 /*

@@ -141,8 +141,9 @@ Solid.prototype.loadDicts = function (stream) {
 Solid.prototype.loadMtrls = function (stream) {
   var mtrls = [];
 
-  for (var i = 0; i < this.mc; ++i)
+  for (var i = 0; i < this.mc; ++i) {
     mtrls.push(Mtrl.load(stream));
+  }
 
   this.mv = mtrls;
 };
@@ -509,13 +510,13 @@ Solid.prototype.getView = function (k) {
 
 Solid.prototype.getBodyPosition = function (body) {
   var p = [0, 0, 0];
-  
+
   // TODO very incomplete without movers.
   if (body.pi >= 0) {
     var path = this.pv[body.pi];
     p = path.p;
   }
-  
+
   return p;
 };
 
@@ -533,7 +534,7 @@ Solid.prototype.getBodyTransform = function (body) {
  * IS THIS POINTLESS
  *
  * Generally:
- * 
+ *
  * var reader = new SolReader();
  * reader.onload = function () { console.log(this.result); };
  * reader.read(file);
