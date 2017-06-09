@@ -7,23 +7,29 @@ function GLState() {
   this.defaultTexture = null;
 
   this.prog = null;
+
+  this.perspUniformLoc = null;
+  this.modelViewUniformLoc = null;
   this.textureUniformLoc = null;
-  this.mvpUniformLoc = null;
+
   this.positionAttrLoc = 0;
   this.normalAttrLoc = 1;
   this.texCoordAttrLoc = 2;
 
   this.perspMatrix = mat4.create();
+  this.modelViewMatrix = mat4.create();
 }
 
+GLState.perspUniform = 'uPersp';
+GLState.modelViewUniform = 'uModelView';
 GLState.textureUniform = 'uTexture';
-GLState.mvpUniform = 'uMvp';
 GLState.positionAttr = 'aPosition';
 GLState.normalAttr = 'aNormal';
 GLState.texCoordAttr = 'aTexCoord';
 
 GLState.vertShader = `
-uniform mat4 uMvp;
+uniform mat4 uPersp;
+uniform mat4 uModelView;
 
 attribute vec3 aPosition;
 attribute vec3 aNormal;
@@ -33,7 +39,7 @@ varying vec2 vTexCoord;
 
 void main() {
   vTexCoord = aTexCoord;
-  gl_Position = uMvp * vec4(aPosition, 1.0);
+  gl_Position = uPersp * uModelView * vec4(aPosition, 1.0);
 }
 `;
 
@@ -108,7 +114,8 @@ GLState.prototype.createShaders = function(gl) {
     return;
   }
 
-  this.mvpUniformLoc = gl.getUniformLocation(prog, GLState.mvpUniform);
+  this.perspUniformLoc = gl.getUniformLocation(prog, GLState.perspUniform);
+  this.modelViewUniformLoc = gl.getUniformLocation(prog, GLState.modelViewUniform);
   this.textureUniformLoc = gl.getUniformLocation(prog, GLState.textureUniform);
 
   this.prog = prog;

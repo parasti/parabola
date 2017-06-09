@@ -5,12 +5,11 @@ var util = require('./util.js');
 var SolReader = require('./solid.js').SolReader;
 var GLState = require('./gl-state.js');
 
-var state_wip = new GLState();
+var state = new GLState();
 
 // TODO
 var sol = null;
 var bodies = [];
-var mvpMatrix = mat4.create();
 
 function loadBodies(gl) {
   bodies = [];
@@ -52,9 +51,9 @@ function initGL(canvas) {
     depth: true
   });
 
-  state_wip.createDefaultTexture(gl);
-  state_wip.createShaders(gl);
-  state_wip.calcPerspective(canvas.width, canvas.height);
+  state.createDefaultTexture(gl);
+  state.createShaders(gl);
+  state.calcPerspective(canvas.width, canvas.height);
 
   gl.enable(gl.CULL_FACE);
   gl.enable(gl.DEPTH_TEST);
@@ -78,40 +77,33 @@ function init() {
   function step(dt) {
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    if (state_wip.prog) {
-      gl.useProgram(state_wip.prog);
-      gl.uniform1i(state_wip.textureUniformLoc, 0);
+    if (state.prog) {
+      gl.useProgram(state.prog);
 
-      // TODO, don't do this here?
+      gl.uniform1i(state.textureUniformLoc, 0);
+      gl.uniformMatrix4fv(state.perspUniformLoc, false, state.perspMatrix)
+
+      // TODO
       if (sol) {
-        mat4.multiply(mvpMatrix,
-          state_wip.perspMatrix,
-          sol.getView().getMatrix());
+        mat4.copy(state.modelViewMatrix, sol.getView().getMatrix());
+        gl.uniformMatrix4fv(state.modelViewUniformLoc, false, state.modelViewMatrix);
       }
 
       for (var i = 0; i < bodies.length; ++i) {
         // TODO
         var bp = bodies[i].bp;
         if (bp.pi >= 0) {
-          var bodyTransform = sol.getBodyTransform(bp);
-          var mvpFinal = mat4.create();
-          mat4.multiply(mvpFinal, mvpMatrix, bodyTransform);
-          gl.uniformMatrix4fv(state_wip.mvpUniformLoc, false, mvpFinal);
-        } else {
-          gl.uniformMatrix4fv(state_wip.mvpUniformLoc, false, mvpMatrix);
+          mat4.multiply(state.modelViewMatrix, state.modelViewMatrix, sol.getBodyTransform(bp));
+          gl.uniformMatrix4fv(state.modelViewUniformLoc, false, state.modelViewMatrix);
         }
 
         var meshes = bodies[i];
         for (var j = 0; j < meshes.length; ++j) {
-          meshes[j].draw(gl, state_wip);
+          meshes[j].draw(gl, state);
         }
       }
 
       gl.useProgram(null);
-    }
-
-    if (gl.getError() !== gl.NO_ERROR) {
-      console.log('gl error');
     }
 
     window.requestAnimationFrame(step);
