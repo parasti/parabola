@@ -2,6 +2,7 @@
 
 var mat4 = require('gl-matrix').mat4;
 var vec3 = require('gl-matrix').vec3;
+var quat = require('gl-matrix').quat;
 
 var util = require('./util.js');
 
@@ -259,9 +260,9 @@ Solid.prototype.loadNodes = function (stream) {
   this.nv = nodes;
 };
 
-Solid.prototype.loadPaths = function (stream) {
-  var P_ORIENTED = 1;
+Solid.P_ORIENTED = 1;
 
+Solid.prototype.loadPaths = function (stream) {
   var paths = [];
 
   for (var i = 0; i < this.pc; ++i) {
@@ -275,10 +276,12 @@ Solid.prototype.loadPaths = function (stream) {
 
     path.fl = stream.getInt32();
 
-    if (path.fl & P_ORIENTED) {
-      path.e = stream.getFloat32Array(4);
+    if (path.fl & Solid.P_ORIENTED) {
+      // Neverball quaternions are the other way around.
+      var e = stream.getFloat32Array(4);
+      path.e = quat.fromValues(e[1], e[2], e[3], e[0]);
     } else {
-      path.e = new Float32Array([1.0, 0.0, 0.0, 0.0]);
+      path.e = quat.create();
     }
 
     paths.push(path);
@@ -520,9 +523,20 @@ Solid.prototype.getBodyPosition = function (body) {
   return p;
 };
 
+Solid.prototype.getBodyOrientation = function (body) {
+  var e = [0, 0, 0, 1];
+
+  // TODO
+  if (body.pj >= 0) {
+    var path = this.pv[body.pj];
+    e = path.e;
+  }
+  return e;
+}
+
 Solid.prototype.getBodyTransform = function (body) {
   var transform = mat4.create();
-  mat4.fromTranslation(transform, this.getBodyPosition(body));
+  mat4.fromRotationTranslation(transform, this.getBodyOrientation(body), this.getBodyPosition(body));
   return transform;
 };
 

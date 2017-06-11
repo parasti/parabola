@@ -4,14 +4,31 @@ var vec3 = require('gl-matrix').vec3;
 var mat4 = require('gl-matrix').mat4;
 
 var View = function (p, c) {
-  this.p = (p && vec3.clone(p) || vec3.fromValues(0, View.DP, View.DZ));
-  this.c = (c && vec3.clone(c) || vec3.fromValues(0, View.DC, 0));
+  if (p && c) {
+    this.p = vec3.clone(p);
+    this.c = vec3.clone(c);
+  } else if (p) {
+    this.overhead(p);
+  } else {
+    this.overhead([0, 0, 0]);
+  }
   this.u = vec3.fromValues(0, 1, 0);
 };
 
+/*
+ * Neverball defaults
+ */
 View.DP = 0.75;
 View.DC = 0.25;
 View.DZ = 2.00;
+
+/*
+ * Overhead at position.
+ */
+View.prototype.overhead = function(p) {
+  this.p = vec3.fromValues(p[0], p[1] + View.DP, p[2] + View.DZ);
+  this.c = vec3.fromValues(p[0], p[1] + View.DC, p[2]);
+}
 
 /*
  * Calculate a matrix from the view.
