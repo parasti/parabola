@@ -108,21 +108,28 @@ Mtrl.prototype.draw = function (gl, state) {
  * Download material image and create a texture.
  */
 Mtrl.prototype.loadTexture = function (gl) {
-  if (this.tex || this.img) {
-    console.log('Attempted to load ' + this + ' again');
+  if (this._loading) {
+    return;
+  }
+  if (this.tex) {
+    console.log('Material ' + this + ' has already been loaded');
     return;
   }
   if (!mtrlImages[this]) {
-    console.log('Didn\'t recognize material ' + this);
+    console.log('Material ' + this + ' is unknown');
     return;
   }
 
-  this.img = new Image();
+  // Prevent multiple loads. This is probably dumb.
+  this._loading = true;
+
+  var img = new Image();
   var self = this;
-  this.img.onload = function () {
+  img.onload = function () {
     self.createTexture(gl, this);
+    delete this._loading;
   };
-  this.img.src = 'data/' + mtrlImages[this];
+  img.src = 'data/' + mtrlImages[this];
 };
 
 /*
