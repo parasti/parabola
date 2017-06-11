@@ -13,17 +13,19 @@ var bodies = [];
 function loadBodies(gl) {
   bodies = [];
   for (var i = 0; i < sol.bc; ++i) {
-    var bp = sol.bv[i];
-    bodies.push(sol.getBodyMeshes(bp));
+    var solBody = sol.bv[i];
+    bodies.push({
+      meshes: sol.getBodyMeshes(solBody)
+    });
     // TODO
-    bodies[i].bp = bp;
+    bodies[i].solBody = solBody;
   }
   loadBodyMeshes(gl);
 }
 
 function loadBodyMeshes(gl) {
   for (var i = 0; i < bodies.length; ++i) {
-    var meshes = bodies[i];
+    var meshes = bodies[i].meshes;
 
     for (var j = 0; j < meshes.length; ++j) {
       var mesh = meshes[j];
@@ -37,7 +39,7 @@ function loadBodyMeshes(gl) {
 function loadTextures(gl) {
   // Body.prototype.loadMeshMaterials?
   for (var i = 0; i < bodies.length; ++i) {
-    var meshes = bodies[i];
+    var meshes = bodies[i].meshes;
     for (var j = 0; j < meshes.length; ++j) {
       var mesh = meshes[j];
       // FIXME this attempts to load anew for every body
@@ -46,35 +48,11 @@ function loadTextures(gl) {
   }
 }
 
-function initGL(canvas) {
-  var opts = {
-    depth: true
-  };
-  var gl = canvas.getContext('webgl', opts) || canvas.getContext('experimental-webgl', opts);
-
-  state.createDefaultTexture(gl);
-  state.createShaders(gl);
-  state.calcPerspective(canvas.width, canvas.height);
-
-  gl.enable(gl.CULL_FACE);
-  gl.enable(gl.DEPTH_TEST);
-  gl.enable(gl.BLEND);
-
-  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-  gl.depthFunc(gl.LEQUAL);
-
-  // Fix upside down images.
-  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-
-  gl.clearColor(0.0, 0.0, 0.0, 1.0);
-
-  return gl;
-}
-
 function init() {
   var canvas = document.getElementById('canvas');
-  var gl = initGL(canvas);
+  var gl = GLState.initGL(canvas);
 
+  state = new GLState(gl);
 
   var view_k = 1.0;
 
@@ -94,9 +72,9 @@ function init() {
 
       for (var i = 0; i < bodies.length; ++i) {
         // TODO
-        gl.uniformMatrix4fv(state.uModelID, false, sol.getBodyTransform(bodies[i].bp));
+        gl.uniformMatrix4fv(state.uModelID, false, sol.getBodyTransform(bodies[i].solBody));
 
-        var meshes = bodies[i];
+        var meshes = bodies[i].meshes;
         for (var j = 0; j < meshes.length; ++j) {
           meshes[j].draw(gl, state);
         }
