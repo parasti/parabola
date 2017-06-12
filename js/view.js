@@ -31,7 +31,7 @@ View.prototype.overhead = function(p) {
 }
 
 /*
- * Calculate a matrix from the view.
+ * Calculate a basis matrix.
  */
 View.prototype.getBasis = function () {
   // video_calc_view
@@ -62,6 +62,9 @@ View.prototype.getBasis = function () {
   return M;
 };
 
+/*
+ * Calculate the complete view matrix.
+ */
 View.prototype.getMatrix = function () {
   // game_draw
   var viewMat = mat4.create();
