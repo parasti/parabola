@@ -10,7 +10,8 @@
   "author": "Jānis Rūcis",
   "license": "GPL-3.0",
   "dependencies": {
-    "gl-matrix": "^2.3.2"
+    "gl-matrix": "^2.3.2",
+    "screenfull": "^3.2.1"
   },
   "devDependencies": {
     "babel-preset-env": "^1.5.2",

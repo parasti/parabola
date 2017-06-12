@@ -1,6 +1,7 @@
 'use strict';
 
 var mat4 = require('gl-matrix').mat4;
+var screenfull = require('screenfull');
 var SolReader = require('./solid.js').SolReader;
 var GLState = require('./gl-state.js');
 
@@ -45,6 +46,29 @@ function init() {
 
     reader.read(this.files[0]);
   });
+
+  var fullscreen = document.getElementById('fullscreen');
+  fullscreen.addEventListener('click', function() {
+    if (screenfull.enabled) {
+      screenfull.request(canvas);
+    }
+  });
+
+  if (screenfull.enabled) {
+    screenfull.onchange(function () {
+      if (screenfull.isFullscreen) {
+        canvas.width = window.screen.width;
+        canvas.height = window.screen.height;
+        viewPosition.focus();
+      } else {
+        canvas.width = 800;
+        canvas.height = 600;
+      }
+      // TODO
+      gl.viewport(0, 0, canvas.width, canvas.height);
+      state.calcPerspective(canvas.width, canvas.height);
+    });
+  }
 }
 
 /*

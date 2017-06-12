@@ -80,7 +80,7 @@ GLState.initGL = function(canvas) {
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
   gl.depthFunc(gl.LEQUAL);
 
-  gl.clearColor(0, 0, 0, 1);
+  gl.clearColor(1, 0, 0, 1);
 
   // Fix upside down images.
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
