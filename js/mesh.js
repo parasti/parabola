@@ -46,10 +46,6 @@ Mesh.prototype.draw = function (gl, state) {
     gl.vertexAttribPointer(state.aNormalID, 3, gl.FLOAT, false, Mesh.stride * 4, 12);
     gl.vertexAttribPointer(state.aTexCoordID, 2, gl.FLOAT, false, Mesh.stride * 4, 24);
 
-    gl.enableVertexAttribArray(state.aPositionID);
-    gl.enableVertexAttribArray(state.aNormalID);
-    gl.enableVertexAttribArray(state.aTexCoordID);
-
     gl.drawArrays(gl.TRIANGLES, 0, this.count);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, null);

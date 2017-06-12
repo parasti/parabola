@@ -44,17 +44,28 @@ GLSolid.prototype.loadBodyMeshes = function(gl) {
 GLSolid.prototype.drawBodies = function(gl, state) {
   var bodies = this.bodies;
 
+  gl.enableVertexAttribArray(state.aPositionID);
+  gl.enableVertexAttribArray(state.aNormalID);
+  gl.enableVertexAttribArray(state.aTexCoordID);
+
   for (var i = 0; i < bodies.length; ++i) {
     var body = bodies[i];
 
     // TODO do the math on the CPU
     gl.uniformMatrix4fv(state.uModelID, false, body.matrix);
 
+    // TODO sort
+
     var meshes = body.meshes;
     for (var j = 0; j < meshes.length; ++j) {
       meshes[j].draw(gl, state);
     }
   }
+
+
+  gl.disableVertexAttribArray(this.aPositionID);
+  gl.disableVertexAttribArray(this.aNormalID);
+  gl.disableVertexAttribArray(this.aTexCoordID);
 }
 
 module.exports = GLSolid;
