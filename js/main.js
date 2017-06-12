@@ -40,8 +40,7 @@ function init() {
     reader.onload = function() {
       // TODO multiple sols, items, goals, etc.
       sol = this.result;
-      state.loadBodies(sol);
-      state.loadBodyMeshes(gl);
+      state.loadLevel(gl, sol);
     }
 
     reader.read(this.files[0]);

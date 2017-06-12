@@ -3,6 +3,8 @@
 var mat4 = require('gl-matrix').mat4;
 var util = require('./util.js');
 
+var GLSolid = require('./gl-solid.js');
+
 function GLState(gl) {
   this.defaultTexture = null;
 
@@ -24,7 +26,7 @@ function GLState(gl) {
     this.init(gl);
   }
 
-  this.bodies = [];
+  this.levelModel = null;
 }
 
 GLState.vertShader = `
@@ -175,56 +177,13 @@ GLState.prototype.calcPerspective = function(w, h) {
   util.calcPersp(this.perspMatrix, w, h);
 }
 
-/*
- * Load body meshes and initial transform from SOL.
- */
-GLState.prototype.loadBodies = function(sol) {
-  this.bodies = [];
+GLState.prototype.loadLevel = function(gl, sol) {
+  var model = new GLSolid();
 
-  for (var i = 0; i < sol.bv.length; ++i) {
-    var solBody = sol.bv[i];
+  model.loadBodies(sol);
+  model.loadBodyMeshes(gl);
 
-    this.bodies.push({
-      meshes: sol.getBodyMeshes(solBody),
-      // TODO figure out how to update this w/o linking to SOL
-      matrix: sol.getBodyTransform(solBody)
-    });
-  }
-}
-
-/*
- * Create body mesh VBOs and textures.
- */
-GLState.prototype.loadBodyMeshes = function(gl) {
-  for (var i = 0; i < this.bodies.length; ++i) {
-    var meshes = this.bodies[i].meshes;
-
-    for (var j = 0; j < meshes.length; ++j) {
-      var mesh = meshes[j];
-      mesh.createVBO(gl);
-      // TODO Keep a shared material cache instead of per-SOL?
-      mesh.mtrl.loadTexture(gl);
-    }
-  }
-}
-
-/*
- * Render body meshes.
- */
-GLState.prototype.drawBodies = function(gl) {
-  var bodies = this.bodies;
-
-  for (var i = 0; i < bodies.length; ++i) {
-    var body = bodies[i];
-
-    // TODO do the math on the CPU
-    gl.uniformMatrix4fv(this.uModelID, false, body.matrix);
-
-    var meshes = body.meshes;
-    for (var j = 0; j < meshes.length; ++j) {
-      meshes[j].draw(gl, this);
-    }
-  }
+  this.levelModel = model;
 }
 
 GLState.prototype.draw = function(gl) {
@@ -239,7 +198,9 @@ GLState.prototype.draw = function(gl) {
     gl.uniformMatrix4fv(this.uPerspID, false, this.perspMatrix);
     gl.uniformMatrix4fv(this.uViewID, false, this.viewMatrix);
 
-    this.drawBodies(gl);
+    if (this.levelModel) {
+      this.levelModel.drawBodies(gl, this);
+    }
 
     gl.useProgram(null);
   }
