@@ -1,8 +1,56 @@
 'use strict';
 
+var Mtrl = require('./mtrl.js');
+
 function GLSolid() {
   this.bodies = null;
   // TODO what else?
+}
+
+function GLSolidBody() {
+  this.meshes = null;
+  this.matrix = null;
+
+  // TODO
+  this.opaqueMeshes = null;
+  this.opaqueDecalMeshes = null;
+  this.transparentDecalMeshes = null;
+  this.transparentMeshes = null;
+  this.reflectiveMeshes = null;
+}
+
+var opaqueRules = { in: 0, ex: Mtrl.REFLECTIVE | Mtrl.TRANSPARENT | Mtrl.DECAL };
+var opaqueDecalRules = { in: Mtrl.DECAL, ex: Mtrl.REFLECTIVE | Mtrl.TRANSPARENT };
+var transparentDecalRules = { in: Mtrl.DECAL | Mtrl.TRANSPARENT, ex: Mtrl.REFLECTIVE };
+var transparentRules = { in: Mtrl.TRANSPARENT, ex: Mtrl.REFLECTIVE | Mtrl.DECAL };
+var reflectiveRules = { in: Mtrl.REFLECTIVE, ex: 0 };
+
+function testMtrl(mtrl, rules) {
+  return ((mtrl.fl & rules.in) === rules.in && (mtrl.fl & rules.ex) === 0);
+}
+
+GLSolidBody.prototype.sortMeshes = function() {
+  for (var i = 0; i < this.meshes.length; ++i) {
+    var mesh = this.meshes[i];
+    var mtrl = mesh.mtrl;
+
+    if (testMtrl(mtrl, opaqueRules)) {
+      this.opaqueMeshes = this.opaqueMeshes || [];
+      this.opaqueMeshes.push(mesh);
+    } else if (testMtrl(mtrl, opaqueDecalRules)) {
+      this.opaqueDecalMeshes = this.opaqueDecalMeshes || [];
+      this.opaqueDecalMeshes.push(mesh);
+    } else if (testMtrl(mtrl, transparentDecalRules)) {
+      this.transparentDecalMeshes = this.transparentDecalMeshes || [];
+      this.transparentDecalMeshes.push(mesh);
+    } else if (testMtrl(mtrl, transparentRules)) {
+      this.transparentMeshes = this.transparentMeshes || [];
+      this.transparentMeshes.push(mesh);
+    } else if (testMtrl(mtrl, reflectiveRules)) {
+      this.reflectiveMeshes = this.reflectiveMeshes || [];
+      this.reflectiveMeshes.push(mesh);
+    }
+  }
 }
 
 /*
@@ -13,12 +61,14 @@ GLSolid.prototype.loadBodies = function(sol) {
 
   for (var i = 0; i < sol.bv.length; ++i) {
     var solBody = sol.bv[i];
+    var body = new GLSolidBody();
 
-    this.bodies.push({
-      meshes: sol.getBodyMeshes(solBody),
-      // TODO figure out how to update this w/o linking to SOL
-      matrix: sol.getBodyTransform(solBody)
-    });
+    body.meshes = sol.getBodyMeshes(solBody);
+    body.matrix = sol.getBodyTransform(solBody);
+
+    body.sortMeshes();
+
+    this.bodies.push(body);
   }
 }
 
@@ -56,12 +106,37 @@ GLSolid.prototype.drawBodies = function(gl, state) {
 
     // TODO sort
 
-    var meshes = body.meshes;
-    for (var j = 0; j < meshes.length; ++j) {
-      meshes[j].draw(gl, state);
+    if (body.opaqueMeshes) {
+      var meshes = body.opaqueMeshes;
+      for (var j = 0; j < meshes.length; ++j) {
+        meshes[j].draw(gl, state);
+      }
     }
-  }
 
+    if (body.opaqueDecalMeshes) {
+      var meshes = body.opaqueDecalMeshes;
+      for (var j = 0; j < meshes.length; ++j) {
+        meshes[j].draw(gl, state);
+      }
+    }
+
+    gl.depthMask(false);
+    {
+      if (body.transparentDecalMeshes) {
+        var meshes = body.transparentDecalMeshes;
+        for (var j = 0; j < meshes.length; ++j) {
+          meshes[j].draw(gl, state);
+        }
+      }
+      if (body.transparentMeshes) {
+        var meshes = body.transparentMeshes;
+        for (var j = 0; j < meshes.length; ++j) {
+          meshes[j].draw(gl, state);
+        }
+      }
+    }
+    gl.depthMask(true);
+  }
 
   gl.disableVertexAttribArray(this.aPositionID);
   gl.disableVertexAttribArray(this.aNormalID);
