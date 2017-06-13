@@ -50,17 +50,30 @@ varying vec2 vTexCoord;
 //
 // Lighting
 //
-const vec3 L_GlobalAmbient = vec3(0.2, 0.2, 0.2);
+const float Light_GlobalAmbient = 0.2;
 
 // Assume directional lights.
 
-const float L_Attenuation = 1.0;
-const float L_Spotlight = 1.0;
+struct Light {
+  vec3 position;
+  vec3 diffuse;
+  vec3 ambient;
+  vec3 specular;
+};
 
-const vec3 L_Position0 = vec3(-8.0, +32.0, -8.0);
-const vec3 L_Diffuse0 = vec3(1.0, 0.8, 0.8);
-const vec3 L_Ambient0 = vec3(0.7, 0.7, 0.7);
-const vec3 L_Specular0 = vec3(1.0, 0.8, 0.8);
+const Light Light0 = Light(
+  vec3(-8.0, +32.0, -8.0),
+  vec3(1.0, 0.8, 0.8),
+  vec3(0.7, 0.7, 0.7),
+  vec3(1.0, 0.8, 0.8)
+);
+
+const Light Light1 = Light(
+  vec3(+8.0, +32.0, +8.0),
+  vec3(0.8, 1.0, 0.8),
+  vec3(0.7, 0.7, 0.7),
+  vec3(0.8, 1.0, 0.8)
+);
 
 uniform vec4 uDiffuse;
 uniform vec3 uAmbient;
@@ -70,12 +83,19 @@ uniform float uShininess;
 
 varying vec4 vLightColor;
 
+vec3 calcLight(Light L) {
+  return
+    uAmbient * L.ambient +
+    max(0.0, dot(aNormal, normalize(L.position))) * uDiffuse.rgb * L.diffuse;
+}
+
 void main() {
   vec3 lightColor =
-      uEmissive +
-      (uAmbient * L_GlobalAmbient) +
-      ((uAmbient * L_Ambient0) +
-      max(0.0, dot(aNormal, normalize(L_Position0))) * uDiffuse.rgb * L_Diffuse0);
+    uEmissive +
+    uAmbient * Light_GlobalAmbient +
+    //calcLight(Light0) +
+    calcLight(Light1);
+
   vLightColor = vec4(lightColor, uDiffuse.a);
 
   vTexCoord = aTexCoord;
@@ -95,6 +115,7 @@ varying vec4 vLightColor;
 
 void main() {
   gl_FragColor = texture2D(uTexture, vTexCoord) * vLightColor;
+  //gl_FragColor = vLightColor;
 }
 `;
 
