@@ -94,7 +94,7 @@ varying vec2 vTexCoord;
 varying vec4 vLightColor;
 
 void main() {
-  gl_FragColor = vLightColor;
+  gl_FragColor = texture2D(uTexture, vTexCoord) * vLightColor;
 }
 `;
 
@@ -102,7 +102,7 @@ void main() {
  * Obtain a WebGL context. Now IE compatible, whoo.
  */
 GLState.getContext = function(canvas) {
-  var opts = { depth: true };
+  var opts = { depth: true, alpha: false };
   var gl = canvas.getContext('webgl', opts) || canvas.getContext('experimental-webgl', opts);
   return gl;
 }
@@ -117,7 +117,14 @@ GLState.initGL = function(canvas) {
   gl.enable(gl.DEPTH_TEST);
   gl.enable(gl.BLEND);
 
+  // Straight alpha vs premultiplied alpha:
+  // https://limnu.com/webgl-blending-youre-probably-wrong/
+  // https://developer.nvidia.com/content/alpha-blending-pre-or-not-pre
+  //gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+  //gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+  //gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
   gl.depthFunc(gl.LEQUAL);
 
   gl.clearColor(1, 0, 0, 1);
