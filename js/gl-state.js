@@ -15,6 +15,12 @@ function GLState(gl) {
   this.uModelID = null;
   this.uTextureID = null;
 
+  this.uDiffuse = null;
+  this.uAmbient = null;
+  this.uSpecular = null;
+  this.uEmissive = null;
+  this.uShininess = null;
+
   this.aPositionID = 0;
   this.aNormalID = 1;
   this.aTexCoordID = 2;
@@ -41,34 +47,37 @@ attribute vec2 aTexCoord;
 
 varying vec2 vTexCoord;
 
+//
 // Lighting
-vec3 scene_ambient = vec3(0.0, 0.0, 0.0);
+//
+const vec3 L_GlobalAmbient = vec3(0.2, 0.2, 0.2);
 
 // Assume directional lights.
-float att = 1.0;
-float spot = 1.0;
 
-vec3 light_pos = vec3(-8.0, +32.0, -8.0);
-vec3 light_diffuse = vec3(1.0, 0.8, 0.8);
-vec3 light_ambient = vec3(0.7, 0.7, 0.7);
-vec3 light_specular = vec3(1.0, 0.8, 0.8);
+const float L_Attenuation = 1.0;
+const float L_Spotlight = 1.0;
 
-// Hardcoded material.
-vec3 diffuse = vec3(0.8, 0.8, 0.8);
-vec3 ambient = vec3(0.2, 0.2, 0.2);
-vec3 specular = vec3(0.0, 0.0, 0.0);
-vec3 emissive = vec3(0.0, 0.0, 0.0);
-float shininess = 0.0;
+const vec3 L_Position0 = vec3(-8.0, +32.0, -8.0);
+const vec3 L_Diffuse0 = vec3(1.0, 0.8, 0.8);
+const vec3 L_Ambient0 = vec3(0.7, 0.7, 0.7);
+const vec3 L_Specular0 = vec3(1.0, 0.8, 0.8);
 
-varying vec3 vLightColor;
+uniform vec4 uDiffuse;
+uniform vec3 uAmbient;
+uniform vec3 uSpecular;
+uniform vec3 uEmissive;
+uniform float uShininess;
+
+varying vec4 vLightColor;
 
 void main() {
-  vLightColor =
-      emissive +
-      (ambient * scene_ambient) +
-      ((ambient * light_ambient) +
-      max(0.0, dot(aNormal, normalize(light_pos))) * diffuse * light_diffuse);
-  
+  vec3 lightColor =
+      uEmissive +
+      (uAmbient * L_GlobalAmbient) +
+      ((uAmbient * L_Ambient0) +
+      max(0.0, dot(aNormal, normalize(L_Position0))) * uDiffuse.rgb * L_Diffuse0);
+  vLightColor = vec4(lightColor, uDiffuse.a);
+
   vTexCoord = aTexCoord;
   gl_Position = uPersp * uView * uModel * vec4(aPosition, 1.0);
 }
@@ -82,10 +91,10 @@ precision highp float;
 uniform sampler2D uTexture;
 
 varying vec2 vTexCoord;
-varying vec3 vLightColor;
+varying vec4 vLightColor;
 
 void main() {
-  gl_FragColor = texture2D(uTexture, vTexCoord) * vec4(vLightColor, 1.0);
+  gl_FragColor = vLightColor;
 }
 `;
 
@@ -196,6 +205,12 @@ GLState.prototype.createShaders = function(gl) {
   this.uViewID = gl.getUniformLocation(prog, 'uView');
   this.uModelID = gl.getUniformLocation(prog, 'uModel');
   this.uTextureID = gl.getUniformLocation(prog, 'uTexture');
+
+  this.uDiffuse = gl.getUniformLocation(prog, 'uDiffuse');
+  this.uAmbient = gl.getUniformLocation(prog, 'uAmbient');
+  this.uSpecular = gl.getUniformLocation(prog, 'uSpecular');
+  this.uEmissive = gl.getUniformLocation(prog, 'uEmissive');
+  this.uShininess = gl.getUniformLocation(prog, 'uShininess');
 
   this.prog = prog;
 }

@@ -89,11 +89,19 @@ Mtrl.prototype.createTexture = function (gl, img) {
  * Apply material state.
  */
 Mtrl.prototype.draw = function (gl, state) {
+  // TODO shadow state locally
+
   if (this.tex) {
     gl.bindTexture(gl.TEXTURE_2D, this.tex);
   } else {
     gl.bindTexture(gl.TEXTURE_2D, state.defaultTexture);
   }
+
+  gl.uniform4fv(state.uDiffuse, this.d);
+  gl.uniform3f(state.uAmbient, this.a[0], this.a[1], this.a[2]);
+  gl.uniform3f(state.uSpecular, this.s[0], this.s[1], this.s[2]);
+  gl.uniform3f(state.uEmissive, this.e[0], this.e[1], this.e[2]);
+  gl.uniform1f(state.uShininess, this.h[0]);
 
   if (this.fl & Mtrl.DECAL) {
     gl.enable(gl.POLYGON_OFFSET_FILL);
