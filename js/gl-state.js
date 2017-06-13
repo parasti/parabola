@@ -30,6 +30,7 @@ function GLState(gl) {
 }
 
 GLState.vertShader = `
+
 uniform mat4 uPersp;
 uniform mat4 uView;
 uniform mat4 uModel;
@@ -40,11 +41,40 @@ attribute vec2 aTexCoord;
 
 varying vec2 vTexCoord;
 
+// Lighting
+vec3 scene_ambient = vec3(0.0, 0.0, 0.0);
+
+// Assume directional lights.
+float att = 1.0;
+float spot = 1.0;
+
+vec3 light_pos = vec3(-8.0, +32.0, -8.0);
+vec3 light_diffuse = vec3(1.0, 0.8, 0.8);
+vec3 light_ambient = vec3(0.7, 0.7, 0.7);
+vec3 light_specular = vec3(1.0, 0.8, 0.8);
+
+// Hardcoded material.
+vec3 diffuse = vec3(0.8, 0.8, 0.8);
+vec3 ambient = vec3(0.2, 0.2, 0.2);
+vec3 specular = vec3(0.0, 0.0, 0.0);
+vec3 emissive = vec3(0.0, 0.0, 0.0);
+float shininess = 0.0;
+
+varying vec3 vLightColor;
+
 void main() {
+  vLightColor =
+      emissive +
+      (ambient * scene_ambient) +
+      ((ambient * light_ambient) +
+      max(0.0, dot(aNormal, normalize(light_pos))) * diffuse * light_diffuse);
+  
   vTexCoord = aTexCoord;
   gl_Position = uPersp * uView * uModel * vec4(aPosition, 1.0);
 }
 `;
+
+// TODO lighting
 
 GLState.fragShader = `
 precision highp float;
@@ -52,9 +82,10 @@ precision highp float;
 uniform sampler2D uTexture;
 
 varying vec2 vTexCoord;
+varying vec3 vLightColor;
 
 void main() {
-  gl_FragColor = texture2D(uTexture, vTexCoord);
+  gl_FragColor = texture2D(uTexture, vTexCoord) * vec4(vLightColor, 1.0);
 }
 `;
 
