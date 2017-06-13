@@ -136,6 +136,14 @@ GLSolid.prototype.drawBodies = function(gl, state) {
       }
     }
     gl.depthMask(true);
+
+    // TODO
+    if (body.reflectiveMeshes) {
+      var meshes = body.reflectiveMeshes;
+      for (var j = 0; j < meshes.length; ++j) {
+        meshes[j].draw(gl, state);
+      }
+    }
   }
 
   gl.disableVertexAttribArray(this.aPositionID);
