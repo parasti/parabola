@@ -261,7 +261,7 @@ GLState.prototype.loadLevel = function(gl, sol) {
 }
 
 GLState.prototype.draw = function(gl) {
-  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
   if (this.prog) {
     // TODO
