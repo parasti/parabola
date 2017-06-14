@@ -52,8 +52,6 @@ varying vec2 vTexCoord;
 //
 const float Light_GlobalAmbient = 0.2;
 
-// Assume directional lights.
-
 struct Light {
   vec4 position;
   vec4 diffuse;
@@ -84,17 +82,17 @@ uniform float uShininess;
 varying vec4 vLightColor;
 
 vec4 calcLight(Light light, vec4 eyeNormal) {
+  // Assume directional lights.
+  // TODO specular
   return
     uAmbient * light.ambient +
     max(0.0, dot(eyeNormal, normalize(light.position))) * uDiffuse * light.diffuse;
 }
 
 void main() {
-  // TODO normals, light position: eye coordinates?
-  //mat4 normalMat = uView * uModel;
-  //vec4 eyeNormal = normalize(normalMat * vec4(aNormal, 1.0));
-
+  // TODO eye coordinates
   vec4 eyeNormal = vec4(aNormal, 1.0);
+
   vec4 lightColor =
     uEmissive +
     uAmbient * Light_GlobalAmbient +
@@ -102,13 +100,13 @@ void main() {
     calcLight(Light1, eyeNormal);
 
   vLightColor = clamp(vec4(lightColor.rgb, uDiffuse.a), 0.0, 1.0);
+  vLightColor.rgb = vLightColor.rgb * vLightColor.a; // Premultiply.
+
   vTexCoord = aTexCoord;
 
   gl_Position = uPersp * uView * uModel * vec4(aPosition, 1.0);
 }
 `;
-
-// TODO lighting
 
 GLState.fragShader = `
 precision highp float;
@@ -120,7 +118,6 @@ varying vec4 vLightColor;
 
 void main() {
   gl_FragColor = texture2D(uTexture, vTexCoord) * vLightColor;
-  //gl_FragColor = vLightColor;
 }
 `;
 
@@ -146,10 +143,10 @@ GLState.initGL = function(canvas) {
   // Straight alpha vs premultiplied alpha:
   // https://limnu.com/webgl-blending-youre-probably-wrong/
   // https://developer.nvidia.com/content/alpha-blending-pre-or-not-pre
-  //gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
-  //gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+  gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
   //gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  //gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
   gl.depthFunc(gl.LEQUAL);
 
