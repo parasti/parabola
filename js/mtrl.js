@@ -98,9 +98,9 @@ Mtrl.prototype.draw = function (gl, state) {
   }
 
   gl.uniform4fv(state.uDiffuse, this.d);
-  gl.uniform3f(state.uAmbient, this.a[0], this.a[1], this.a[2]);
-  gl.uniform3f(state.uSpecular, this.s[0], this.s[1], this.s[2]);
-  gl.uniform3f(state.uEmissive, this.e[0], this.e[1], this.e[2]);
+  gl.uniform4fv(state.uAmbient, this.a);
+  gl.uniform4fv(state.uSpecular, this.s);
+  gl.uniform4fv(state.uEmissive, this.e);
   gl.uniform1f(state.uShininess, this.h[0]);
 
   if (this.fl & Mtrl.DECAL) {

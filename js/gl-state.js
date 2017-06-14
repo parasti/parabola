@@ -55,50 +55,55 @@ const float Light_GlobalAmbient = 0.2;
 // Assume directional lights.
 
 struct Light {
-  vec3 position;
-  vec3 diffuse;
-  vec3 ambient;
-  vec3 specular;
+  vec4 position;
+  vec4 diffuse;
+  vec4 ambient;
+  vec4 specular;
 };
 
 const Light Light0 = Light(
-  vec3(-8.0, +32.0, -8.0),
-  vec3(1.0, 0.8, 0.8),
-  vec3(0.7, 0.7, 0.7),
-  vec3(1.0, 0.8, 0.8)
+  vec4(-8.0, +32.0, -8.0, 0.0),
+  vec4(1.0, 0.8, 0.8, 1.0),
+  vec4(0.7, 0.7, 0.7, 1.0),
+  vec4(1.0, 0.8, 0.8, 1.0)
 );
 
 const Light Light1 = Light(
-  vec3(+8.0, +32.0, +8.0),
-  vec3(0.8, 1.0, 0.8),
-  vec3(0.7, 0.7, 0.7),
-  vec3(0.8, 1.0, 0.8)
+  vec4(+8.0, +32.0, +8.0, 0.0),
+  vec4(0.8, 1.0, 0.8, 1.0),
+  vec4(0.7, 0.7, 0.7, 1.0),
+  vec4(0.8, 1.0, 0.8, 1.0)
 );
 
 uniform vec4 uDiffuse;
-uniform vec3 uAmbient;
-uniform vec3 uSpecular;
-uniform vec3 uEmissive;
+uniform vec4 uAmbient;
+uniform vec4 uSpecular;
+uniform vec4 uEmissive;
 uniform float uShininess;
 
 varying vec4 vLightColor;
 
-vec3 calcLight(Light L) {
+vec4 calcLight(Light light, vec4 eyeNormal) {
   return
-    uAmbient * L.ambient +
-    max(0.0, dot(aNormal, normalize(L.position))) * uDiffuse.rgb * L.diffuse;
+    uAmbient * light.ambient +
+    max(0.0, dot(eyeNormal, normalize(light.position))) * uDiffuse * light.diffuse;
 }
 
 void main() {
-  vec3 lightColor =
+  // TODO normals, light position: eye coordinates?
+  //mat4 normalMat = uView * uModel;
+  //vec4 eyeNormal = normalize(normalMat * vec4(aNormal, 1.0));
+
+  vec4 eyeNormal = vec4(aNormal, 1.0);
+  vec4 lightColor =
     uEmissive +
     uAmbient * Light_GlobalAmbient +
-    //calcLight(Light0) +
-    calcLight(Light1);
+    calcLight(Light0, eyeNormal) +
+    calcLight(Light1, eyeNormal);
 
-  vLightColor = vec4(lightColor, uDiffuse.a);
-
+  vLightColor = clamp(vec4(lightColor.rgb, uDiffuse.a), 0.0, 1.0);
   vTexCoord = aTexCoord;
+
   gl_Position = uPersp * uView * uModel * vec4(aPosition, 1.0);
 }
 `;
