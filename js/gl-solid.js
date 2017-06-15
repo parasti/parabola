@@ -11,13 +11,18 @@ function GLSolidBody() {
   this.meshes = null;
   this.matrix = null;
 
-  // TODO
   this.opaqueMeshes = null;
   this.opaqueDecalMeshes = null;
   this.transparentDecalMeshes = null;
   this.transparentMeshes = null;
   this.reflectiveMeshes = null;
 }
+
+const OPAQUE = 'opaqueMeshes';
+const OPAQUE_DECAL = 'opaqueDecalMeshes';
+const TRANSPARENT_DECAL = 'transparentDecalMeshes';
+const TRANSPARENT = 'transparentMeshes';
+const REFLECTIVE = 'reflectiveMeshes';
 
 GLSolidBody.prototype.sortMeshes = function() {
   var opaqueMeshes = [];
@@ -94,32 +99,34 @@ function drawMeshes(gl, state, meshes) {
   }
 }
 
-GLSolid.prototype.drawBodies = function(gl, state) {
+GLSolid.prototype.drawAllMeshes = function(gl, state, meshType) {
   var bodies = this.bodies;
 
+  for (var i = 0; i < bodies.length; ++i) {
+    var body = bodies[i];
+    // TODO do the math on the CPU
+    gl.uniformMatrix4fv(state.uModelID, false, body.matrix);
+    drawMeshes(gl, state, body[meshType]);
+  }
+}
+
+GLSolid.prototype.drawBodies = function(gl, state) {
   gl.enableVertexAttribArray(state.aPositionID);
   gl.enableVertexAttribArray(state.aNormalID);
   gl.enableVertexAttribArray(state.aTexCoordID);
 
-  for (var i = 0; i < bodies.length; ++i) {
-    var body = bodies[i];
+  this.drawAllMeshes(gl, state, OPAQUE);
+  this.drawAllMeshes(gl, state, OPAQUE_DECAL);
 
-    // TODO do the math on the CPU
-    gl.uniformMatrix4fv(state.uModelID, false, body.matrix);
-
-    drawMeshes(gl, state, body.opaqueMeshes);
-    drawMeshes(gl, state, body.opaqueDecalMeshes);
-
-    gl.depthMask(false);
-    {
-      drawMeshes(gl, state, body.transparentDecalMeshes);
-      drawMeshes(gl, state, body.transparentMeshes);
-    }
-    gl.depthMask(true);
-
-    // TODO
-    drawMeshes(gl, state, body.reflectiveMeshes);
+  // TODO?
+  gl.depthMask(false);
+  {
+    this.drawAllMeshes(gl, state, TRANSPARENT_DECAL);
+    this.drawAllMeshes(gl, state, TRANSPARENT);
   }
+  gl.depthMask(true);
+
+  this.drawAllMeshes(gl, state, REFLECTIVE);
 
   gl.disableVertexAttribArray(this.aPositionID);
   gl.disableVertexAttribArray(this.aNormalID);
