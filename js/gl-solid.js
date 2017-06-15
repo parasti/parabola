@@ -19,38 +19,35 @@ function GLSolidBody() {
   this.reflectiveMeshes = null;
 }
 
-var opaqueRules = { in: 0, ex: Mtrl.REFLECTIVE | Mtrl.TRANSPARENT | Mtrl.DECAL };
-var opaqueDecalRules = { in: Mtrl.DECAL, ex: Mtrl.REFLECTIVE | Mtrl.TRANSPARENT };
-var transparentDecalRules = { in: Mtrl.DECAL | Mtrl.TRANSPARENT, ex: Mtrl.REFLECTIVE };
-var transparentRules = { in: Mtrl.TRANSPARENT, ex: Mtrl.REFLECTIVE | Mtrl.DECAL };
-var reflectiveRules = { in: Mtrl.REFLECTIVE, ex: 0 };
-
-function testMtrl(mtrl, rules) {
-  return ((mtrl.fl & rules.in) === rules.in && (mtrl.fl & rules.ex) === 0);
-}
-
 GLSolidBody.prototype.sortMeshes = function() {
+  var opaqueMeshes = [];
+  var opaqueDecalMeshes = [];
+  var transparentDecalMeshes = [];
+  var transparentMeshes = [];
+  var reflectiveMeshes = [];
+
   for (var i = 0; i < this.meshes.length; ++i) {
     var mesh = this.meshes[i];
     var mtrl = mesh.mtrl;
 
-    if (testMtrl(mtrl, opaqueRules)) {
-      this.opaqueMeshes = this.opaqueMeshes || [];
-      this.opaqueMeshes.push(mesh);
-    } else if (testMtrl(mtrl, opaqueDecalRules)) {
-      this.opaqueDecalMeshes = this.opaqueDecalMeshes || [];
-      this.opaqueDecalMeshes.push(mesh);
-    } else if (testMtrl(mtrl, transparentDecalRules)) {
-      this.transparentDecalMeshes = this.transparentDecalMeshes || [];
-      this.transparentDecalMeshes.push(mesh);
-    } else if (testMtrl(mtrl, transparentRules)) {
-      this.transparentMeshes = this.transparentMeshes || [];
-      this.transparentMeshes.push(mesh);
-    } else if (testMtrl(mtrl, reflectiveRules)) {
-      this.reflectiveMeshes = this.reflectiveMeshes || [];
-      this.reflectiveMeshes.push(mesh);
+    if (mtrl.isOpaque()) {
+      opaqueMeshes.push(mesh);
+    } else if (mtrl.isOpaqueDecal()) {
+      opaqueDecalMeshes.push(mesh);
+    } else if (mtrl.isTransparentDecal()) {
+      transparentDecalMeshes.push(mesh);
+    } else if (mtrl.isTransparent()) {
+      transparentMeshes.push(mesh);
+    } else if (mtrl.isReflective()) {
+      reflectiveMeshes.push(mesh);
     }
   }
+
+  this.opaqueMeshes = opaqueMeshes;
+  this.opaqueDecalMeshes = opaqueDecalMeshes;
+  this.transparentDecalMeshes = transparentDecalMeshes;
+  this.transparentMeshes = transparentMeshes;
+  this.reflectiveMeshes = reflectiveMeshes;
 }
 
 /*
@@ -91,6 +88,12 @@ GLSolid.prototype.loadBodyMeshes = function(gl) {
 /*
  * Render body meshes.
  */
+function drawMeshes(gl, state, meshes) {
+  for (var i = 0; i < meshes.length; ++i) {
+    meshes[i].draw(gl, state);
+  }
+}
+
 GLSolid.prototype.drawBodies = function(gl, state) {
   var bodies = this.bodies;
 
@@ -104,46 +107,18 @@ GLSolid.prototype.drawBodies = function(gl, state) {
     // TODO do the math on the CPU
     gl.uniformMatrix4fv(state.uModelID, false, body.matrix);
 
-    // TODO sort
-
-    if (body.opaqueMeshes) {
-      var meshes = body.opaqueMeshes;
-      for (var j = 0; j < meshes.length; ++j) {
-        meshes[j].draw(gl, state);
-      }
-    }
-
-    if (body.opaqueDecalMeshes) {
-      var meshes = body.opaqueDecalMeshes;
-      for (var j = 0; j < meshes.length; ++j) {
-        meshes[j].draw(gl, state);
-      }
-    }
+    drawMeshes(gl, state, body.opaqueMeshes);
+    drawMeshes(gl, state, body.opaqueDecalMeshes);
 
     gl.depthMask(false);
     {
-      if (body.transparentDecalMeshes) {
-        var meshes = body.transparentDecalMeshes;
-        for (var j = 0; j < meshes.length; ++j) {
-          meshes[j].draw(gl, state);
-        }
-      }
-      if (body.transparentMeshes) {
-        var meshes = body.transparentMeshes;
-        for (var j = 0; j < meshes.length; ++j) {
-          meshes[j].draw(gl, state);
-        }
-      }
+      drawMeshes(gl, state, body.transparentDecalMeshes);
+      drawMeshes(gl, state, body.transparentMeshes);
     }
     gl.depthMask(true);
 
     // TODO
-    if (body.reflectiveMeshes) {
-      var meshes = body.reflectiveMeshes;
-      for (var j = 0; j < meshes.length; ++j) {
-        meshes[j].draw(gl, state);
-      }
-    }
+    drawMeshes(gl, state, body.reflectiveMeshes);
   }
 
   gl.disableVertexAttribArray(this.aPositionID);

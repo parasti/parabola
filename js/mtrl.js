@@ -63,6 +63,39 @@ Mtrl.prototype.toString = function () {
 };
 
 /*
+ * Material sorting rules.
+ */
+Mtrl.opaqueRules = { in: 0, ex: Mtrl.REFLECTIVE | Mtrl.TRANSPARENT | Mtrl.DECAL };
+Mtrl.opaqueDecalRules = { in: Mtrl.DECAL, ex: Mtrl.REFLECTIVE | Mtrl.TRANSPARENT };
+Mtrl.transparentDecalRules = { in: Mtrl.DECAL | Mtrl.TRANSPARENT, ex: Mtrl.REFLECTIVE };
+Mtrl.transparentRules = { in: Mtrl.TRANSPARENT, ex: Mtrl.REFLECTIVE | Mtrl.DECAL };
+Mtrl.reflectiveRules = { in: Mtrl.REFLECTIVE, ex: 0 };
+
+Mtrl.prototype.test = function(rules) {
+  return ((this.fl & rules.in) === rules.in && (this.fl & rules.ex) === 0);
+}
+
+Mtrl.prototype.isOpaque = function() {
+  return this.test(Mtrl.opaqueRules);
+}
+
+Mtrl.prototype.isOpaqueDecal = function() {
+  return this.test(Mtrl.opaqueDecalRules);
+}
+
+Mtrl.prototype.isTransparentDecal = function() {
+  return this.test(Mtrl.transparentDecalRules);
+}
+
+Mtrl.prototype.isTransparent = function() {
+  return this.test(Mtrl.transparentRules);
+}
+
+Mtrl.prototype.isReflective = function() {
+  return this.test(Mtrl.reflectiveRules);
+}
+
+/*
  * Create a GL texture from the given image.
  */
 Mtrl.prototype.createTexture = function (gl, img) {
