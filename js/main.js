@@ -12,7 +12,6 @@ function init() {
   var state = new GLState(gl);
 
   var sol = null;
-  var view_k = 1.0;
   var view = new View();
 
   function getDT(currTime) {
@@ -60,7 +59,7 @@ function init() {
       // TODO multiple sols, items, goals, etc.
       sol = this.result;
       state.loadLevel(gl, sol);
-    }
+    };
 
     reader.read(this.files[0]);
   });
@@ -77,10 +76,12 @@ function init() {
       if (screenfull.isFullscreen) {
         canvas.width = window.screen.width;
         canvas.height = window.screen.height;
+        canvas.style.background = 'url("background.png")';
         viewPosition.focus();
       } else {
         canvas.width = 800;
         canvas.height = 600;
+        canvas.style.background = 'none';
       }
       // TODO
       gl.viewport(0, 0, canvas.width, canvas.height);

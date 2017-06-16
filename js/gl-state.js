@@ -36,6 +36,13 @@ function GLState(gl) {
   this.levelModel = null;
 }
 
+// Some WebGL fun:
+// 1) Enable premultiplied alpha and appropriate blending.
+// 2) Don't ask for an "alpha: false" context.
+// 3) Clear draw buffer to zero alpha.
+// 4) Composite GL with HTML content.
+GLState.composite = true;
+
 GLState.vertShader = `
 
 uniform mat4 uPersp;
@@ -138,7 +145,7 @@ void main() {
  * Obtain a WebGL context. Now IE compatible, whoo.
  */
 GLState.getContext = function(canvas) {
-  var opts = { depth: true, alpha: false };
+  var opts = { depth: true, alpha: GLState.composite };
   var gl = canvas.getContext('webgl', opts) || canvas.getContext('experimental-webgl', opts);
   return gl;
 }
@@ -163,7 +170,7 @@ GLState.initGL = function(canvas) {
 
   gl.depthFunc(gl.LEQUAL);
 
-  gl.clearColor(0, 0, 0, 1);
+  gl.clearColor(0, 0, 0, GLState.composite ? 0 : 1);
 
   // Fix upside down images.
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
