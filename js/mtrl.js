@@ -136,6 +136,12 @@ Mtrl.prototype.draw = function (gl, state) {
   gl.uniform4fv(state.uEmissive, this.e);
   gl.uniform1f(state.uShininess, this.h[0]);
 
+  if (this.fl & Mtrl.ENVIRONMENT) {
+    gl.uniform1i(state.uEnvironment, 1);
+  } else {
+    gl.uniform1i(state.uEnvironment, 0);
+  }
+
   if (this.fl & Mtrl.DECAL) {
     gl.enable(gl.POLYGON_OFFSET_FILL);
     gl.polygonOffset(-1.0, -2.0);

@@ -20,6 +20,7 @@ function GLState(gl) {
   this.uSpecular = null;
   this.uEmissive = null;
   this.uShininess = null;
+  this.uEnvironment = null;
 
   this.aPositionID = 0;
   this.aNormalID = 1;
@@ -78,6 +79,7 @@ uniform vec4 uAmbient;
 uniform vec4 uSpecular;
 uniform vec4 uEmissive;
 uniform float uShininess;
+uniform bool uEnvironment;
 
 varying vec4 vLightColor;
 
@@ -87,6 +89,14 @@ vec4 calcLight(Light light, vec4 eyeNormal) {
   return
     uAmbient * light.ambient +
     max(0.0, dot(eyeNormal, normalize(light.position))) * uDiffuse * light.diffuse;
+}
+
+vec2 calcSphereMap(vec3 n) {
+  vec3 u = (uView * uModel * vec4(aPosition, 1.0)).xyz;
+  vec3 r = u - 2.0 * n * (n * u);
+  r.z += 1.0;
+  float m = 2.0 * length(r);
+  return vec2(r.x / m + 0.5, r.y / m + 0.5);
 }
 
 void main() {
@@ -102,7 +112,10 @@ void main() {
   vLightColor = clamp(vec4(lightColor.rgb, uDiffuse.a), 0.0, 1.0);
   vLightColor.rgb = vLightColor.rgb * vLightColor.a; // Premultiply.
 
-  vTexCoord = aTexCoord;
+  if (uEnvironment)
+    vTexCoord = calcSphereMap(eyeNormal.xyz);
+  else
+    vTexCoord = aTexCoord;
 
   gl_Position = uPersp * uView * uModel * vec4(aPosition, 1.0);
 }
@@ -241,6 +254,7 @@ GLState.prototype.createShaders = function(gl) {
   this.uSpecular = gl.getUniformLocation(prog, 'uSpecular');
   this.uEmissive = gl.getUniformLocation(prog, 'uEmissive');
   this.uShininess = gl.getUniformLocation(prog, 'uShininess');
+  this.uEnvironment = gl.getUniformLocation(prog, 'uEnvironment');
 
   this.prog = prog;
 }
