@@ -13,6 +13,13 @@ var View = function (p, c) {
     this.overhead([0, 0, 0]);
   }
   this.u = vec3.fromValues(0, 1, 0);
+
+  // TODO
+  this.velocity = vec3.create();
+  this.backward = false;
+  this.forward = false;
+  this.left = false;
+  this.right = false;
 };
 
 /*
@@ -80,6 +87,50 @@ View.prototype.getMatrix = function () {
 
   return viewMat;
 };
+
+/*
+ * Rudimentary controls.
+ */
+View.prototype.moveForward = function(b) {
+  this.forward = b;
+}
+
+View.prototype.moveBackward = function(b) {
+  this.backward = b;
+}
+
+View.prototype.moveLeft = function(b) {
+  this.left = b;
+}
+
+View.prototype.moveRight = function(b) {
+  this.right = b;
+}
+
+View.prototype.step = function(dt) {
+  var v = this.velocity;
+
+  if (this.forward) {
+    v[2] -= 2.0;
+  }
+  if (this.backward) {
+    v[2] += 2.0;
+  }
+  if (this.left) {
+    v[0] -= 2.0;
+  }
+  if (this.right) {
+    v[0] += 2.0;
+  }
+
+  if (v[0] || v[2] || v[1]) {
+    vec3.transformMat4(v, v, this.getBasis());
+
+    vec3.scale(v, v, dt);
+    vec3.add(this.p, this.p, v);
+    vec3.add(this.c, this.c, v);
+  }
+}
 
 /*
  * Exports.

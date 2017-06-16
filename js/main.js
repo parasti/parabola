@@ -4,6 +4,7 @@ var mat4 = require('gl-matrix').mat4;
 var screenfull = require('screenfull');
 var SolReader = require('./solid.js').SolReader;
 var GLState = require('./gl-state.js');
+var View = require('./view.js');
 
 function init() {
   var canvas = document.getElementById('canvas');
@@ -12,21 +13,39 @@ function init() {
 
   var sol = null;
   var view_k = 1.0;
+  var view = new View();
 
-  function step(dt) {
-    if (sol) {
-      var view = sol.getView(view_k);
-      mat4.copy(state.viewMatrix, view.getMatrix());
+  function getDT(currTime) {
+    var self = getDT;
+    if (self.lastTime == null) {
+      self.lastTime = 0.0;
     }
+    var dt = (currTime - self.lastTime) / 1000.0;
+    if (dt > 1.0) {
+      dt = 0.0;
+    }
+    self.lastTime = currTime;
+    return dt;
+  }
 
+  function step(currTime) {
+    var dt = getDT(currTime);
+
+    // TODO
+    view.step(dt);
+
+    mat4.copy(state.viewMatrix, view.getMatrix());
     state.draw(gl);
+
     window.requestAnimationFrame(step);
   }
   window.requestAnimationFrame(step);
 
   var viewPosition = document.getElementById('viewPosition');
   viewPosition.addEventListener('input', function() {
-    view_k = this.value;
+    if (sol) {
+      view = sol.getView(this.value);
+    }
   });
 
   var fileInput = document.getElementById('fileInput');
@@ -34,7 +53,6 @@ function init() {
     // Convenience over logic
     viewPosition.focus();
     viewPosition.value = 1;
-    view_k = 1.0;
 
     var reader = new SolReader();
 
@@ -69,6 +87,36 @@ function init() {
       state.calcPerspective(canvas.width, canvas.height);
     });
   }
+
+  window.addEventListener('keydown', function(e) {
+    var code = e.code; // Not very portable.
+
+    if (code === 'KeyW') {
+      view.moveForward(true);
+    } else if (code === 'KeyA') {
+      view.moveLeft(true);
+    } else if (code === 'KeyS') {
+      view.moveBackward(true);
+    } else if (code === 'KeyD') {
+      view.moveRight(true);
+    }
+
+  });
+
+  window.addEventListener('keyup', function(e) {
+    var code = e.code;
+
+    if (code === 'KeyW') {
+      view.moveForward(false);
+    } else if (code === 'KeyA') {
+      view.moveLeft(false);
+    } else if (code === 'KeyS') {
+      view.moveBackward(false);
+    } else if (code === 'KeyD') {
+      view.moveRight(false);
+    }
+
+  });
 }
 
 /*
