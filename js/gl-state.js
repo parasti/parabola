@@ -275,12 +275,7 @@ GLState.prototype.calcPerspective = function(w, h) {
 }
 
 GLState.prototype.loadLevel = function(gl, sol) {
-  var model = new GLSolid();
-
-  model.loadBodies(sol);
-  model.loadBodyMeshes(gl);
-
-  this.levelModel = model;
+  this.levelModel = new GLSolid(gl, sol);
 }
 
 GLState.prototype.draw = function(gl) {

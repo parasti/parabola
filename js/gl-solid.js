@@ -2,9 +2,13 @@
 
 var Mtrl = require('./mtrl.js');
 
-function GLSolid() {
+function GLSolid(gl, sol) {
   this.bodies = null;
-  // TODO what else?
+
+  if (sol && gl) {
+    this.loadBodies(sol);
+    this.loadBodyMeshes(gl);
+  }
 }
 
 function GLSolidBody() {
