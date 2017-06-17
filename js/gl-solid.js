@@ -2,6 +2,11 @@
 
 var Mtrl = require('./mtrl.js');
 
+// TODO
+// Nomenclature change, maybe?
+// A SOL contains a list of materials, models (bodies), entities, collision shapes.
+// It's a self-contained world of objects, but each SOL is completely separate.
+// Tempted to load the models, entities, etc, into a shared world instead. Pros, cons?
 function GLSolid(gl, sol) {
   this.bodies = null;
 
@@ -81,6 +86,7 @@ GLSolid.prototype.loadBodies = function(sol) {
 /*
  * Create body mesh VBOs and textures.
  */
+// FIXME s/load/create/
 GLSolid.prototype.loadBodyMeshes = function(gl) {
   for (var i = 0; i < this.bodies.length; ++i) {
     var meshes = this.bodies[i].meshes;
@@ -103,7 +109,7 @@ function drawMeshes(gl, state, meshes) {
   }
 }
 
-GLSolid.prototype.drawAllMeshes = function(gl, state, meshType) {
+GLSolid.prototype.drawMeshes = function(gl, state, meshType) {
   var bodies = this.bodies;
 
   for (var i = 0; i < bodies.length; ++i) {
@@ -119,18 +125,18 @@ GLSolid.prototype.drawBodies = function(gl, state) {
   gl.enableVertexAttribArray(state.aNormalID);
   gl.enableVertexAttribArray(state.aTexCoordID);
 
-  this.drawAllMeshes(gl, state, OPAQUE);
-  this.drawAllMeshes(gl, state, OPAQUE_DECAL);
+  this.drawMeshes(gl, state, OPAQUE);
+  this.drawMeshes(gl, state, OPAQUE_DECAL);
 
   // TODO?
   gl.depthMask(false);
   {
-    this.drawAllMeshes(gl, state, TRANSPARENT_DECAL);
-    this.drawAllMeshes(gl, state, TRANSPARENT);
+    this.drawMeshes(gl, state, TRANSPARENT_DECAL);
+    this.drawMeshes(gl, state, TRANSPARENT);
   }
   gl.depthMask(true);
 
-  this.drawAllMeshes(gl, state, REFLECTIVE);
+  this.drawMeshes(gl, state, REFLECTIVE);
 
   gl.disableVertexAttribArray(this.aPositionID);
   gl.disableVertexAttribArray(this.aNormalID);
