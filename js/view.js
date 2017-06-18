@@ -20,6 +20,8 @@ var View = function (p, c) {
   this.forward = false;
   this.left = false;
   this.right = false;
+  this.dx = 0.0;
+  this.dy = 0.0;
 };
 
 /*
@@ -130,6 +132,39 @@ View.prototype.step = function(dt) {
     vec3.add(this.p, this.p, v);
     vec3.add(this.c, this.c, v);
   }
+}
+
+var toRadian = require('gl-matrix').glMatrix.toRadian;
+
+View.prototype.mouseLook = function(_dx, _dy) {
+  // dx = rotate around Y
+  // dy = rotate around X
+
+  var a = (_dx || _dy) ? 0.005 : 0.1;
+  var dx = (_dx * a) + (this.dx * (1.0 - a));
+  var dy = (_dy * a) + (this.dy * (1.0 - a));
+  this.dx = dx;
+  this.dy = dy;
+
+  var M = this.getBasis();
+
+  if (dx) {
+    mat4.rotateY(M, M, toRadian(-dx));
+  }
+  if (dy) {
+    mat4.rotateX(M, M, toRadian(-dy));
+  }
+
+  this.setBasis(M);
+}
+
+View.prototype.setBasis = function(M) {
+  var x = vec3.fromValues(M[0], M[1], M[2]);
+  var y = vec3.fromValues(M[4], M[5], M[6]);
+  var z = vec3.fromValues(M[8], M[9], M[10]);
+
+  vec3.add(this.c, this.p, vec3.negate(z, z));
+  //vec3.copy(this.u, y);
 }
 
 /*

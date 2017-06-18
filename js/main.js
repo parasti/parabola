@@ -31,6 +31,7 @@ function init() {
     var dt = getDT(currTime);
 
     // TODO
+    view.mouseLook(0, 0); // lerp until stop
     view.step(dt);
 
     mat4.copy(state.viewMatrix, view.getMatrix());
@@ -39,6 +40,29 @@ function init() {
     window.requestAnimationFrame(step);
   }
   window.requestAnimationFrame(step);
+
+  function mouseMove(e) {
+    view.mouseLook(e.movementX, e.movementY);
+  }
+
+  function pointerLockChange(e) {
+    if (document.pointerLockElement === canvas) {
+      document.addEventListener('mousemove', mouseMove);
+    } else {
+      document.removeEventListener('mousemove', mouseMove);
+    }
+  }
+
+  function togglePointerLock(e) {
+    if (document.pointerLockElement) {
+      document.exitPointerLock();
+    } else {
+      canvas.requestPointerLock();
+    }    
+  }
+
+  canvas.addEventListener('click', togglePointerLock);
+  document.addEventListener('pointerlockchange', pointerLockChange);
 
   var viewPosition = document.getElementById('viewPosition');
   viewPosition.addEventListener('input', function() {
