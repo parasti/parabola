@@ -6,13 +6,31 @@ var SolReader = require('./solid.js').SolReader;
 var GLState = require('./gl-state.js');
 var View = require('./view.js');
 
+function loadDataFile(path, onload) {
+  var req = new XMLHttpRequest();
+  req.responseType = 'arraybuffer';
+  req.addEventListener('load', function(e) {
+    if (this.status === 200)
+      onload.call(this, e);
+  });
+  req.open('GET', 'data/' + path);
+  req.send();
+}
+
 function init() {
   var canvas = document.getElementById('canvas');
   var gl = GLState.initGL(canvas);
   var state = new GLState(gl);
-
   var sol = null;
   var view = new View();
+
+  (function() {
+    loadDataFile('map-fwp/adventure.sol', function(e) {
+      sol = require('./solid.js').Solid.load(this.response);
+      state.loadLevel(gl, sol);
+      view = sol.getView(1.0);
+    });
+  })();
 
   function getDT(currTime) {
     var self = getDT;
