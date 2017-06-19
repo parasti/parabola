@@ -125,6 +125,9 @@ GLSolid.prototype.drawBodies = function(gl, state) {
   gl.enableVertexAttribArray(state.aNormalID);
   gl.enableVertexAttribArray(state.aTexCoordID);
 
+  // TODO
+  this.drawMeshes(gl, state, REFLECTIVE);
+
   this.drawMeshes(gl, state, OPAQUE);
   this.drawMeshes(gl, state, OPAQUE_DECAL);
 
@@ -135,8 +138,6 @@ GLSolid.prototype.drawBodies = function(gl, state) {
     this.drawMeshes(gl, state, TRANSPARENT);
   }
   gl.depthMask(true);
-
-  this.drawMeshes(gl, state, REFLECTIVE);
 
   gl.disableVertexAttribArray(this.aPositionID);
   gl.disableVertexAttribArray(this.aNormalID);
