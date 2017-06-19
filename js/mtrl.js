@@ -122,7 +122,7 @@ Mtrl.prototype.createTexture = function (gl, img) {
  * Apply material state.
  */
 Mtrl.prototype.draw = function (gl, state) {
-  // TODO shadow state locally
+  // TODO shadow state locally?
 
   if (this.tex) {
     gl.bindTexture(gl.TEXTURE_2D, this.tex);

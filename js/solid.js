@@ -13,49 +13,7 @@ var View = require('./view.js');
 /*
  * Neverball SOL file.
  */
-var Solid = function () {
-  this.ac = 0;
-  this.dc = 0;
-  this.mc = 0;
-  this.vc = 0;
-  this.ec = 0;
-  this.sc = 0;
-  this.tc = 0;
-  this.oc = 0;
-  this.gc = 0;
-  this.lc = 0;
-  this.nc = 0;
-  this.pc = 0;
-  this.bc = 0;
-  this.hc = 0;
-  this.zc = 0;
-  this.jc = 0;
-  this.xc = 0;
-  this.rc = 0;
-  this.uc = 0;
-  this.wc = 0;
-  this.ic = 0;
-
-  this.av = null;
-  this.dv = null;
-  this.vv = null;
-  this.ev = null;
-  this.sv = null;
-  this.tv = null;
-  this.ov = null;
-  this.gv = null;
-  this.lv = null;
-  this.nv = null;
-  this.pv = null;
-  this.bv = null;
-  this.hv = null;
-  this.zv = null;
-  this.jv = null;
-  this.xv = null;
-  this.rv = null;
-  this.uv = null;
-  this.wv = null;
-  this.iv = null;
+function Solid() {
 };
 
 Solid.MAGIC = 0x4c4f53af;
@@ -77,57 +35,57 @@ Solid.load = function (buffer) {
     return;
   }
 
-  sol.ac = stream.getInt32();
-  sol.dc = stream.getInt32();
-  sol.mc = stream.getInt32();
-  sol.vc = stream.getInt32();
-  sol.ec = stream.getInt32();
-  sol.sc = stream.getInt32();
-  sol.tc = stream.getInt32();
-  sol.oc = stream.getInt32();
-  sol.gc = stream.getInt32();
-  sol.lc = stream.getInt32();
-  sol.nc = stream.getInt32();
-  sol.pc = stream.getInt32();
-  sol.bc = stream.getInt32();
-  sol.hc = stream.getInt32();
-  sol.zc = stream.getInt32();
-  sol.jc = stream.getInt32();
-  sol.xc = stream.getInt32();
-  sol.rc = stream.getInt32();
-  sol.uc = stream.getInt32();
-  sol.wc = stream.getInt32();
-  sol.ic = stream.getInt32();
+  var ac = stream.getInt32();
+  var dc = stream.getInt32();
+  var mc = stream.getInt32();
+  var vc = stream.getInt32();
+  var ec = stream.getInt32();
+  var sc = stream.getInt32();
+  var tc = stream.getInt32();
+  var oc = stream.getInt32();
+  var gc = stream.getInt32();
+  var lc = stream.getInt32();
+  var nc = stream.getInt32();
+  var pc = stream.getInt32();
+  var bc = stream.getInt32();
+  var hc = stream.getInt32();
+  var zc = stream.getInt32();
+  var jc = stream.getInt32();
+  var xc = stream.getInt32();
+  var rc = stream.getInt32();
+  var uc = stream.getInt32();
+  var wc = stream.getInt32();
+  var ic = stream.getInt32();
 
-  sol.av = stream.getUint8Array(sol.ac);
-  sol.loadDicts(stream);
-  sol.loadMtrls(stream);
-  sol.loadVerts(stream);
-  sol.loadEdges(stream);
-  sol.loadSides(stream);
-  sol.loadTexcs(stream);
-  sol.loadOffs(stream);
-  sol.loadGeoms(stream);
-  sol.loadLumps(stream);
-  sol.loadNodes(stream);
-  sol.loadPaths(stream);
-  sol.loadBodies(stream);
-  sol.loadItems(stream);
-  sol.loadGoals(stream);
-  sol.loadJumps(stream);
-  sol.loadSwitches(stream);
-  sol.loadBills(stream);
-  sol.loadBalls(stream);
-  sol.loadViews(stream);
-  sol.iv = stream.getInt32Array(sol.ic);
+  sol.av = stream.getUint8Array(ac);
+  sol.loadDicts(stream, dc);
+  sol.loadMtrls(stream, mc);
+  sol.loadVerts(stream, vc);
+  sol.loadEdges(stream, ec);
+  sol.loadSides(stream, sc);
+  sol.loadTexcs(stream, tc);
+  sol.loadOffs(stream, oc);
+  sol.loadGeoms(stream, gc);
+  sol.loadLumps(stream, lc);
+  sol.loadNodes(stream, nc);
+  sol.loadPaths(stream, pc);
+  sol.loadBodies(stream, bc);
+  sol.loadItems(stream, hc);
+  sol.loadGoals(stream, zc);
+  sol.loadJumps(stream, jc);
+  sol.loadSwitches(stream, xc);
+  sol.loadBills(stream, rc);
+  sol.loadBalls(stream, uc);
+  sol.loadViews(stream, wc);
+  sol.iv = stream.getInt32Array(ic);
 
   return sol;
 };
 
-Solid.prototype.loadDicts = function (stream) {
+Solid.prototype.loadDicts = function (stream, count) {
   var dicts = {};
 
-  for (var i = 0; i < this.dc; ++i) {
+  for (var i = 0; i < count; ++i) {
     var ai = stream.getInt32();
     var aj = stream.getInt32();
 
@@ -139,30 +97,30 @@ Solid.prototype.loadDicts = function (stream) {
   this.dv = dicts;
 };
 
-Solid.prototype.loadMtrls = function (stream) {
+Solid.prototype.loadMtrls = function (stream, count) {
   var mtrls = [];
 
-  for (var i = 0; i < this.mc; ++i) {
+  for (var i = 0; i < count; ++i) {
     mtrls.push(Mtrl.load(stream));
   }
 
   this.mv = mtrls;
 };
 
-Solid.prototype.loadVerts = function (stream) {
+Solid.prototype.loadVerts = function (stream, count) {
   var verts = [];
 
-  for (var i = 0; i < this.vc; ++i) {
+  for (var i = 0; i < count; ++i) {
     verts.push(stream.getFloat32Array(3));
   }
 
   this.vv = verts;
 };
 
-Solid.prototype.loadEdges = function (stream) {
+Solid.prototype.loadEdges = function (stream, count) {
   var edges = [];
 
-  for (var i = 0; i < this.ec; ++i) {
+  for (var i = 0; i < count; ++i) {
     edges.push({
       vi: stream.getInt32(),
       vj: stream.getInt32()
@@ -172,10 +130,10 @@ Solid.prototype.loadEdges = function (stream) {
   this.ev = edges;
 };
 
-Solid.prototype.loadSides = function (stream) {
+Solid.prototype.loadSides = function (stream, count) {
   var sides = [];
 
-  for (var i = 0; i < this.sc; ++i) {
+  for (var i = 0; i < count; ++i) {
     sides.push({
       n: stream.getFloat32Array(3),
       d: stream.getFloat32()
@@ -185,20 +143,20 @@ Solid.prototype.loadSides = function (stream) {
   this.sv = sides;
 };
 
-Solid.prototype.loadTexcs = function (stream) {
+Solid.prototype.loadTexcs = function (stream, count) {
   var texcs = [];
 
-  for (var i = 0; i < this.tc; ++i) {
+  for (var i = 0; i < count; ++i) {
     texcs.push(stream.getFloat32Array(2));
   }
 
   this.tv = texcs;
 };
 
-Solid.prototype.loadOffs = function (stream) {
+Solid.prototype.loadOffs = function (stream, count) {
   var offs = [];
 
-  for (var i = 0; i < this.oc; ++i) {
+  for (var i = 0; i < count; ++i) {
     offs.push({
       ti: stream.getInt32(),
       si: stream.getInt32(),
@@ -209,10 +167,10 @@ Solid.prototype.loadOffs = function (stream) {
   this.ov = offs;
 };
 
-Solid.prototype.loadGeoms = function (stream) {
+Solid.prototype.loadGeoms = function (stream, count) {
   var geoms = [];
 
-  for (var i = 0; i < this.gc; ++i) {
+  for (var i = 0; i < count; ++i) {
     geoms.push({
       mi: stream.getInt32(),
       oi: stream.getInt32(),
@@ -224,10 +182,10 @@ Solid.prototype.loadGeoms = function (stream) {
   this.gv = geoms;
 };
 
-Solid.prototype.loadLumps = function (stream) {
+Solid.prototype.loadLumps = function (stream, count) {
   var lumps = [];
 
-  for (var i = 0; i < this.lc; ++i) {
+  for (var i = 0; i < count; ++i) {
     lumps.push({
       fl: stream.getInt32(),
       v0: stream.getInt32(),
@@ -244,10 +202,10 @@ Solid.prototype.loadLumps = function (stream) {
   this.lv = lumps;
 };
 
-Solid.prototype.loadNodes = function (stream) {
+Solid.prototype.loadNodes = function (stream, count) {
   var nodes = [];
 
-  for (var i = 0; i < this.nc; ++i) {
+  for (var i = 0; i < count; ++i) {
     nodes.push({
       si: stream.getInt32(),
       ni: stream.getInt32(),
@@ -262,10 +220,10 @@ Solid.prototype.loadNodes = function (stream) {
 
 Solid.P_ORIENTED = 1;
 
-Solid.prototype.loadPaths = function (stream) {
+Solid.prototype.loadPaths = function (stream, count) {
   var paths = [];
 
-  for (var i = 0; i < this.pc; ++i) {
+  for (var i = 0; i < count; ++i) {
     var path = {};
 
     path.p = stream.getFloat32Array(3);
@@ -290,10 +248,10 @@ Solid.prototype.loadPaths = function (stream) {
   this.pv = paths;
 };
 
-Solid.prototype.loadBodies = function (stream) {
+Solid.prototype.loadBodies = function (stream, count) {
   var bodies = [];
 
-  for (var i = 0; i < this.bc; ++i) {
+  for (var i = 0; i < count; ++i) {
     bodies.push({
       pi: stream.getInt32(),
       pj: stream.getInt32(),
@@ -311,10 +269,10 @@ Solid.prototype.loadBodies = function (stream) {
   this.bv = bodies;
 };
 
-Solid.prototype.loadItems = function (stream) {
+Solid.prototype.loadItems = function (stream, count) {
   var items = [];
 
-  for (var i = 0; i < this.hc; ++i) {
+  for (var i = 0; i < count; ++i) {
     items.push({
       p: stream.getFloat32Array(3),
       t: stream.getInt32(),
@@ -325,10 +283,10 @@ Solid.prototype.loadItems = function (stream) {
   this.hv = items;
 };
 
-Solid.prototype.loadGoals = function (stream) {
+Solid.prototype.loadGoals = function (stream, count) {
   var goals = [];
 
-  for (var i = 0; i < this.zc; ++i) {
+  for (var i = 0; i < count; ++i) {
     goals.push({
       p: stream.getFloat32Array(3),
       r: stream.getFloat32()
@@ -338,10 +296,10 @@ Solid.prototype.loadGoals = function (stream) {
   this.zv = goals;
 };
 
-Solid.prototype.loadJumps = function (stream) {
+Solid.prototype.loadJumps = function (stream, count) {
   var jumps = [];
 
-  for (var i = 0; i < this.jc; ++i) {
+  for (var i = 0; i < count; ++i) {
     jumps.push({
       p: stream.getFloat32Array(3),
       q: stream.getFloat32Array(3),
@@ -352,10 +310,10 @@ Solid.prototype.loadJumps = function (stream) {
   this.jv = jumps;
 };
 
-Solid.prototype.loadSwitches = function (stream) {
+Solid.prototype.loadSwitches = function (stream, count) {
   var switches = [];
 
-  for (var i = 0; i < this.xc; ++i) {
+  for (var i = 0; i < count; ++i) {
     switches.push({
       p: stream.getFloat32Array(3),
       r: stream.getFloat32(),
@@ -369,10 +327,10 @@ Solid.prototype.loadSwitches = function (stream) {
   this.xv = switches;
 };
 
-Solid.prototype.loadBills = function (stream) {
+Solid.prototype.loadBills = function (stream, count) {
   var bills = [];
 
-  for (var i = 0; i < this.rc; ++i) {
+  for (var i = 0; i < count; ++i) {
     bills.push({
       fl: stream.getInt32(),
       mi: stream.getInt32(),
@@ -391,10 +349,10 @@ Solid.prototype.loadBills = function (stream) {
   this.rv = bills;
 };
 
-Solid.prototype.loadBalls = function (stream) {
+Solid.prototype.loadBalls = function (stream, count) {
   var balls = [];
 
-  for (var i = 0; i < this.uc; ++i) {
+  for (var i = 0; i < count; ++i) {
     balls.push({
       p: stream.getFloat32Array(3),
       r: stream.getFloat32()
@@ -404,10 +362,10 @@ Solid.prototype.loadBalls = function (stream) {
   this.uv = balls;
 };
 
-Solid.prototype.loadViews = function (stream) {
+Solid.prototype.loadViews = function (stream, count) {
   var views = [];
 
-  for (var i = 0; i < this.wc; ++i) {
+  for (var i = 0; i < count; ++i) {
     views.push({
       p: stream.getFloat32Array(3),
       q: stream.getFloat32Array(3)
@@ -417,29 +375,35 @@ Solid.prototype.loadViews = function (stream) {
   this.wv = views;
 };
 
+/*
+ * Collect body geoms into an array indexed by SOL material ID.
+ */
+function addGeomByMtrl(geoms, geom) {
+  var mi = geom.mi;
+  geoms[mi] = geoms[mi] || [];
+  geoms[mi].push(geom);
+}
+
 Solid.prototype.getBodyGeomsByMtrl = function (body) {
   var geoms = [];
 
-  function addGeomByMtrl(geom) {
-    var mi = geom.mi;
-    geoms[mi] = geoms[mi] || [];
-    geoms[mi].push(geom);
-  }
-
   for (var gi = 0; gi < body.gc; ++gi) {
-    addGeomByMtrl(this.gv[this.iv[body.g0 + gi]]);
+    addGeomByMtrl(geoms, this.gv[this.iv[body.g0 + gi]]);
   }
 
   for (var li = 0; li < body.lc; ++li) {
     var lump = this.lv[body.l0 + li];
     for (var gi = 0; gi < lump.gc; ++gi) {
-      addGeomByMtrl(this.gv[this.iv[lump.g0 + gi]]);
+      addGeomByMtrl(geoms, this.gv[this.iv[lump.g0 + gi]]);
     }
   }
 
   return geoms;
 };
 
+/*
+ * Collect vertex attributes described by a SOL offs into a Float32Array.
+ */
 Solid.prototype.getVert = function (vert, offs) {
   var vp = this.vv[offs.vi];
   var sp = this.sv[offs.si].n;
@@ -457,12 +421,16 @@ Solid.prototype.getVert = function (vert, offs) {
   vert[7] = tp[1];
 };
 
+/*
+ * Create a list of meshes from a SOL body, mesh per each used material.
+ */
 Solid.prototype.getBodyMeshes = function (body) {
   var meshes = [];
   var self = this;
 
   this.getBodyGeomsByMtrl(body).forEach(function (geoms, mi) {
-    var mesh = new Mesh(geoms.length * 3, self.mv[mi]);
+    var mtrl = self.mv[mi];
+    var mesh = new Mesh(geoms.length * 3, mtrl);
 
     geoms.forEach(function (geom) {
       mesh.addVertFromSol(self, self.ov[geom.oi]);
@@ -476,21 +444,24 @@ Solid.prototype.getBodyMeshes = function (body) {
   return meshes;
 };
 
+/*
+ * Calculate a fly-in view from the available SOL entities.
+ */
 Solid.prototype.getView = function (k) {
   // game_view_fly
   var view0 = new View();
   var view1 = new View();
 
-  if (this.uc > 0) {
+  if (this.uv.lenght) {
     vec3.add(view0.p, view0.p, this.uv[0].p);
     vec3.add(view0.c, view0.c, this.uv[0].p);
   }
 
-  if (k >= 0 && this.wc > 0) {
+  if (k >= 0 && this.wv.length > 0) {
     vec3.copy(view1.p, this.wv[0].p);
     vec3.copy(view1.c, this.wv[0].q);
   }
-  if (k <= 0 && this.wc > 1) {
+  if (k <= 0 && this.wv.length > 1) {
     vec3.copy(view1.p, this.wv[1].p);
     vec3.copy(view1.c, this.wv[1].q);
   }
