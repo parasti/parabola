@@ -52,6 +52,8 @@ function init() {
     view.mouseLook(0, 0); // lerp until stop
     view.step(dt);
 
+    state.step(dt);
+
     mat4.copy(state.viewMatrix, view.getMatrix());
     state.draw(gl);
 

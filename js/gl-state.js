@@ -298,4 +298,10 @@ GLState.prototype.draw = function(gl) {
   }
 }
 
+GLState.prototype.step = function(dt) {
+  if (this.levelModel) {
+    this.levelModel.step(dt);
+  }
+}
+
 module.exports = GLState;

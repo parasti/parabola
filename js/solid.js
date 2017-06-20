@@ -218,13 +218,17 @@ Solid.prototype.loadNodes = function (stream, count) {
   this.nv = nodes;
 };
 
-Solid.P_ORIENTED = 1;
+// TODO
+function Path() {
+}
+
+Path.ORIENTED = 1;
 
 Solid.prototype.loadPaths = function (stream, count) {
   var paths = [];
 
   for (var i = 0; i < count; ++i) {
-    var path = {};
+    var path = new Path();
 
     path.p = stream.getFloat32Array(3);
     path.t = stream.getFloat32();
@@ -234,7 +238,7 @@ Solid.prototype.loadPaths = function (stream, count) {
 
     path.fl = stream.getInt32();
 
-    if (path.fl & Solid.P_ORIENTED) {
+    if (path.fl & Path.ORIENTED) {
       // Neverball quaternions are the other way around.
       var e = stream.getFloat32Array(4);
       path.e = quat.fromValues(e[1], e[2], e[3], e[0]);
@@ -243,6 +247,14 @@ Solid.prototype.loadPaths = function (stream, count) {
     }
 
     paths.push(path);
+  }
+
+  // Translate.
+
+  for (var i = 0; i < paths.length; ++i) {
+    var path = paths[i];
+    // May link to itself.
+    path.next = paths[path.pi] || null;
   }
 
   this.pv = paths;
@@ -548,5 +560,6 @@ SolReader.prototype.read = function (file) {
  */
 module.exports = {
   Solid: Solid,
+  Path: Path,
   SolReader: SolReader
 };

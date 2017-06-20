@@ -1,6 +1,11 @@
 'use strict';
 
+var vec3 = require('gl-matrix').vec3;
+var quat = require('gl-matrix').quat;
+var mat4 = require('gl-matrix').mat4;
+
 var Mtrl = require('./mtrl.js');
+var Mover = require('./mover.js');
 
 // TODO
 // Nomenclature change, maybe?
@@ -19,6 +24,10 @@ function GLSolid(gl, sol) {
 function GLSolidBody() {
   this.meshes = null;
   this.matrix = null;
+
+  // TODO
+  this.moverTranslate = null;
+  this.moverRotate = null;
 
   this.opaqueMeshes = null;
   this.opaqueDecalMeshes = null;
@@ -65,6 +74,34 @@ GLSolidBody.prototype.sortMeshes = function() {
 }
 
 /*
+ * Update mover state, recalculate transform on movement.
+ */
+GLSolidBody.prototype.step = function(dt) {
+  // TODO not GL related
+  var moverTranslate = this.moverTranslate;
+  var moverRotate = this.moverRotate;
+
+  moverTranslate.step(dt);
+  moverRotate.step(dt);
+
+  // Recalculate transform matrix on update.
+
+  if (moverTranslate.update || moverRotate.update) {
+    var p = vec3.create();
+    var e = quat.create();
+
+    moverTranslate.getPosition(p);
+    moverRotate.getOrientation(e);
+
+    mat4.fromRotationTranslation(this.matrix, e, p);
+  }
+}
+
+GLSolidBody.prototype.getTransform = function() {
+  return this.matrix;
+}
+
+/*
  * Load body meshes and initial transform from SOL.
  */
 GLSolid.prototype.loadBodies = function(sol) {
@@ -77,9 +114,21 @@ GLSolid.prototype.loadBodies = function(sol) {
     body.meshes = sol.getBodyMeshes(solBody);
     body.matrix = sol.getBodyTransform(solBody);
 
+    // TODO not GL related
+    var movers = Mover.fromSolBody(sol, solBody);
+    body.moverTranslate = movers[0];
+    body.moverRotate = movers[1];
+
     body.sortMeshes();
 
     this.bodies.push(body);
+  }
+}
+
+// TODO not GL related
+GLSolid.prototype.step = function(dt) {
+  for (var i = 0; i < this.bodies.length; ++i) {
+    this.bodies[i].step(dt);
   }
 }
 
@@ -115,7 +164,7 @@ GLSolid.prototype.drawMeshes = function(gl, state, meshType) {
   for (var i = 0; i < bodies.length; ++i) {
     var body = bodies[i];
     // TODO do the math on the CPU
-    gl.uniformMatrix4fv(state.uModelID, false, body.matrix);
+    gl.uniformMatrix4fv(state.uModelID, false, body.getTransform());
     drawMeshes(gl, state, body[meshType]);
   }
 }
