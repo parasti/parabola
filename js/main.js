@@ -24,13 +24,11 @@ function init() {
   var sol = null;
   var view = new View();
 
-  (function() {
-    loadDataFile('map-fwp/adventure.sol', function(e) {
-      sol = require('./solid.js').Solid.load(this.response);
-      state.loadLevel(gl, sol);
-      view = sol.getView(1.0);
-    });
-  })();
+  loadDataFile('map-fwp/adventure.sol', function(e) {
+    sol = require('./solid.js').Solid.load(this.response);
+    state.loadLevel(gl, sol);
+    view = sol.getView(1.0);
+  });
 
   function getDT(currTime) {
     var self = getDT;

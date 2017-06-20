@@ -464,7 +464,7 @@ Solid.prototype.getView = function (k) {
   var view0 = new View();
   var view1 = new View();
 
-  if (this.uv.lenght) {
+  if (this.uv.length) {
     vec3.add(view0.p, view0.p, this.uv[0].p);
     vec3.add(view0.c, view0.c, this.uv[0].p);
   }
