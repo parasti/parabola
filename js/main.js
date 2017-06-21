@@ -2,6 +2,7 @@
 
 var mat4 = require('gl-matrix').mat4;
 var screenfull = require('screenfull');
+var Solid = require('./solid.js').Solid;
 var SolReader = require('./solid.js').SolReader;
 var GLState = require('./gl-state.js');
 var View = require('./view.js');
@@ -24,10 +25,18 @@ function init() {
   var sol = null;
   var view = new View();
 
+/*
   loadDataFile('map-fwp/adventure.sol', function(e) {
-    sol = require('./solid.js').Solid.load(this.response);
+    sol = Solid.load(this.response);
     state.loadLevel(gl, sol);
     view = sol.getView(1.0);
+  });
+*/
+
+  loadDataFile('ball/snowglobe/snowglobe-inner.sol', function(e) {
+    sol = Solid.load(this.response);
+    state.loadLevel(gl, sol);
+    view = new View([0, 0, 2], [0, -0.15, 0]);
   });
 
   function getDT(currTime) {
