@@ -21,7 +21,28 @@ function GLSolid(gl, sol) {
   }
 }
 
-function GLSolidBody() {
+// TODO
+// drawEntities()
+// something something
+function Entity() {
+  this.moverTranslate = null;
+  this.moverRotate = null;
+  // this.modelID = model identified as "body #m of SOL #n"
+  // this.modelID = "SOL #n"? nested SolidModel for items, etc. complicated.
+  //     model = new CoinModel(); model.draw(); let the model hide the SOL(s) inside.
+  // this.modelID = model loaded from OBJ
+  // etc
+}
+// drawEntities(entityList) {
+//   for (ent)
+//     model = getModel(ent.modelID)
+//     matrix = ent.matrix
+//     set uniforms
+//     model.draw()
+// }
+
+
+function BodyModel() {
   this.meshes = null;
   this.matrix = null;
 
@@ -42,7 +63,7 @@ const TRANSPARENT_DECAL = 'transparentDecalMeshes';
 const TRANSPARENT = 'transparentMeshes';
 const REFLECTIVE = 'reflectiveMeshes';
 
-GLSolidBody.prototype.sortMeshes = function() {
+BodyModel.prototype.sortMeshes = function() {
   var opaqueMeshes = [];
   var opaqueDecalMeshes = [];
   var transparentDecalMeshes = [];
@@ -76,7 +97,7 @@ GLSolidBody.prototype.sortMeshes = function() {
 /*
  * Update mover state, recalculate transform on movement.
  */
-GLSolidBody.prototype.step = function(dt) {
+BodyModel.prototype.step = function(dt) {
   // TODO not GL related
   var moverTranslate = this.moverTranslate;
   var moverRotate = this.moverRotate;
@@ -97,7 +118,7 @@ GLSolidBody.prototype.step = function(dt) {
   }
 }
 
-GLSolidBody.prototype.getTransform = function() {
+BodyModel.prototype.getTransform = function() {
   return this.matrix;
 }
 
@@ -109,7 +130,7 @@ GLSolid.prototype.loadBodies = function(sol) {
 
   for (var i = 0; i < sol.bv.length; ++i) {
     var solBody = sol.bv[i];
-    var body = new GLSolidBody();
+    var body = new BodyModel();
 
     body.meshes = sol.getBodyMeshes(solBody);
     body.matrix = sol.getBodyTransform(solBody);
