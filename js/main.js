@@ -7,7 +7,7 @@ var SolReader = require('./solid.js').SolReader;
 var GLState = require('./gl-state.js');
 var View = require('./view.js');
 
-function loadDataFile(path, onload) {
+function fetchDataFile(path, onload) {
   var req = new XMLHttpRequest();
   req.responseType = 'arraybuffer';
   req.addEventListener('load', function(e) {
@@ -16,6 +16,14 @@ function loadDataFile(path, onload) {
   });
   req.open('GET', 'data/' + path);
   req.send();
+}
+
+function loadFile(file, onload) {
+  var reader = new FileReader();
+  reader.addEventListener('load', function (e) {
+    onload.call(this, e);
+  });
+  reader.readAsArrayBuffer(file);
 }
 
 function init() {
@@ -33,7 +41,7 @@ function init() {
   });
 */
 
-  loadDataFile('ball/snowglobe/snowglobe-inner.sol', function(e) {
+  fetchDataFile('ball/snowglobe/snowglobe-inner.sol', function(e) {
     sol = Solid.load(this.response);
     state.loadLevel(gl, sol);
     view = new View([0, 0, 2], [0, -0.15, 0]);
@@ -100,19 +108,14 @@ function init() {
 
   var fileInput = document.getElementById('fileInput');
   fileInput.addEventListener('change', function() {
-    // Convenience over logic
-    viewPosition.focus();
-    viewPosition.value = 1;
+    if (!this.files.length) {
+      return;
+    }
 
-    var reader = new SolReader();
-
-    reader.onload = function() {
-      // TODO multiple sols, items, goals, etc.
-      sol = this.result;
+    loadFile(this.files[0], function(e) {
+      sol = Solid.load(this.result);
       state.loadLevel(gl, sol);
-    };
-
-    reader.read(this.files[0]);
+    });
   });
 
   var fullscreen = document.getElementById('fullscreen');
@@ -127,16 +130,13 @@ function init() {
       if (screenfull.isFullscreen) {
         canvas.width = window.screen.width;
         canvas.height = window.screen.height;
-        canvas.style.background = 'url("background.png")';
-        viewPosition.focus();
       } else {
         canvas.width = 800;
         canvas.height = 600;
-        canvas.style.background = 'none';
       }
       // TODO
-      gl.viewport(0, 0, canvas.width, canvas.height);
-      state.calcPerspective(canvas.width, canvas.height);
+      gl.viewport(0, 0, canvas.clientWidth, canvas.clientHeight);
+      state.calcPerspective(canvas.clientWidth, canvas.clientHeight);
     });
   }
 
@@ -169,6 +169,10 @@ function init() {
     }
 
   });
+
+  window.addEventListener('wheel', function(e) {
+    view.moveSpeed(-Math.sign(e.deltaY));
+  })
 }
 
 /*

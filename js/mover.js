@@ -16,18 +16,15 @@ Mover.fromSolBody = function(sol, body) {
   // TODO figure out how to translate between this and indices in replays.
 
   var moverTranslate = new Mover(sol.pv[body.pi]);
+  var moverRotate;
 
-  // FIXME this breaks stupidly when attempting to step "both" movers.
-  // This doesn't occur in Neverball because it walks the global mover array.
-  // NOTE Mover index values in replays depend on this.
-/*
   if (body.pj === body.pi) {
-    var moverRotate = moverTranslate;
+    moverRotate = moverTranslate;
   } else {
-*/
-  var moverRotate = new Mover(sol.pv[body.pj]);
+    moverRotate = new Mover(sol.pv[body.pj]);
+  }
 
-  return [moverTranslate, moverRotate];
+  return { translate: moverTranslate, rotate: moverRotate };
 }
 
 Mover.erp = function(t) {

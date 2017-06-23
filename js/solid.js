@@ -14,6 +14,9 @@ var View = require('./view.js');
  * Neverball SOL file.
  */
 function Solid() {
+  if (!(this instanceof Solid)) {
+    return new Solid();
+  }
 };
 
 Solid.MAGIC = 0x4c4f53af;
@@ -25,13 +28,18 @@ Solid.VERSION = 7;
 Solid.load = function (buffer) {
   // TODO move to a worker
   var stream = new util.DataStream(buffer);
-  var sol = new Solid();
 
-  sol.magic = stream.getInt32();
-  sol.version = stream.getInt32();
+  var magic = stream.getInt32();
 
-  if (sol.magic !== Solid.MAGIC || sol.version !== Solid.VERSION) {
-    // TODO throw
+  if (magic !== Solid.MAGIC) {
+    console.error('Failed to load SOL: not a SOL file');
+    return;
+  }
+
+  var version = stream.getInt32();
+
+  if (version !== Solid.VERSION) {
+    console.error('Failed to load SOL: not a version ' + Solid.VERSION + ' SOL file');
     return;
   }
 
@@ -57,6 +65,11 @@ Solid.load = function (buffer) {
   var wc = stream.getInt32();
   var ic = stream.getInt32();
 
+  var sol = new Solid();
+
+  sol.magic = magic;
+  sol.version = version;
+
   sol.av = stream.getUint8Array(ac);
   sol.loadDicts(stream, dc);
   sol.loadMtrls(stream, mc);
@@ -81,6 +94,25 @@ Solid.load = function (buffer) {
 
   return sol;
 };
+
+Solid.jsonStringifyReplacer = function(key, val) {
+  if (key.startsWith('_')) {
+    return void 0;
+  }
+  if (key === 'tex') { // Mtrl
+    return void 0;
+  }
+  if (key === 'next') { // Path
+    return void 0;
+  }
+  if (val instanceof Uint8Array || val instanceof Float32Array || val instanceof Int32Array) {
+    return Array.from(val);
+  }
+  if (val.toFixed) {
+    return Number(val.toFixed(7));
+  }
+  return val;
+}
 
 Solid.prototype.loadDicts = function (stream, count) {
   var dicts = {};
@@ -492,35 +524,6 @@ Solid.prototype.getView = function (k) {
   //view0.orthonormalize();
 
   return view0;
-};
-
-Solid.prototype.getBodyPosition = function (body) {
-  var p = [0, 0, 0];
-
-  // TODO very incomplete without movers.
-  if (body.pi >= 0) {
-    var path = this.pv[body.pi];
-    p = path.p;
-  }
-
-  return p;
-};
-
-Solid.prototype.getBodyOrientation = function (body) {
-  var e = [0, 0, 0, 1];
-
-  // TODO
-  if (body.pj >= 0) {
-    var path = this.pv[body.pj];
-    e = path.e;
-  }
-  return e;
-}
-
-Solid.prototype.getBodyTransform = function (body) {
-  var transform = mat4.create();
-  mat4.fromRotationTranslation(transform, this.getBodyOrientation(body), this.getBodyPosition(body));
-  return transform;
 };
 
 /*----------------------------------------------------------------------------*/

@@ -44,7 +44,7 @@ function Entity() {
 
 function BodyModel() {
   this.meshes = null;
-  this.matrix = null;
+  this.matrix = mat4.create();
 
   // TODO
   this.moverTranslate = null;
@@ -102,25 +102,28 @@ BodyModel.prototype.step = function(dt) {
   var moverTranslate = this.moverTranslate;
   var moverRotate = this.moverRotate;
 
-  moverTranslate.step(dt);
-  moverRotate.step(dt);
-
-  // Recalculate transform matrix on update.
-
-  if (moverTranslate.update || moverRotate.update) {
-    var p = vec3.create();
-    var e = quat.create();
-
-    moverTranslate.getPosition(p);
-    moverRotate.getOrientation(e);
-
-    mat4.fromRotationTranslation(this.matrix, e, p);
+  if (moverTranslate === moverRotate) {
+    moverTranslate.step(dt);
+  } else {
+    moverTranslate.step(dt);
+    moverRotate.step(dt);
   }
 }
 
-BodyModel.prototype.getTransform = function() {
-  return this.matrix;
-}
+BodyModel.prototype.getTransform = (function() {
+  var p = vec3.create();
+  var e = quat.create();
+  var M = mat4.create();
+
+  return function() {
+    this.moverTranslate.getPosition(p);
+    this.moverRotate.getOrientation(e);
+
+    mat4.fromRotationTranslation(M, e, p);
+
+    return M;
+  }
+})();
 
 /*
  * Load body meshes and initial transform from SOL.
@@ -133,12 +136,12 @@ GLSolid.prototype.loadBodies = function(sol) {
     var body = new BodyModel();
 
     body.meshes = sol.getBodyMeshes(solBody);
-    body.matrix = sol.getBodyTransform(solBody);
+    //body.matrix = sol.getBodyTransform(solBody);
 
     // TODO not GL related
     var movers = Mover.fromSolBody(sol, solBody);
-    body.moverTranslate = movers[0];
-    body.moverRotate = movers[1];
+    body.moverTranslate = movers.translate;
+    body.moverRotate = movers.rotate;
 
     body.sortMeshes();
 
