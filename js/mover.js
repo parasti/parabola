@@ -1,3 +1,5 @@
+'use strict';
+
 var vec3 = require('gl-matrix').vec3;
 var quat = require('gl-matrix').quat;
 
@@ -7,6 +9,10 @@ var Path = require('./solid.js').Path;
  * Walk the path entities in life. Don't we all.
  */
 function Mover(path) {
+  if (!(this instanceof Mover)) {
+    return new Mover(path);
+  }
+
   this.path = path || null;
   this.time = 0;
 }
@@ -32,10 +38,15 @@ Mover.erp = function(t) {
   return 3.0 * t * t - 2.0 * t * t * t;
 }
 
+/*
+ * Calculate position (optionally after DT seconds).
+ */
 Mover.prototype.getPosition = function(p, dt) {
   // sol_body_p
 
   var dt = dt || 0.0;
+
+  vec3.set(p, 0, 0, 0);
 
   if (this.path) {
     var thisPath = this.path;
@@ -47,16 +58,15 @@ Mover.prototype.getPosition = function(p, dt) {
       var s = this.time / thisPath.t;
     }
 
-    var v = vec3.create();
-    vec3.sub(v, nextPath.p, thisPath.p);
-    vec3.scaleAndAdd(p, thisPath.p, v, thisPath.s ? Mover.erp(s) : s);
-  } else {
-    vec3.set(p, 0, 0, 0);
+    vec3.lerp(p, thisPath.p, nextPath.p, thisPath.s ? Mover.erp(s) : s);
   }
 
   return p;
 }
 
+/*
+ * Calculate orientation (optionally after DT seconds) as a quaternion.
+ */
 Mover.prototype.getOrientation = function(e, dt) {
   // sol_body_e
 
@@ -87,7 +97,6 @@ Mover.prototype.getOrientation = function(e, dt) {
  */
 Mover.prototype.step = function(dt) {
   // TODO Count milliseconds to keep time-aware entities in sync.
-  this.update = false;
 
   if (this.path) {
     var thisPath = this.path;
@@ -99,8 +108,6 @@ Mover.prototype.step = function(dt) {
         this.time = 0.0;
         this.path = thisPath.next;
       }
-      
-      this.update = true;
     }
   }
 }
