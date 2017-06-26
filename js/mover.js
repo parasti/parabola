@@ -17,18 +17,35 @@ function Mover(path) {
   this.time = 0;
 }
 
+/*
+ * Count movers for replay compatibility purposes.
+ */
+require('./solid.js').Solid.prototype._indexBodyMovers = function(body, moverTranslate, moverRotate) {
+  this._moversByIndex = this._moversByIndex || [];
+
+  if (body.pi >= 0) {
+    this._moversByIndex.push(moverTranslate);
+  }
+  if (body.pj >= 0 && body.pj != body.pi) {
+    this._moversByIndex.push(moverRotate);
+  }
+}
+
 Mover.fromSolBody = function(sol, body) {
   // sol_load_vary
-  // TODO figure out how to translate between this and indices in replays.
 
-  var moverTranslate = new Mover(sol.pv[body.pi]);
+  var moverTranslate;
   var moverRotate;
+
+  moverTranslate = new Mover(sol.pv[body.pi]);
 
   if (body.pj === body.pi) {
     moverRotate = moverTranslate;
   } else {
     moverRotate = new Mover(sol.pv[body.pj]);
   }
+
+  sol._indexBodyMovers(body, moverTranslate, moverRotate);
 
   return { translate: moverTranslate, rotate: moverRotate };
 }

@@ -2,8 +2,8 @@
 
 var mat4 = require('gl-matrix').mat4;
 var screenfull = require('screenfull');
+
 var Solid = require('./solid.js').Solid;
-var SolReader = require('./solid.js').SolReader;
 var GLState = require('./gl-state.js');
 var View = require('./view.js');
 
@@ -26,6 +26,21 @@ function loadFile(file, onload) {
   reader.readAsArrayBuffer(file);
 }
 
+var getDeltaTime = (function () {
+  var lastTime = 0.0;
+
+  return function(currTime) {
+    var dt = (currTime - lastTime) / 1000.0;
+
+    if (dt > 1.0) {
+      dt = 0.0;
+    }
+
+    lastTime = currTime;
+    return dt;
+  }
+})();
+
 function init() {
   var canvas = document.getElementById('canvas');
   var gl = GLState.initGL(canvas);
@@ -33,35 +48,13 @@ function init() {
   var sol = null;
   var view = new View();
 
-/*
-  loadDataFile('map-fwp/adventure.sol', function(e) {
+  fetchDataFile('map-fwp/adventure.sol', function(e) {
     sol = Solid.load(this.response);
     state.loadLevel(gl, sol);
-    view = sol.getView(1.0);
   });
-*/
-
-  fetchDataFile('ball/snowglobe/snowglobe-inner.sol', function(e) {
-    sol = Solid.load(this.response);
-    state.loadLevel(gl, sol);
-    view = new View([0, 0, 2], [0, -0.15, 0]);
-  });
-
-  function getDT(currTime) {
-    var self = getDT;
-    if (self.lastTime == null) {
-      self.lastTime = 0.0;
-    }
-    var dt = (currTime - self.lastTime) / 1000.0;
-    if (dt > 1.0) {
-      dt = 0.0;
-    }
-    self.lastTime = currTime;
-    return dt;
-  }
 
   function step(currTime) {
-    var dt = getDT(currTime);
+    var dt = getDeltaTime(currTime);
 
     // TODO
     view.mouseLook(0, 0); // lerp until stop
@@ -102,7 +95,7 @@ function init() {
   var viewPosition = document.getElementById('viewPosition');
   viewPosition.addEventListener('input', function() {
     if (sol) {
-      view = sol.getView(this.value);
+      view.setFromSol(sol, this.value);
     }
   });
 
@@ -172,7 +165,8 @@ function init() {
 
   window.addEventListener('wheel', function(e) {
     view.moveSpeed(-Math.sign(e.deltaY));
-  })
+    e.preventDefault();
+  });
 }
 
 /*

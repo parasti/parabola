@@ -6,6 +6,7 @@ var mat4 = require('gl-matrix').mat4;
 
 var Mtrl = require('./mtrl.js');
 var Mover = require('./mover.js');
+var BodyModel = require('./body-model.js');
 
 // TODO
 // Nomenclature change, maybe?
@@ -17,7 +18,7 @@ function GLSolid(gl, sol) {
 
   if (sol && gl) {
     this.loadBodies(sol);
-    this.loadBodyMeshes(gl);
+    this.createBodyMeshes(gl);
   }
 }
 
@@ -41,90 +42,6 @@ function Entity() {
 //     model.draw()
 // }
 
-
-function BodyModel() {
-  this.meshes = null;
-  this.matrix = mat4.create();
-
-  // TODO
-  this.moverTranslate = null;
-  this.moverRotate = null;
-
-  this.opaqueMeshes = null;
-  this.opaqueDecalMeshes = null;
-  this.transparentDecalMeshes = null;
-  this.transparentMeshes = null;
-  this.reflectiveMeshes = null;
-}
-
-const OPAQUE = 'opaqueMeshes';
-const OPAQUE_DECAL = 'opaqueDecalMeshes';
-const TRANSPARENT_DECAL = 'transparentDecalMeshes';
-const TRANSPARENT = 'transparentMeshes';
-const REFLECTIVE = 'reflectiveMeshes';
-
-BodyModel.prototype.sortMeshes = function() {
-  var opaqueMeshes = [];
-  var opaqueDecalMeshes = [];
-  var transparentDecalMeshes = [];
-  var transparentMeshes = [];
-  var reflectiveMeshes = [];
-
-  for (var i = 0; i < this.meshes.length; ++i) {
-    var mesh = this.meshes[i];
-    var mtrl = mesh.mtrl;
-
-    if (mtrl.isOpaque()) {
-      opaqueMeshes.push(mesh);
-    } else if (mtrl.isOpaqueDecal()) {
-      opaqueDecalMeshes.push(mesh);
-    } else if (mtrl.isTransparentDecal()) {
-      transparentDecalMeshes.push(mesh);
-    } else if (mtrl.isTransparent()) {
-      transparentMeshes.push(mesh);
-    } else if (mtrl.isReflective()) {
-      reflectiveMeshes.push(mesh);
-    }
-  }
-
-  this.opaqueMeshes = opaqueMeshes;
-  this.opaqueDecalMeshes = opaqueDecalMeshes;
-  this.transparentDecalMeshes = transparentDecalMeshes;
-  this.transparentMeshes = transparentMeshes;
-  this.reflectiveMeshes = reflectiveMeshes;
-}
-
-/*
- * Update mover state, recalculate transform on movement.
- */
-BodyModel.prototype.step = function(dt) {
-  // TODO not GL related
-  var moverTranslate = this.moverTranslate;
-  var moverRotate = this.moverRotate;
-
-  if (moverTranslate === moverRotate) {
-    moverTranslate.step(dt);
-  } else {
-    moverTranslate.step(dt);
-    moverRotate.step(dt);
-  }
-}
-
-BodyModel.prototype.getTransform = (function() {
-  var p = vec3.create();
-  var e = quat.create();
-  var M = mat4.create();
-
-  return function() {
-    this.moverTranslate.getPosition(p);
-    this.moverRotate.getOrientation(e);
-
-    mat4.fromRotationTranslation(M, e, p);
-
-    return M;
-  }
-})();
-
 /*
  * Load body meshes and initial transform from SOL.
  */
@@ -132,19 +49,7 @@ GLSolid.prototype.loadBodies = function(sol) {
   this.bodies = [];
 
   for (var i = 0; i < sol.bv.length; ++i) {
-    var solBody = sol.bv[i];
-    var body = new BodyModel();
-
-    body.meshes = sol.getBodyMeshes(solBody);
-    //body.matrix = sol.getBodyTransform(solBody);
-
-    // TODO not GL related
-    var movers = Mover.fromSolBody(sol, solBody);
-    body.moverTranslate = movers.translate;
-    body.moverRotate = movers.rotate;
-
-    body.sortMeshes();
-
+    var body = BodyModel.fromSolBody(sol, sol.bv[i]);
     this.bodies.push(body);
   }
 }
@@ -160,7 +65,7 @@ GLSolid.prototype.step = function(dt) {
  * Create body mesh VBOs and textures.
  */
 // FIXME s/load/create/
-GLSolid.prototype.loadBodyMeshes = function(gl) {
+GLSolid.prototype.createBodyMeshes = function(gl) {
   for (var i = 0; i < this.bodies.length; ++i) {
     var meshes = this.bodies[i].meshes;
 
@@ -176,20 +81,13 @@ GLSolid.prototype.loadBodyMeshes = function(gl) {
 /*
  * Render body meshes.
  */
-function drawMeshes(gl, state, meshes) {
-  for (var i = 0; i < meshes.length; ++i) {
-    meshes[i].draw(gl, state);
-  }
-}
 
-GLSolid.prototype.drawMeshes = function(gl, state, meshType) {
+GLSolid.prototype.drawMeshType = function(gl, state, meshType) {
   var bodies = this.bodies;
 
   for (var i = 0; i < bodies.length; ++i) {
     var body = bodies[i];
-    // TODO do the math on the CPU
-    gl.uniformMatrix4fv(state.uModelID, false, body.getTransform());
-    drawMeshes(gl, state, body[meshType]);
+    body.drawMeshType(gl, state, meshType);
   }
 }
 
@@ -199,16 +97,16 @@ GLSolid.prototype.drawBodies = function(gl, state) {
   gl.enableVertexAttribArray(state.aTexCoordID);
 
   // TODO
-  this.drawMeshes(gl, state, REFLECTIVE);
+  this.drawMeshType(gl, state, 'reflective');
 
-  this.drawMeshes(gl, state, OPAQUE);
-  this.drawMeshes(gl, state, OPAQUE_DECAL);
+  this.drawMeshType(gl, state, 'opaque');
+  this.drawMeshType(gl, state, 'opaqueDecal');
 
   // TODO?
   gl.depthMask(false);
   {
-    this.drawMeshes(gl, state, TRANSPARENT_DECAL);
-    this.drawMeshes(gl, state, TRANSPARENT);
+    this.drawMeshType(gl, state, 'transparentDecal');
+    this.drawMeshType(gl, state, 'transparent');
   }
   gl.depthMask(true);
 

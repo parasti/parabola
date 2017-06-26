@@ -489,80 +489,9 @@ Solid.prototype.getBodyMeshes = function (body) {
 };
 
 /*
- * Calculate a fly-in view from the available SOL entities.
- */
-Solid.prototype.getView = function (k) {
-  // game_view_fly
-  var view0 = new View();
-  var view1 = new View();
-
-  if (this.uv.length) {
-    vec3.add(view0.p, view0.p, this.uv[0].p);
-    vec3.add(view0.c, view0.c, this.uv[0].p);
-  }
-
-  if (k >= 0 && this.wv.length > 0) {
-    vec3.copy(view1.p, this.wv[0].p);
-    vec3.copy(view1.c, this.wv[0].q);
-  }
-  if (k <= 0 && this.wv.length > 1) {
-    vec3.copy(view1.p, this.wv[1].p);
-    vec3.copy(view1.c, this.wv[1].q);
-  }
-
-  // Interpolate the views.
-
-  var v = vec3.create();
-
-  vec3.sub(v, view1.p, view0.p);
-  vec3.scaleAndAdd(view0.p, view0.p, v, k * k);
-
-  vec3.sub(v, view1.c, view0.c);
-  vec3.scaleAndAdd(view0.c, view0.c, v, k * k);
-
-  // Hypothetically
-  //view0.orthonormalize();
-
-  return view0;
-};
-
-/*----------------------------------------------------------------------------*/
-
-/*
- * Load a SOL file from the given file.
- *
- * IS THIS POINTLESS
- *
- * Generally:
- *
- * var reader = new SolReader();
- * reader.onload = function () { console.log(this.result); };
- * reader.read(file);
- */
-var SolReader = function () {
-  this.onload = null;
-  this.result = null;
-};
-
-SolReader.prototype.read = function (file) {
-  var self = this;
-  var reader = new FileReader();
-  reader.addEventListener('load', function (event) {
-    self.result = Solid.load(this.result);
-    if (self.onload)
-      self.onload.call(self);
-  });
-  try {
-    reader.readAsArrayBuffer(file);
-  } catch (e) {
-  }
-};
-
-/*
  * Exports.
  */
 module.exports = {
   Solid: Solid,
-  Path: Path,
-  SolReader: SolReader
+  Path: Path
 };

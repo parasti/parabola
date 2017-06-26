@@ -4,15 +4,21 @@ var vec3 = require('gl-matrix').vec3;
 var mat4 = require('gl-matrix').mat4;
 
 var View = function (p, c) {
+  this.p = vec3.create();
+  this.c = vec3.create();
+  this.u = vec3.fromValues(0, 1, 0);
+
   if (p && c) {
-    this.p = vec3.clone(p);
-    this.c = vec3.clone(c);
+    vec3.copy(this.p, p);
+    vec3.copy(this.c, c);
   } else if (p) {
     this.overhead(p);
   } else {
     this.overhead([0, 0, 0]);
   }
-  this.u = vec3.fromValues(0, 1, 0);
+
+  this._basis = mat4.create();
+  this._viewMatrix = mat4.create();
 
   // TODO
   this.speed = View.SPEED;
@@ -20,8 +26,8 @@ var View = function (p, c) {
   this.forward = false;
   this.left = false;
   this.right = false;
-  this.dx = 0.0;
-  this.dy = 0.0;
+  this._dx = 0.0;
+  this._dy = 0.0;
 };
 
 /*
@@ -37,8 +43,8 @@ View.SPEED = 2.0;
  * Overhead at position.
  */
 View.prototype.overhead = function(p) {
-  this.p = vec3.fromValues(p[0], p[1] + View.DP, p[2] + View.DZ);
-  this.c = vec3.fromValues(p[0], p[1] + View.DC, p[2]);
+  vec3.set(this.p, p[0], p[1] + View.DP, p[2] + View.DZ);
+  vec3.set(this.c, p[0], p[1] + View.DC, p[2]);
 }
 
 /*
@@ -50,14 +56,14 @@ View.prototype.getBasis = (function () {
   var y = vec3.create();
   var z = vec3.create();
 
-  var M = mat4.create();
-
   return function () {
     vec3.sub(z, this.p, this.c);
     vec3.normalize(z, z);
     vec3.cross(x, this.u, z);
     vec3.normalize(x, x);
     vec3.cross(y, z, x);
+
+    var M = this._basis;
 
     M[0] = x[0];
     M[1] = x[1];
@@ -71,7 +77,7 @@ View.prototype.getBasis = (function () {
     M[9]  = z[1];
     M[10] = z[2];
 
-    return M;
+    return this._basis;
   }
 })();
 
@@ -80,19 +86,51 @@ View.prototype.getBasis = (function () {
  */
 View.prototype.getMatrix = (function () {
   // game_draw
-  var viewMat = mat4.create();
-
   var M = mat4.create();
   var v = vec3.create();
 
   return function() {
+    var viewMat = this._viewMatrix;
+
     vec3.sub(v, this.c, this.p);
     mat4.fromTranslation(viewMat, vec3.set(v, 0, 0, -vec3.len(v)));
     mat4.multiply(viewMat, viewMat, mat4.transpose(M, this.getBasis()));
     mat4.translate(viewMat, viewMat, vec3.negate(v, this.c));
-    return viewMat;
+
+    return this._viewMatrix;
   }
 })();
+
+/*
+ * Calculate a fly-in view from the available SOL entities.
+ */
+View.prototype.setFromSol = (function() {
+  // game_view_fly
+
+  var ball = new View();
+  var view = new View();
+
+  return function (sol, k) {
+    if (sol.uv.length) {
+      ball.overhead(sol.uv[0].p);
+    }
+
+    if (k >= 0 && sol.wv.length > 0) {
+      vec3.copy(view.p, sol.wv[0].p);
+      vec3.copy(view.c, sol.wv[0].q);
+    }
+    if (k <= 0 && sol.wv.length > 1) {
+      vec3.copy(view.p, sol.wv[1].p);
+      vec3.copy(view.c, sol.wv[1].q);
+    }
+
+    // Interpolate the views.
+
+    vec3.lerp(this.p, ball.p, view.p, k * k);
+    vec3.lerp(this.c, ball.c, view.c, k * k);
+  }
+})();
+
 
 /*
  * Rudimentary controls.
@@ -152,26 +190,27 @@ View.prototype.step = (function() {
 
 var toRadian = require('gl-matrix').glMatrix.toRadian;
 
-View.prototype.mouseLook = function(_dx, _dy) {
+View.prototype.mouseLook = function(dx, dy) {
   // dx = rotate around Y
   // dy = rotate around X
 
-  var a = (_dx || _dy) ? 0.005 : 0.1;
-  var dx = (_dx * a) + (this.dx * (1.0 - a));
-  var dy = (_dy * a) + (this.dy * (1.0 - a));
-  this.dx = dx;
-  this.dy = dy;
+  var a = (dx || dy) ? 0.005 : 0.1;
+  var filtered_dx = (dx * a) + (this._dx * (1.0 - a));
+  var filtered_dy = (dy * a) + (this._dy * (1.0 - a));
+  this._dx = filtered_dx;
+  this._dy = filtered_dy;
 
-  var M = this.getBasis();
+  var z = vec3.fromValues(0, 0, 1);
+  var o = vec3.fromValues(0, 0, 0);
 
-  if (dx) {
-    mat4.rotateY(M, M, toRadian(-dx));
+  if (filtered_dx) {
+    vec3.rotateY(z, z, o, toRadian(-filtered_dx));
   }
-  if (dy) {
-    mat4.rotateX(M, M, toRadian(-dy));
+  if (filtered_dy) {
+    vec3.rotateX(z, z, o, toRadian(-filtered_dy));
   }
 
-  var z = vec3.fromValues(M[8], M[9], M[10]);
+  vec3.transformMat4(z, z, this.getBasis());
   vec3.add(this.c, this.p, vec3.negate(z, z));
 }
 

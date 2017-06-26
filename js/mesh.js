@@ -1,6 +1,10 @@
 'use strict';
 
 var Mesh = function (count, mtrl) {
+  if (!(this instanceof Mesh)) {
+    return new Mesh(count, mtrl);
+  }
+
   this.mtrl = mtrl || null;
   this.verts = count ? new Float32Array(Mesh.stride * count) : null;
   this.count = 0;
