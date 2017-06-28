@@ -3,28 +3,11 @@
 var mat4 = require('gl-matrix').mat4;
 var screenfull = require('screenfull');
 
+var misc = require('./misc.js');
+
 var Solid = require('./solid.js').Solid;
 var GLState = require('./gl-state.js');
 var View = require('./view.js');
-
-function fetchDataFile(path, onload) {
-  var req = new XMLHttpRequest();
-  req.responseType = 'arraybuffer';
-  req.addEventListener('load', function(e) {
-    if (this.status === 200)
-      onload.call(this, e);
-  });
-  req.open('GET', 'data/' + path);
-  req.send();
-}
-
-function loadFile(file, onload) {
-  var reader = new FileReader();
-  reader.addEventListener('load', function (e) {
-    onload.call(this, e);
-  });
-  reader.readAsArrayBuffer(file);
-}
 
 var getDeltaTime = (function () {
   var lastTime = 0.0;
@@ -48,7 +31,7 @@ function init() {
   var sol = null;
   var view = new View();
 
-  fetchDataFile('map-fwp/adventure.sol', function(e) {
+  misc.fetchDataFile('map-fwp/adventure.sol', function(e) {
     sol = Solid.load(this.response);
     state.loadLevel(gl, sol);
   });
@@ -105,7 +88,7 @@ function init() {
       return;
     }
 
-    loadFile(this.files[0], function(e) {
+    misc.loadFile(this.files[0], function(e) {
       sol = Solid.load(this.result);
       state.loadLevel(gl, sol);
     });
@@ -177,7 +160,7 @@ function init() {
   var listMaterials = document.getElementById('listMaterials');
   listMaterials.addEventListener('click', function(e) {
     if (sol) {
-      var html = '<select>';
+      var html = '<select size="10">';
       for (var i = 0; i < sol.mv.length; ++i) {
         html += '<option>' + sol.mv[i].f + '</option>';
       }

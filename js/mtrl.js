@@ -1,5 +1,7 @@
 'use strict';
 
+var misc = require('./misc.js');
+
 var mtrlImages = require('./mtrl-images.json');
 
 var Mtrl = function () {
@@ -143,14 +145,11 @@ Mtrl.prototype.loadTexture = function (gl) {
 
   // Prevent multiple loads. This is probably dumb.
   this._loading = true;
-
-  var img = new Image();
   var self = this;
-  img.onload = function () {
+  misc.fetchDataImage(mtrlImages[self.f], function() {
     self.createTexture(gl, this);
-    delete this._loading;
-  };
-  img.src = 'data/' + mtrlImages[this];
+    delete self._loading;
+  });
 };
 
 /*
