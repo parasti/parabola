@@ -8,11 +8,6 @@ var Mtrl = require('./mtrl.js');
 var Mover = require('./mover.js');
 var BodyModel = require('./body-model.js');
 
-// TODO
-// Nomenclature change, maybe?
-// A SOL contains a list of materials, models (bodies), entities, collision shapes.
-// It's a self-contained world of objects, but each SOL is completely separate.
-// Tempted to load the models, entities, etc, into a shared world instead. Pros, cons?
 function GLSolid(gl, sol) {
   this.bodies = null;
 
@@ -21,26 +16,6 @@ function GLSolid(gl, sol) {
     this.createBodyMeshes(gl);
   }
 }
-
-// TODO
-// drawEntities()
-// something something
-function Entity() {
-  this.moverTranslate = null;
-  this.moverRotate = null;
-  // this.modelID = model identified as "body #m of SOL #n"
-  // this.modelID = "SOL #n"? nested SolidModel for items, etc. complicated.
-  //     model = new CoinModel(); model.draw(); let the model hide the SOL(s) inside.
-  // this.modelID = model loaded from OBJ
-  // etc
-}
-// drawEntities(entityList) {
-//   for (ent)
-//     model = getModel(ent.modelID)
-//     matrix = ent.matrix
-//     set uniforms
-//     model.draw()
-// }
 
 /*
  * Load body meshes and initial transform from SOL.

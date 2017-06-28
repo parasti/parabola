@@ -164,8 +164,26 @@ function init() {
   });
 
   window.addEventListener('wheel', function(e) {
-    view.moveSpeed(-Math.sign(e.deltaY));
+    view.setMoveSpeed(-Math.sign(e.deltaY));
     e.preventDefault();
+  });
+
+  var textureInput = document.getElementById('textures');
+  textureInput.addEventListener('change', function(e) {
+    state.enableTextures = this.checked;
+  });
+
+  var materialElem = document.getElementById('materials');
+  var listMaterials = document.getElementById('listMaterials');
+  listMaterials.addEventListener('click', function(e) {
+    if (sol) {
+      var html = '<select>';
+      for (var i = 0; i < sol.mv.length; ++i) {
+        html += '<option>' + sol.mv[i].f + '</option>';
+      }
+      html += '</select>'
+      materialElem.innerHTML = html;
+    }
   });
 }
 

@@ -151,7 +151,7 @@ View.prototype.moveRight = function(b) {
   this.right = b;
 }
 
-View.prototype.moveSpeed = function(dir) {
+View.prototype.setMoveSpeed = function(dir) {
   if (dir > 0) {
     this.speed = Math.max(View.SPEED, this.speed + View.SPEED);
   } else if (dir < 0) {

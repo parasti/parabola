@@ -9,26 +9,8 @@ var Path = require('./solid.js').Path;
  * Walk the path entities in life. Don't we all.
  */
 function Mover(path) {
-  if (!(this instanceof Mover)) {
-    return new Mover(path);
-  }
-
   this.path = path || null;
   this.time = 0;
-}
-
-/*
- * Count movers for replay compatibility purposes.
- */
-require('./solid.js').Solid.prototype._indexBodyMovers = function(body, moverTranslate, moverRotate) {
-  this._moversByIndex = this._moversByIndex || [];
-
-  if (body.pi >= 0) {
-    this._moversByIndex.push(moverTranslate);
-  }
-  if (body.pj >= 0 && body.pj != body.pi) {
-    this._moversByIndex.push(moverRotate);
-  }
 }
 
 Mover.fromSolBody = function(sol, body) {
@@ -45,13 +27,11 @@ Mover.fromSolBody = function(sol, body) {
     moverRotate = new Mover(sol.pv[body.pj]);
   }
 
-  sol._indexBodyMovers(body, moverTranslate, moverRotate);
-
   return { translate: moverTranslate, rotate: moverRotate };
 }
 
 Mover.erp = function(t) {
-  // erp(float t)
+  // float erp(float t)
   return 3.0 * t * t - 2.0 * t * t * t;
 }
 

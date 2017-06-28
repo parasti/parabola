@@ -1,6 +1,5 @@
 'use strict';
 
-var util = require('./util.js');
 var mtrlImages = require('./mtrl-images.json');
 
 var Mtrl = function () {
@@ -11,6 +10,9 @@ var Mtrl = function () {
   this.h = new Float32Array([0]);
   this.fl = 0;
   this.f = '';
+
+  this.alpha_func = 0;
+  this.alpha_ref = 0.0;
 
   this.tex = null;
 };
@@ -29,34 +31,6 @@ Mtrl.TWO_SIDED = (1 << 3);
 Mtrl.ADDITIVE = (1 << 2);
 Mtrl.CLAMP_S = (1 << 1);
 Mtrl.CLAMP_T = (1 << 0);
-
-Mtrl.load = function (stream) {
-  return (new Mtrl()).load(stream);
-};
-
-/*
- * Load material from a DataStream.
- */
-Mtrl.prototype.load = function (stream) {
-  this.d = stream.getFloat32Array(4);
-  this.a = stream.getFloat32Array(4);
-  this.s = stream.getFloat32Array(4);
-  this.e = stream.getFloat32Array(4);
-  this.h = stream.getFloat32Array(1);
-  this.fl = stream.getInt32();
-
-  this.f = util.getCString(stream.getUint8Array(64));
-
-  if (this.fl & Mtrl.ALPHA_TEST) {
-    this.alpha_func = stream.getInt32();
-    this.alpha_ref = stream.getFloat32();
-  } else {
-    this.alpha_func = 0;
-    this.alpha_ref = 0.0;
-  }
-
-  return this;
-};
 
 Mtrl.prototype.toString = function () {
   return this.f;
@@ -124,7 +98,7 @@ Mtrl.prototype.createTexture = function (gl, img) {
 Mtrl.prototype.draw = function (gl, state) {
   // TODO shadow state locally?
 
-  if (this.tex) {
+  if (state.enableTextures && this.tex) {
     gl.bindTexture(gl.TEXTURE_2D, this.tex);
   } else {
     gl.bindTexture(gl.TEXTURE_2D, state.defaultTexture);

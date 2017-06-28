@@ -1,12 +1,13 @@
 'use strict';
 
 var mat4 = require('gl-matrix').mat4;
-var util = require('./util.js');
+var misc = require('./misc.js');
 
 var GLSolid = require('./gl-solid.js');
 
 function GLState(gl) {
   this.defaultTexture = null;
+  this.enableTextures = true;
 
   this.prog = null;
 
@@ -271,7 +272,7 @@ GLState.prototype.createShaders = function(gl) {
  */
 GLState.prototype.calcPerspective = function(w, h) {
   // TODO pass fov? for teleport effects
-  util.calcPersp(this.perspMatrix, w, h);
+  misc.calcPersp(this.perspMatrix, w, h);
 }
 
 GLState.prototype.loadLevel = function(gl, sol) {

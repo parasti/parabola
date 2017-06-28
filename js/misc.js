@@ -7,36 +7,36 @@ require('typedarray-methods');
 /*
  * Utility namespace.
  */
-var util = {};
+var misc = {};
 
 /*
  * Wrap DataView to automate byte counting and endianness.
  */
-util.DataStream = function (buffer) {
+misc.DataStream = function (buffer) {
   this.view = new DataView(buffer);
   this.position = 0;
 };
 
-util.DataStream.prototype.getInt32 = function () {
+misc.DataStream.prototype.getInt32 = function () {
   var value = this.view.getInt32(this.position, true);
   this.position += 4;
   return value;
 };
 
-util.DataStream.prototype.getFloat32 = function () {
+misc.DataStream.prototype.getFloat32 = function () {
   var value = this.view.getFloat32(this.position, true);
   this.position += 4;
   return value;
 };
 
-util.DataStream.prototype.getUint8Array = function (length) {
+misc.DataStream.prototype.getUint8Array = function (length) {
   // Single bytes are order independent, reuse buffer.
   var value = new Uint8Array(this.view.buffer, this.position, length);
   this.position += length;
   return value;
 };
 
-util.DataStream.prototype.getFloat32Array = function (length) {
+misc.DataStream.prototype.getFloat32Array = function (length) {
   // Float bytes are not, convert values to a new array.
   var value = new Float32Array(length);
   for (var i = 0; i < length; ++i)
@@ -44,7 +44,7 @@ util.DataStream.prototype.getFloat32Array = function (length) {
   return value;
 };
 
-util.DataStream.prototype.getInt32Array = function (length) {
+misc.DataStream.prototype.getInt32Array = function (length) {
   var value = new Int32Array(length);
   for (var i = 0; i < length; ++i) {
     value[i] = this.getInt32();
@@ -55,7 +55,7 @@ util.DataStream.prototype.getInt32Array = function (length) {
 /*
  * Parse UTF-8 bytes into an array of Unicode codepoints.
  */
-util.utf8ToCodePoints = function (byteArray) {
+misc.utf8ToCodePoints = function (byteArray) {
   function addUtf8Byte(codePoints, val) {
     if ((val & 0x80) === 0) { // ASCII (0xxx xxxx)
       codePoints.push(val);
@@ -79,7 +79,7 @@ util.utf8ToCodePoints = function (byteArray) {
 /*
  * Get a null-terminated string from a Uint8Array.
  */
-util.getCString = function (byteArray, fromIndex) {
+misc.getCString = function (byteArray, fromIndex) {
   fromIndex = fromIndex || 0;
   var toIndex = byteArray.indexOf(0, fromIndex);
   if (toIndex < 0)
@@ -87,13 +87,13 @@ util.getCString = function (byteArray, fromIndex) {
 
   var stringBytes = byteArray.subarray(fromIndex, toIndex);
 
-  return String.fromCodePoint.apply(null, util.utf8ToCodePoints(stringBytes));
+  return String.fromCodePoint.apply(null, misc.utf8ToCodePoints(stringBytes));
 };
 
 /*
  * Calculate a perspective matrix.
  */
-util.calcPersp = function(M, w, h) {
+misc.calcPersp = function(M, w, h) {
   var a = w / h;
   var fov = 50;
   var n = 0.1;
@@ -126,4 +126,4 @@ util.calcPersp = function(M, w, h) {
 /*
  * Node.js export.
  */
-module.exports = util;
+module.exports = misc;

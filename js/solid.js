@@ -4,7 +4,7 @@ var mat4 = require('gl-matrix').mat4;
 var vec3 = require('gl-matrix').vec3;
 var quat = require('gl-matrix').quat;
 
-var util = require('./util.js');
+var misc = require('./misc.js');
 
 var Mtrl = require('./mtrl.js');
 var Mesh = require('./mesh.js');
@@ -14,9 +14,30 @@ var View = require('./view.js');
  * Neverball SOL file.
  */
 function Solid() {
-  if (!(this instanceof Solid)) {
-    return new Solid();
-  }
+  this.magic = 0;
+  this.version = 0;
+
+  this.av = null;
+  this.dv = null;
+  this.mv = null;
+  this.vv = null;
+  this.ev = null;
+  this.sv = null;
+  this.tv = null;
+  this.ov = null;
+  this.gv = null;
+  this.lv = null;
+  this.nv = null;
+  this.pv = null;
+  this.bv = null;
+  this.hv = null;
+  this.zv = null;
+  this.jv = null;
+  this.xv = null;
+  this.rv = null;
+  this.uv = null;
+  this.wv = null;
+  this.iv = null;
 };
 
 Solid.MAGIC = 0x4c4f53af;
@@ -27,7 +48,7 @@ Solid.VERSION = 7;
  */
 Solid.load = function (buffer) {
   // TODO move to a worker
-  var stream = new util.DataStream(buffer);
+  var stream = new misc.DataStream(buffer);
 
   var magic = stream.getInt32();
 
@@ -71,85 +92,86 @@ Solid.load = function (buffer) {
   sol.version = version;
 
   sol.av = stream.getUint8Array(ac);
-  sol.loadDicts(stream, dc);
-  sol.loadMtrls(stream, mc);
-  sol.loadVerts(stream, vc);
-  sol.loadEdges(stream, ec);
-  sol.loadSides(stream, sc);
-  sol.loadTexcs(stream, tc);
-  sol.loadOffs(stream, oc);
-  sol.loadGeoms(stream, gc);
-  sol.loadLumps(stream, lc);
-  sol.loadNodes(stream, nc);
-  sol.loadPaths(stream, pc);
-  sol.loadBodies(stream, bc);
-  sol.loadItems(stream, hc);
-  sol.loadGoals(stream, zc);
-  sol.loadJumps(stream, jc);
-  sol.loadSwitches(stream, xc);
-  sol.loadBills(stream, rc);
-  sol.loadBalls(stream, uc);
-  sol.loadViews(stream, wc);
+  sol.dv = loadDicts(stream, dc, sol.av);
+  sol.mv = loadMtrls(stream, mc);
+  sol.vv = loadVerts(stream, vc);
+  sol.ev = loadEdges(stream, ec);
+  sol.sv = loadSides(stream, sc);
+  sol.tv = loadTexcs(stream, tc);
+  sol.ov = loadOffs(stream, oc);
+  sol.gv = loadGeoms(stream, gc);
+  sol.lv = loadLumps(stream, lc);
+  sol.nv = loadNodes(stream, nc);
+  sol.pv = loadPaths(stream, pc);
+  sol.bv = loadBodies(stream, bc);
+  sol.hv = loadItems(stream, hc);
+  sol.zv = loadGoals(stream, zc);
+  sol.jv = loadJumps(stream, jc);
+  sol.xv = loadSwitches(stream, xc);
+  sol.rv = loadBills(stream, rc);
+  sol.uv = loadBalls(stream, uc);
+  sol.wv = loadViews(stream, wc);
   sol.iv = stream.getInt32Array(ic);
 
   return sol;
 };
 
-Solid.jsonStringifyReplacer = function(key, val) {
-  if (key.startsWith('_')) {
-    return void 0;
-  }
-  if (key === 'tex') { // Mtrl
-    return void 0;
-  }
-  if (key === 'next') { // Path
-    return void 0;
-  }
-  if (val instanceof Uint8Array || val instanceof Float32Array || val instanceof Int32Array) {
-    return Array.from(val);
-  }
-  if (val.toFixed) {
-    return Number(val.toFixed(7));
-  }
-  return val;
-}
-
-Solid.prototype.loadDicts = function (stream, count) {
+function loadDicts(stream, count, bytes) {
   var dicts = {};
 
   for (var i = 0; i < count; ++i) {
     var ai = stream.getInt32();
     var aj = stream.getInt32();
 
-    var key = util.getCString(this.av, ai);
-    var val = util.getCString(this.av, aj);
+    var key = misc.getCString(bytes, ai);
+    var val = misc.getCString(bytes, aj);
 
     dicts[key] = val;
   }
-  this.dv = dicts;
+
+  return dicts;
 };
 
-Solid.prototype.loadMtrls = function (stream, count) {
+function loadMtrls(stream, count) {
   var mtrls = [];
 
   for (var i = 0; i < count; ++i) {
-    mtrls.push(Mtrl.load(stream));
+    var mtrl = new Mtrl();
+
+    mtrl.d = stream.getFloat32Array(4);
+    mtrl.a = stream.getFloat32Array(4);
+    mtrl.s = stream.getFloat32Array(4);
+    mtrl.e = stream.getFloat32Array(4);
+    mtrl.h = stream.getFloat32Array(1);
+    mtrl.fl = stream.getInt32();
+
+    mtrl.f = misc.getCString(stream.getUint8Array(64));
+
+    if (mtrl.fl & Mtrl.ALPHA_TEST) {
+      mtrl.alpha_func = stream.getInt32();
+      mtrl.alpha_ref = stream.getFloat32();
+    } else {
+      mtrl.alpha_func = 0;
+      mtrl.alpha_ref = 0.0;
+    }
+
+    mtrls.push(mtrl);
   }
 
-  this.mv = mtrls;
+  return mtrls;
 };
 
-Solid.prototype.loadVerts = function (stream, count) {
+function loadVerts(stream, count) {
   var verts = [];
 
   for (var i = 0; i < count; ++i) {
     verts.push(stream.getFloat32Array(3));
   }
 
-  this.vv = verts;
+  return verts;
 };
 
-Solid.prototype.loadEdges = function (stream, count) {
+function loadEdges(stream, count) {
   var edges = [];
 
   for (var i = 0; i < count; ++i) {
@@ -159,10 +181,10 @@ Solid.prototype.loadEdges = function (stream, count) {
     });
   }
 
-  this.ev = edges;
+  return edges;
 };
 
-Solid.prototype.loadSides = function (stream, count) {
+function loadSides(stream, count) {
   var sides = [];
 
   for (var i = 0; i < count; ++i) {
@@ -172,20 +194,20 @@ Solid.prototype.loadSides = function (stream, count) {
     });
   }
 
-  this.sv = sides;
+  return sides;
 };
 
-Solid.prototype.loadTexcs = function (stream, count) {
+function loadTexcs(stream, count) {
   var texcs = [];
 
   for (var i = 0; i < count; ++i) {
     texcs.push(stream.getFloat32Array(2));
   }
 
-  this.tv = texcs;
+  return texcs;
 };
 
-Solid.prototype.loadOffs = function (stream, count) {
+function loadOffs(stream, count) {
   var offs = [];
 
   for (var i = 0; i < count; ++i) {
@@ -196,10 +218,10 @@ Solid.prototype.loadOffs = function (stream, count) {
     });
   }
 
-  this.ov = offs;
+  return offs;
 };
 
-Solid.prototype.loadGeoms = function (stream, count) {
+function loadGeoms(stream, count) {
   var geoms = [];
 
   for (var i = 0; i < count; ++i) {
@@ -211,10 +233,10 @@ Solid.prototype.loadGeoms = function (stream, count) {
     });
   }
 
-  this.gv = geoms;
+  return geoms;
 };
 
-Solid.prototype.loadLumps = function (stream, count) {
+function loadLumps(stream, count) {
   var lumps = [];
 
   for (var i = 0; i < count; ++i) {
@@ -231,10 +253,10 @@ Solid.prototype.loadLumps = function (stream, count) {
     });
   }
 
-  this.lv = lumps;
+  return lumps;
 };
 
-Solid.prototype.loadNodes = function (stream, count) {
+function loadNodes(stream, count) {
   var nodes = [];
 
   for (var i = 0; i < count; ++i) {
@@ -247,7 +269,7 @@ Solid.prototype.loadNodes = function (stream, count) {
     });
   }
 
-  this.nv = nodes;
+  return nodes;
 };
 
 // TODO
@@ -256,7 +278,7 @@ function Path() {
 
 Path.ORIENTED = 1;
 
-Solid.prototype.loadPaths = function (stream, count) {
+function loadPaths(stream, count) {
   var paths = [];
 
   for (var i = 0; i < count; ++i) {
@@ -289,10 +311,10 @@ Solid.prototype.loadPaths = function (stream, count) {
     path.next = paths[path.pi] || null;
   }
 
-  this.pv = paths;
+  return paths;
 };
 
-Solid.prototype.loadBodies = function (stream, count) {
+function loadBodies(stream, count) {
   var bodies = [];
 
   for (var i = 0; i < count; ++i) {
@@ -310,10 +332,10 @@ Solid.prototype.loadBodies = function (stream, count) {
       bodies[i].pj = bodies[i].pi;
   }
 
-  this.bv = bodies;
+  return bodies;
 };
 
-Solid.prototype.loadItems = function (stream, count) {
+function loadItems(stream, count) {
   var items = [];
 
   for (var i = 0; i < count; ++i) {
@@ -324,10 +346,10 @@ Solid.prototype.loadItems = function (stream, count) {
     });
   }
 
-  this.hv = items;
+  return items;
 };
 
-Solid.prototype.loadGoals = function (stream, count) {
+function loadGoals(stream, count) {
   var goals = [];
 
   for (var i = 0; i < count; ++i) {
@@ -337,10 +359,10 @@ Solid.prototype.loadGoals = function (stream, count) {
     });
   }
 
-  this.zv = goals;
+  return goals;
 };
 
-Solid.prototype.loadJumps = function (stream, count) {
+function loadJumps(stream, count) {
   var jumps = [];
 
   for (var i = 0; i < count; ++i) {
@@ -351,10 +373,10 @@ Solid.prototype.loadJumps = function (stream, count) {
     });
   }
 
-  this.jv = jumps;
+  return jumps;
 };
 
-Solid.prototype.loadSwitches = function (stream, count) {
+function loadSwitches(stream, count) {
   var switches = [];
 
   for (var i = 0; i < count; ++i) {
@@ -368,10 +390,10 @@ Solid.prototype.loadSwitches = function (stream, count) {
     });
   }
 
-  this.xv = switches;
+  return switches;
 };
 
-Solid.prototype.loadBills = function (stream, count) {
+function loadBills(stream, count) {
   var bills = [];
 
   for (var i = 0; i < count; ++i) {
@@ -390,10 +412,10 @@ Solid.prototype.loadBills = function (stream, count) {
     });
   }
 
-  this.rv = bills;
+  return bills;
 };
 
-Solid.prototype.loadBalls = function (stream, count) {
+function loadBalls(stream, count) {
   var balls = [];
 
   for (var i = 0; i < count; ++i) {
@@ -403,10 +425,10 @@ Solid.prototype.loadBalls = function (stream, count) {
     });
   }
 
-  this.uv = balls;
+  return balls;
 };
 
-Solid.prototype.loadViews = function (stream, count) {
+function loadViews(stream, count) {
   var views = [];
 
   for (var i = 0; i < count; ++i) {
@@ -416,7 +438,7 @@ Solid.prototype.loadViews = function (stream, count) {
     });
   }
 
-  this.wv = views;
+  return views;
 };
 
 /*
