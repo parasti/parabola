@@ -1,12 +1,8 @@
 'use strict';
 
-var Mesh = function (count, mtrl) {
-  if (!(this instanceof Mesh)) {
-    return new Mesh(count, mtrl);
-  }
-
+var Mesh = function (numVerts, mtrl) {
   this.mtrl = mtrl || null;
-  this.verts = count ? new Float32Array(Mesh.stride * count) : null;
+  this.verts = numVerts ? new Float32Array(Mesh.stride * numVerts) : null;
   this.count = 0;
 };
 
@@ -38,10 +34,12 @@ Mesh.prototype.createVBO = function (gl) {
 };
 
 /*
- * Setup material and draw the mesh.
+ * Setup mesh material and draw the mesh.
  */
 Mesh.prototype.draw = function (gl, state) {
-  this.mtrl.draw(gl, state);
+  if (this.mtrl) {
+    this.mtrl.draw(gl, state);
+  }
 
   if (this.vbo) {
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
