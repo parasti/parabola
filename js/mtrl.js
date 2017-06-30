@@ -1,5 +1,9 @@
 'use strict';
 
+var misc = require('./misc.js');
+
+var mtrlImages = require('./mtrl-images.json');
+
 var Mtrl = function () {
   this.d = new Float32Array([0.8, 0.8, 0.8, 1.0]);
   this.a = new Float32Array([0.2, 0.2, 0.2, 1.0]);
@@ -124,11 +128,8 @@ Mtrl.prototype.draw = function (gl, state) {
 };
 
 /*
- * Download the material image and create a texture.
+ * Download material image and create a texture.
  */
-
-var mtrlImages = require('./mtrl-images.json');
-
 Mtrl.prototype.loadTexture = function (gl) {
   if (this._loading) {
     return;
@@ -138,14 +139,14 @@ Mtrl.prototype.loadTexture = function (gl) {
     return;
   }
   if (!mtrlImages[this]) {
-    console.log('Material ' + this + ' doesn\'t have an image');
+    console.log('Material ' + this + ' is unknown');
     return;
   }
 
   // Prevent multiple loads. This is probably dumb.
   this._loading = true;
   var self = this;
-  require('./data').fetchImage(mtrlImages[self.f], function() {
+  misc.fetchDataImage(mtrlImages[self.f], function() {
     self.createTexture(gl, this);
     delete self._loading;
   });

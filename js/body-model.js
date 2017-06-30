@@ -6,16 +6,19 @@ var vec3 = require('gl-matrix').vec3,
 
 var Mover = require('./mover.js');
 
-function Body() {
+function BodyModel() {
+  if (!(this instanceof BodyModel)) {
+    return new BodyModel();
+  }
+
+  this.meshes = null;
+
   // TODO not GL related
-  this.movers = null;
+  this.moverTranslate = null;
+  this.moverRotate = null;
 
   this._modelMatrix = mat4.create();
 
-  // All meshes.
-  this.meshes = null;
-
-  // Sorted meshes.
   this.opaqueMeshes = null;
   this.opaqueDecalMeshes = null;
   this.transparentDecalMeshes = null;
@@ -23,12 +26,22 @@ function Body() {
   this.reflectiveMeshes = null;
 }
 
-Body.prototype.loadMeshes = function(sol) {
-  this.meshes = sol.getBodyMeshes(this);
-  this.sortMeshes();
+BodyModel.fromSolBody = function(sol, solBody) {
+  var body = new BodyModel();
+
+  body.meshes = sol.getBodyMeshes(solBody);
+
+  // TODO not GL related
+  var movers = Mover.fromSolBody(sol, solBody);
+  body.moverTranslate = movers.translate;
+  body.moverRotate = movers.rotate;
+
+  body.sortMeshes();
+
+  return body;
 }
 
-Body.prototype.sortMeshes = function() {
+BodyModel.prototype.sortMeshes = function() {
   var opaqueMeshes = [];
   var opaqueDecalMeshes = [];
   var transparentDecalMeshes = [];
@@ -59,25 +72,24 @@ Body.prototype.sortMeshes = function() {
   this.reflectiveMeshes = reflectiveMeshes;
 }
 
-Body.prototype.drawMeshType = function(gl, state, meshType) {
-  // String concat for every mesh of every body every frame. Whoo.
-  var meshes = this[meshType + 'Meshes'];
-
+function drawMeshes(gl, state, meshes) {
   for (var i = 0; i < meshes.length; ++i) {
     meshes[i].draw(gl, state);
   }
 }
 
+BodyModel.prototype.drawMeshType = function(gl, state, meshType) {
+  gl.uniformMatrix4fv(state.uModelID, false, this.getTransform());
+  drawMeshes(gl, state, this[meshType + 'Meshes']);
+}
+
 /*
  * Update mover state.
  */
-Body.prototype.step = function(dt) {
-  if (!this.movers) {
-    return;
-  }
-
-  var moverTranslate = this.movers.translate;
-  var moverRotate = this.movers.rotate;
+BodyModel.prototype.step = function(dt) {
+  // TODO not GL related
+  var moverTranslate = this.moverTranslate;
+  var moverRotate = this.moverRotate;
 
   if (moverTranslate === moverRotate) {
     moverTranslate.step(dt);
@@ -90,21 +102,18 @@ Body.prototype.step = function(dt) {
 /*
  * Get entity transform from mover state.
  */
-Body.prototype.getTransform = (function() {
+BodyModel.prototype.getTransform = (function() {
   var p = vec3.create();
   var e = quat.create();
 
   return function() {
-    if (this.movers) {
-      this.movers.translate.getPosition(p);
-      this.movers.rotate.getOrientation(e);
+    this.moverTranslate.getPosition(p);
+    this.moverRotate.getOrientation(e);
 
-      return mat4.fromRotationTranslation(this._modelMatrix, e, p);
-    } else {
-      // TODO
-      return mat4.identity(this._modelMatrix);
-    }
+    return mat4.fromRotationTranslation(this._modelMatrix, e, p);
   }
 })();
 
-module.exports = Body;
+
+
+module.exports = BodyModel;

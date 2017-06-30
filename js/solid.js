@@ -5,17 +5,15 @@ var vec3 = require('gl-matrix').vec3;
 var quat = require('gl-matrix').quat;
 
 var misc = require('./misc.js');
-var data = require('./data.js');
 
 var Mtrl = require('./mtrl.js');
 var Mesh = require('./mesh.js');
-var Body = require('./body.js');
 var View = require('./view.js');
 
 /*
  * Neverball SOL file.
  */
-function Solid(buffer) {
+function Solid() {
   this.magic = 0;
   this.version = 0;
 
@@ -44,16 +42,6 @@ function Solid(buffer) {
 
 Solid.MAGIC = 0x4c4f53af;
 Solid.VERSION = 7;
-
-/*
- * Download and parse a SOL file at path (relative to data).
- */
-Solid.fetch = function(path, onload) {
-  data.fetchBinaryFile(path, function(e) {
-    var sol = Solid.load(this.response);
-    onload.call(sol, e);
-  });
-}
 
 /*
  * Load a SOL file from the given ArrayBuffer.
@@ -330,20 +318,18 @@ function loadBodies(stream, count) {
   var bodies = [];
 
   for (var i = 0; i < count; ++i) {
-    var body = new Body();
+    bodies.push({
+      pi: stream.getInt32(),
+      pj: stream.getInt32(),
+      ni: stream.getInt32(),
+      l0: stream.getInt32(),
+      lc: stream.getInt32(),
+      g0: stream.getInt32(),
+      gc: stream.getInt32()
+    });
 
-    body.pi = stream.getInt32();
-    body.pj = stream.getInt32();
-    body.ni = stream.getInt32();
-    body.l0 = stream.getInt32();
-    body.lc = stream.getInt32();
-    body.g0 = stream.getInt32();
-    body.gc = stream.getInt32();
-
-    if (body.pj < 0)
-      body.pj = body.pi;
-
-    bodies.push(body);
+    if (bodies[i].pj < 0)
+      bodies[i].pj = bodies[i].pi;
   }
 
   return bodies;
@@ -456,6 +442,78 @@ function loadViews(stream, count) {
 };
 
 /*
+ * Collect body geoms into an array indexed by SOL material ID.
+ */
+function addGeomByMtrl(geoms, geom) {
+  var mi = geom.mi;
+  geoms[mi] = geoms[mi] || [];
+  geoms[mi].push(geom);
+}
+
+Solid.prototype.getBodyGeomsByMtrl = function (body) {
+  var geoms = [];
+
+  for (var gi = 0; gi < body.gc; ++gi) {
+    addGeomByMtrl(geoms, this.gv[this.iv[body.g0 + gi]]);
+  }
+
+  for (var li = 0; li < body.lc; ++li) {
+    var lump = this.lv[body.l0 + li];
+    for (var gi = 0; gi < lump.gc; ++gi) {
+      addGeomByMtrl(geoms, this.gv[this.iv[lump.g0 + gi]]);
+    }
+  }
+
+  return geoms;
+};
+
+/*
+ * Collect vertex attributes described by a SOL offs into a Float32Array.
+ */
+Solid.prototype.getVert = function (vert, offs) {
+  var vp = this.vv[offs.vi];
+  var sp = this.sv[offs.si].n;
+  var tp = this.tv[offs.ti];
+
+  vert[0] = vp[0];
+  vert[1] = vp[1];
+  vert[2] = vp[2];
+
+  vert[3] = sp[0];
+  vert[4] = sp[1];
+  vert[5] = sp[2];
+
+  vert[6] = tp[0];
+  vert[7] = tp[1];
+};
+
+/*
+ * Create a list of meshes from a SOL body, mesh per each used material.
+ */
+Solid.prototype.getBodyMeshes = function (body) {
+  var meshes = [];
+  var self = this;
+
+  this.getBodyGeomsByMtrl(body).forEach(function (geoms, mi) {
+    var mtrl = self.mv[mi];
+    var mesh = new Mesh(geoms.length * 3, mtrl);
+
+    geoms.forEach(function (geom) {
+      mesh.addVertFromSol(self, self.ov[geom.oi]);
+      mesh.addVertFromSol(self, self.ov[geom.oj]);
+      mesh.addVertFromSol(self, self.ov[geom.ok]);
+    });
+
+    meshes.push(mesh);
+  });
+
+  return meshes;
+};
+
+/*
  * Exports.
  */
-module.exports = Solid;
+module.exports = {
+  Solid: Solid,
+  Path: Path
+};

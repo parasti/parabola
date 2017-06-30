@@ -3,10 +3,11 @@
 var mat4 = require('gl-matrix').mat4;
 var screenfull = require('screenfull');
 
+var misc = require('./misc.js');
 
+var Solid = require('./solid.js').Solid;
 var GLState = require('./gl-state.js');
 var View = require('./view.js');
-var Solid = require('./solid-full');
 
 var getDeltaTime = (function () {
   var lastTime = 0.0;
@@ -30,10 +31,9 @@ function init() {
   var sol = null;
   var view = new View();
 
-  Solid.fetch('map-fwp/adventure.sol', function(e) {
-    sol = this;
+  misc.fetchDataFile('map-fwp/adventure.sol', function(e) {
+    sol = Solid.load(this.response);
     state.loadLevel(gl, sol);
-    view.setFromSol(sol, 1.0);
   });
 
   function step(currTime) {
@@ -43,9 +43,6 @@ function init() {
     view.mouseLook(0, 0); // lerp until stop
     view.step(dt);
 
-    if (sol) {
-      sol.step(dt);
-    }
     state.step(dt);
 
     mat4.copy(state.viewMatrix, view.getMatrix());
