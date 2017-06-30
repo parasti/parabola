@@ -4,6 +4,7 @@ var mat4 = require('gl-matrix').mat4;
 var screenfull = require('screenfull');
 
 var misc = require('./misc.js');
+var data = require('./data.js');
 
 var Solid = require('./solid.js').Solid;
 var GLState = require('./gl-state.js');
@@ -31,9 +32,11 @@ function init() {
   var sol = null;
   var view = new View();
 
-  misc.fetchDataFile('map-fwp/adventure.sol', function(e) {
-    sol = Solid.load(this.response);
+  Solid.fetch('map-fwp/adventure.sol', function() {
+    sol = this;
+
     state.loadLevel(gl, sol);
+    view.setFromSol(sol, 1.0);
   });
 
   function step(currTime) {

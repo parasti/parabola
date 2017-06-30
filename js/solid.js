@@ -5,6 +5,7 @@ var vec3 = require('gl-matrix').vec3;
 var quat = require('gl-matrix').quat;
 
 var misc = require('./misc.js');
+var data = require('./data');
 
 var Mtrl = require('./mtrl.js');
 var Mesh = require('./mesh.js');
@@ -42,6 +43,16 @@ function Solid() {
 
 Solid.MAGIC = 0x4c4f53af;
 Solid.VERSION = 7;
+
+/*
+ * Download and load the SOL at relative path.
+ */
+Solid.fetch = function(path, onload) {
+  data.fetchBinaryFile(path, function(e) {
+    var sol = Solid.load(this.response);
+    onload.call(sol, e);
+  });
+}
 
 /*
  * Load a SOL file from the given ArrayBuffer.

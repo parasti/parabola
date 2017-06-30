@@ -1,6 +1,6 @@
 'use strict';
 
-var misc = require('./misc.js');
+var data = require('./data.js');
 
 var mtrlImages = require('./mtrl-images.json');
 
@@ -146,7 +146,7 @@ Mtrl.prototype.loadTexture = function (gl) {
   // Prevent multiple loads. This is probably dumb.
   this._loading = true;
   var self = this;
-  misc.fetchDataImage(mtrlImages[self.f], function() {
+  data.fetchImage(mtrlImages[self.f], function() {
     self.createTexture(gl, this);
     delete self._loading;
   });
