@@ -7,38 +7,28 @@ var vec3 = require('gl-matrix').vec3,
 var Mover = require('./mover.js');
 
 function BodyModel() {
-  if (!(this instanceof BodyModel)) {
-    return new BodyModel();
-  }
-
   this.meshes = null;
-
-  // TODO not GL related
-  this.moverTranslate = null;
-  this.moverRotate = null;
-
-  this._modelMatrix = mat4.create();
 
   this.opaqueMeshes = null;
   this.opaqueDecalMeshes = null;
   this.transparentDecalMeshes = null;
   this.transparentMeshes = null;
   this.reflectiveMeshes = null;
+
+  // TODO not GL related
+  this.movers = null;
+  this._modelMatrix = mat4.create();
 }
 
 BodyModel.fromSolBody = function(sol, solBody) {
-  var body = new BodyModel();
-
-  body.meshes = sol.getBodyMeshes(solBody);
+  var model = new BodyModel();
+  model.meshes = sol.getBodyMeshes(solBody);
+  model.sortMeshes();
 
   // TODO not GL related
-  var movers = Mover.fromSolBody(sol, solBody);
-  body.moverTranslate = movers.translate;
-  body.moverRotate = movers.rotate;
+  model.movers = Mover.fromSolBody(sol, solBody);
 
-  body.sortMeshes();
-
-  return body;
+  return model;
 }
 
 BodyModel.prototype.sortMeshes = function() {
@@ -79,8 +69,12 @@ function drawMeshes(gl, state, meshes) {
 }
 
 BodyModel.prototype.drawMeshType = function(gl, state, meshType) {
-  gl.uniformMatrix4fv(state.uModelID, false, this.getTransform());
-  drawMeshes(gl, state, this[meshType + 'Meshes']);
+  gl.uniformMatrix4fv(state.uModelID, false, this.getTransform()); // TODO not model related
+
+  var meshes = this[meshType + 'Meshes'];
+  for (var i = 0; i < meshes.length; ++i) {
+    meshes[i].draw(gl, state);
+  }
 }
 
 /*
@@ -88,8 +82,8 @@ BodyModel.prototype.drawMeshType = function(gl, state, meshType) {
  */
 BodyModel.prototype.step = function(dt) {
   // TODO not GL related
-  var moverTranslate = this.moverTranslate;
-  var moverRotate = this.moverRotate;
+  var moverTranslate = this.movers.translate;
+  var moverRotate = this.movers.rotate;
 
   if (moverTranslate === moverRotate) {
     moverTranslate.step(dt);
@@ -107,8 +101,8 @@ BodyModel.prototype.getTransform = (function() {
   var e = quat.create();
 
   return function() {
-    this.moverTranslate.getPosition(p);
-    this.moverRotate.getOrientation(e);
+    this.movers.translate.getPosition(p);
+    this.movers.rotate.getOrientation(e);
 
     return mat4.fromRotationTranslation(this._modelMatrix, e, p);
   }
