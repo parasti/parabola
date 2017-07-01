@@ -3,7 +3,7 @@
 var mat4 = require('gl-matrix').mat4;
 var misc = require('./misc.js');
 
-var GLSolid = require('./gl-solid.js');
+var SolidModel = require('./solid-model.js');
 
 function GLState(gl) {
   this.defaultTexture = null;
@@ -276,7 +276,7 @@ GLState.prototype.calcPerspective = function(w, h) {
 }
 
 GLState.prototype.loadLevel = function(gl, sol) {
-  this.levelModel = new GLSolid(gl, sol);
+  this.levelModel = new SolidModel(gl, sol);
 }
 
 GLState.prototype.draw = function(gl) {
