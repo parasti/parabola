@@ -34,9 +34,12 @@ function init() {
 
   Solid.fetch('map-fwp/adventure.sol', function() {
     sol = this;
-
     state.loadLevel(gl, sol);
     view.setFromSol(sol, 1.0);
+  });
+
+  Solid.fetch('item/coin/coin.sol', function() {
+    state.loadItem(gl, this);
   });
 
   function step(currTime) {

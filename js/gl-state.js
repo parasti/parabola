@@ -35,6 +35,7 @@ function GLState(gl) {
   }
 
   this.levelModel = null;
+  this.itemModel = null; // TODO
 }
 
 // Some WebGL fun:
@@ -279,6 +280,10 @@ GLState.prototype.loadLevel = function(gl, sol) {
   this.levelModel = new SolidModel(gl, sol);
 }
 
+GLState.prototype.loadItem = function(gl, sol) {
+  this.itemModel = new SolidModel(gl, sol);
+}
+
 GLState.prototype.draw = function(gl) {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -292,7 +297,16 @@ GLState.prototype.draw = function(gl) {
     gl.uniformMatrix4fv(this.uViewID, false, this.viewMatrix);
 
     if (this.levelModel) {
+      gl.enableVertexAttribArray(this.aPositionID);
+      gl.enableVertexAttribArray(this.aNormalID);
+      gl.enableVertexAttribArray(this.aTexCoordID);
+
       this.levelModel.drawBodies(gl, this);
+      this.levelModel.drawItems(gl, this);
+      
+      gl.disableVertexAttribArray(this.aPositionID);
+      gl.disableVertexAttribArray(this.aNormalID);
+      gl.disableVertexAttribArray(this.aTexCoordID);
     }
 
     gl.useProgram(null);
@@ -302,6 +316,9 @@ GLState.prototype.draw = function(gl) {
 GLState.prototype.step = function(dt) {
   if (this.levelModel) {
     this.levelModel.step(dt);
+  }
+  if (this.itemModel) {
+    //this.itemModel.step(dt);
   }
 }
 

@@ -4,7 +4,9 @@ var vec3 = require('gl-matrix').vec3,
     mat4 = require('gl-matrix').mat4,
     quat = require('gl-matrix').quat;
 
-function Entity() {
+function Entity(type) {
+  this.type = type || 'generic';
+
   this.model = null;
 
   this.movers = null;

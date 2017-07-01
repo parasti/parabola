@@ -26,7 +26,7 @@ SolidModel.prototype.fromSol = function(sol) {
 
   for (var i = 0; i < sol.bv.length; ++i) {
     var solBody = sol.bv[i];
-    var ent = new Entity();
+    var ent = new Entity('body');
 
     // Graphical
     ent.model = BodyModel.fromSolBody(sol, solBody);
@@ -35,6 +35,23 @@ SolidModel.prototype.fromSol = function(sol) {
     ent.movers = Mover.fromSolBody(sol, solBody);
     ent.modelMatrix = mat4.create();
     
+    ents.push(ent);
+  }
+
+  for (var i = 0; i < sol.hv.length; ++i) {
+    var solItem = sol.hv[i];
+
+    if (solItem.t !== 1) { // TODO
+      continue;
+    }
+
+    var ent = new Entity('item');
+
+    ent.value = solItem.n; // TODO
+    // TODO hieararchial transform
+    ent.modelMatrix = mat4.create();
+    mat4.fromTranslation(ent.modelMatrix, solItem.p);
+
     ents.push(ent);
   }
 }
@@ -70,16 +87,15 @@ SolidModel.prototype.drawMeshType = function(gl, state, meshType) {
   for (var i = 0; i < ents.length; ++i) {
     var ent = ents[i];
     var model = ent.model;
-    gl.uniformMatrix4fv(state.uModelID, false, ent.getTransform());
-    model.drawMeshType(gl, state, meshType);
+
+    if (model) {
+      gl.uniformMatrix4fv(state.uModelID, false, ent.getTransform());
+      model.drawMeshType(gl, state, meshType);
+    }
   }
 }
 
 SolidModel.prototype.drawBodies = function(gl, state) {
-  gl.enableVertexAttribArray(state.aPositionID);
-  gl.enableVertexAttribArray(state.aNormalID);
-  gl.enableVertexAttribArray(state.aTexCoordID);
-
   // TODO
   this.drawMeshType(gl, state, 'reflective');
 
@@ -93,10 +109,17 @@ SolidModel.prototype.drawBodies = function(gl, state) {
     this.drawMeshType(gl, state, 'transparent');
   }
   gl.depthMask(true);
+}
 
-  gl.disableVertexAttribArray(this.aPositionID);
-  gl.disableVertexAttribArray(this.aNormalID);
-  gl.disableVertexAttribArray(this.aTexCoordID);
+SolidModel.prototype.drawItems = function(gl, state) {
+  var ents = this.ents;
+
+  for (var i = 0; i < ents.length; ++i) {
+    if (ents[i].type === 'item') {
+      // TODO hierarchial transform
+      state.itemModel.drawBodies(gl, state);
+    }
+  }
 }
 
 module.exports = SolidModel;
