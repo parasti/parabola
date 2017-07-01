@@ -91,7 +91,7 @@ function init() {
       return;
     }
 
-    misc.loadFile(this.files[0], function(e) {
+    data.loadFile(this.files[0], function(e) {
       sol = Solid.load(this.result);
       state.loadLevel(gl, sol);
     });

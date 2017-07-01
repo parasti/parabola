@@ -40,7 +40,7 @@ SolidModel.prototype.fromSol = function(sol) {
 }
 
 SolidModel.prototype.step = function(dt) {
-  // TODO keep a list of entities that need this
+  // TODO keep a list of entities that need this?
   for (var i = 0; i < this.ents.length; ++i) {
     this.ents[i].step(dt);
   }
