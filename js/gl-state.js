@@ -306,18 +306,18 @@ GLState.prototype.draw = function(gl) {
     gl.uniformMatrix4fv(this.uPerspID, false, this.perspMatrix);
     gl.uniformMatrix4fv(this.uViewID, false, this.viewMatrix);
 
-    if (this.levelModel) {
-      gl.enableVertexAttribArray(this.aPositionID);
-      gl.enableVertexAttribArray(this.aNormalID);
-      gl.enableVertexAttribArray(this.aTexCoordID);
+    gl.enableVertexAttribArray(this.aPositionID);
+    gl.enableVertexAttribArray(this.aNormalID);
+    gl.enableVertexAttribArray(this.aTexCoordID);
 
-      this.levelModel.drawBodies(gl, this);
+    if (this.levelModel) {
       this.levelModel.drawItems(gl, this);
-      
-      gl.disableVertexAttribArray(this.aPositionID);
-      gl.disableVertexAttribArray(this.aNormalID);
-      gl.disableVertexAttribArray(this.aTexCoordID);
+      this.levelModel.drawBodies(gl, this);
     }
+
+    gl.disableVertexAttribArray(this.aPositionID);
+    gl.disableVertexAttribArray(this.aNormalID);
+    gl.disableVertexAttribArray(this.aTexCoordID);
 
     gl.useProgram(null);
   }
