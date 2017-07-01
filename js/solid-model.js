@@ -40,17 +40,28 @@ SolidModel.prototype.fromSol = function(sol) {
 
   for (var i = 0; i < sol.hv.length; ++i) {
     var solItem = sol.hv[i];
+    var ent;
 
-    if (solItem.t !== 1) { // TODO
+    if (solItem.t === 1) { // TODO
+      ent = new Entity('item_coin');
+    } else {
       continue;
     }
 
-    var ent = new Entity('item');
-
     ent.value = solItem.n; // TODO
+
     // TODO hieararchial transform
     ent.modelMatrix = mat4.create();
-    mat4.fromTranslation(ent.modelMatrix, solItem.p);
+
+    const r = 0.15;
+    const x = solItem.p[0];
+    const y = solItem.p[1];
+    const z = solItem.p[2];
+    mat4.set(ent.modelMatrix,
+      r, 0, 0, 0,
+      0, r, 0, 0,
+      0, 0, r, 0,
+      x, y, z, 1);
 
     ents.push(ent);
   }
@@ -81,32 +92,44 @@ SolidModel.prototype.createObjects = function(gl) {
 /*
  * Render body meshes.
  */
-SolidModel.prototype.drawMeshType = function(gl, state, meshType) {
+SolidModel.prototype.drawMeshType = function(gl, state, meshType, parentMatrix) {
   var ents = this.ents;
+
+  // TODO
+  var modelMatrix;
 
   for (var i = 0; i < ents.length; ++i) {
     var ent = ents[i];
     var model = ent.model;
 
     if (model) {
-      gl.uniformMatrix4fv(state.uModelID, false, ent.getTransform());
+      // todo multiply with parent transform
+      if (parentMatrix) {
+        modelMatrix = mat4.create();
+        mat4.multiply(modelMatrix, parentMatrix, ent.getTransform());
+      } else {
+        modelMatrix = ent.getTransform();
+      }
+
+      gl.uniformMatrix4fv(state.uModelID, false, modelMatrix);
+
       model.drawMeshType(gl, state, meshType);
     }
   }
 }
 
-SolidModel.prototype.drawBodies = function(gl, state) {
+SolidModel.prototype.drawBodies = function(gl, state, parentMatrix) {
   // TODO
-  this.drawMeshType(gl, state, 'reflective');
+  this.drawMeshType(gl, state, 'reflective', parentMatrix);
 
-  this.drawMeshType(gl, state, 'opaque');
-  this.drawMeshType(gl, state, 'opaqueDecal');
+  this.drawMeshType(gl, state, 'opaque', parentMatrix);
+  this.drawMeshType(gl, state, 'opaqueDecal', parentMatrix);
 
   // TODO?
   gl.depthMask(false);
   {
-    this.drawMeshType(gl, state, 'transparentDecal');
-    this.drawMeshType(gl, state, 'transparent');
+    this.drawMeshType(gl, state, 'transparentDecal', parentMatrix);
+    this.drawMeshType(gl, state, 'transparent', parentMatrix);
   }
   gl.depthMask(true);
 }
@@ -115,9 +138,11 @@ SolidModel.prototype.drawItems = function(gl, state) {
   var ents = this.ents;
 
   for (var i = 0; i < ents.length; ++i) {
-    if (ents[i].type === 'item') {
+    var ent = ents[i];
+
+    if (ent.type === 'item_coin') {
       // TODO hierarchial transform
-      state.itemModel.drawBodies(gl, state);
+      state.itemModel.drawBodies(gl, state, ent.getTransform());
     }
   }
 }

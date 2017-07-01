@@ -318,7 +318,7 @@ GLState.prototype.step = function(dt) {
     this.levelModel.step(dt);
   }
   if (this.itemModel) {
-    //this.itemModel.step(dt);
+    this.itemModel.step(dt);
   }
 }
 
