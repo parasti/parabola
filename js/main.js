@@ -39,7 +39,13 @@ function init() {
   });
 
   Solid.fetch('item/coin/coin.sol', function() {
-    state.loadItem(gl, this);
+    state.loadCoin(gl, this);
+  });
+  Solid.fetch('item/grow/grow.sol', function() {
+    state.loadGrow(gl, this);
+  });
+  Solid.fetch('item/shrink/shrink.sol', function() {
+    state.loadShrink(gl, this);
   });
 
   function step(currTime) {
@@ -112,9 +118,11 @@ function init() {
       if (screenfull.isFullscreen) {
         canvas.width = window.screen.width;
         canvas.height = window.screen.height;
+        canvas.style.background = 'black';
       } else {
         canvas.width = 800;
         canvas.height = 600;
+        canvas.style.background = 'inherit';
       }
       // TODO
       gl.viewport(0, 0, canvas.clientWidth, canvas.clientHeight);
