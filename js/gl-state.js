@@ -4,6 +4,7 @@ var mat4 = require('gl-matrix').mat4;
 var misc = require('./misc.js');
 
 var SolidModel = require('./solid-model.js');
+var BallModel = require('./ball-model.js');
 
 function GLState(gl) {
   this.defaultTexture = null;
@@ -294,6 +295,10 @@ GLState.prototype.loadShrink = function(gl, sol) {
   this.shrinkModel = new SolidModel(gl, sol);
 }
 
+GLState.prototype.loadBall = function(gl, model) {
+  this.ballModel = model;
+}
+
 GLState.prototype.draw = function(gl) {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -313,6 +318,7 @@ GLState.prototype.draw = function(gl) {
     if (this.levelModel) {
       this.levelModel.drawItems(gl, this);
       this.levelModel.drawBodies(gl, this);
+      this.levelModel.drawBalls(gl, this);
     }
 
     gl.disableVertexAttribArray(this.aPositionID);

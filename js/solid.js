@@ -45,12 +45,12 @@ Solid.MAGIC = 0x4c4f53af;
 Solid.VERSION = 7;
 
 /*
- * Download and load the SOL at relative path.
+ * Asynchronously fetch the SOL at relative path.
  */
-Solid.fetch = function(path, onload) {
-  data.fetchBinaryFile(path, function(e) {
-    var sol = Solid.load(this.response);
-    onload.call(sol, e);
+Solid.fetch = function(path) {
+  return data.fetchBinaryFile(path)
+  .then(function(buffer) {
+    return Solid.load(buffer);
   });
 }
 

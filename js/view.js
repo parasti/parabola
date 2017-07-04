@@ -122,6 +122,8 @@ View.prototype.setFromSol = (function() {
     if (k <= 0 && sol.wv.length > 1) {
       vec3.copy(view.p, sol.wv[1].p);
       vec3.copy(view.c, sol.wv[1].q);
+    } else if (k <= 0) { // TOOD
+      k = 0;
     }
 
     // Interpolate the views.
@@ -193,6 +195,8 @@ var toRadian = require('gl-matrix').glMatrix.toRadian;
 View.prototype.mouseLook = function(dx, dy) {
   // dx = rotate around Y
   // dy = rotate around X
+
+  // TODO this does nothing a lot of the time.
 
   var a = (dx || dy) ? 0.005 : 0.1;
   var filtered_dx = (dx * a) + (this._dx * (1.0 - a));

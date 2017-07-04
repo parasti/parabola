@@ -1,14 +1,17 @@
 'use strict';
 
-function fetchBinaryFile(path, onload) {
-  var req = new XMLHttpRequest();
-  req.responseType = 'arraybuffer';
-  req.addEventListener('load', function(e) {
-    if (this.status === 200)
-      onload.call(this, e);
+function fetchBinaryFile(path) {
+  return new Promise(function(resolve) {
+    var req = new XMLHttpRequest();
+    req.responseType = 'arraybuffer';
+    req.onload = function() {
+      if (this.status === 200) {
+        resolve(this.response);
+      }
+    };
+    req.open('GET', 'data/' + path);
+    req.send();
   });
-  req.open('GET', 'data/' + path);
-  req.send();
 }
 
 function fetchImage(path, onload) {

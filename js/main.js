@@ -9,6 +9,7 @@ var data = require('./data.js');
 var Solid = require('./solid.js').Solid;
 var GLState = require('./gl-state.js');
 var View = require('./view.js');
+var BallModel = require('./ball-model.js');
 
 var getDeltaTime = (function () {
   var lastTime = 0.0;
@@ -29,23 +30,27 @@ function init() {
   var canvas = document.getElementById('canvas');
   var gl = GLState.initGL(canvas);
   var state = new GLState(gl);
-  var sol = null;
+  var solFile = null;
   var view = new View();
 
-  Solid.fetch('map-fwp/adventure.sol', function() {
-    sol = this;
+  Solid.fetch('map-fwp/adventure.sol').then(function(sol) {
+    solFile = sol;
     state.loadLevel(gl, sol);
     view.setFromSol(sol, 1.0);
   });
 
-  Solid.fetch('item/coin/coin.sol', function() {
-    state.loadCoin(gl, this);
+  Solid.fetch('item/coin/coin.sol').then(function(sol) {
+    state.loadCoin(gl, sol);
   });
-  Solid.fetch('item/grow/grow.sol', function() {
-    state.loadGrow(gl, this);
+  Solid.fetch('item/grow/grow.sol').then(function(sol) {
+    state.loadGrow(gl, sol);
   });
-  Solid.fetch('item/shrink/shrink.sol', function() {
-    state.loadShrink(gl, this);
+  Solid.fetch('item/shrink/shrink.sol').then(function(sol) {
+    state.loadShrink(gl, sol);
+  });
+
+  BallModel.fetch(gl, 'ball/basic-ball/basic-ball').then(function(model) {
+    state.loadBall(gl, model);
   });
 
   function step(currTime) {
@@ -89,8 +94,8 @@ function init() {
 
   var viewPosition = document.getElementById('viewPosition');
   viewPosition.addEventListener('input', function() {
-    if (sol) {
-      view.setFromSol(sol, this.value);
+    if (solFile) {
+      view.setFromSol(solFile, this.value);
     }
   });
 
@@ -101,8 +106,8 @@ function init() {
     }
 
     data.loadFile(this.files[0], function(e) {
-      sol = Solid.load(this.result);
-      state.loadLevel(gl, sol);
+      solFile = Solid.load(this.result);
+      state.loadLevel(gl, solFile);
     });
   });
 
@@ -160,7 +165,7 @@ function init() {
 
   });
 
-  window.addEventListener('wheel', function(e) {
+  canvas.addEventListener('wheel', function(e) {
     view.setMoveSpeed(-Math.sign(e.deltaY));
     e.preventDefault();
   });
@@ -173,10 +178,10 @@ function init() {
   var materialElem = document.getElementById('materials');
   var listMaterials = document.getElementById('listMaterials');
   listMaterials.addEventListener('click', function(e) {
-    if (sol) {
+    if (solFile) {
       var html = '<select size="10">';
-      for (var i = 0; i < sol.mv.length; ++i) {
-        html += '<option>' + sol.mv[i].f + '</option>';
+      for (var i = 0; i < solFile.mv.length; ++i) {
+        html += '<option>' + solFile.mv[i].f + '</option>';
       }
       html += '</select>'
       materialElem.innerHTML = html;

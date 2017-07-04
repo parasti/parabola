@@ -1,11 +1,9 @@
 'use strict';
 
-var Mesh = function (count, mtrl) {
-  if (!(this instanceof Mesh)) {
-    return new Mesh(count, mtrl);
-  }
+/* TODO adapt this for billboards? */
 
-  this.mtrl = mtrl || null;
+var Mesh = function (count, mtrl) {
+  this.mtrl = mtrl || null; // TODO move this off of Mesh?
   this.verts = count ? new Float32Array(Mesh.stride * count) : null;
   this.count = 0;
 };

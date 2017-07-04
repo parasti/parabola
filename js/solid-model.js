@@ -24,6 +24,7 @@ function SolidModel(gl, sol) {
 SolidModel.prototype.fromSol = function(sol) {
   var ents = this.ents = [];
 
+  // Bodies
   for (var i = 0; i < sol.bv.length; ++i) {
     var solBody = sol.bv[i];
     var ent = new Entity('body');
@@ -38,6 +39,7 @@ SolidModel.prototype.fromSol = function(sol) {
     ents.push(ent);
   }
 
+  // Items
   loop: for (var i = 0; i < sol.hv.length; ++i) {
     var solItem = sol.hv[i];
     var ent;
@@ -52,18 +54,38 @@ SolidModel.prototype.fromSol = function(sol) {
 
     ent.value = solItem.n; // TODO
 
-    // TODO hieararchial transform
-    ent.modelMatrix = mat4.create();
+    // GLMatrix doesn't have a mat4.fromTranslationScale.
 
     const r = 0.15;
     const x = solItem.p[0];
     const y = solItem.p[1];
     const z = solItem.p[2];
+    ent.modelMatrix = mat4.create();
     mat4.set(ent.modelMatrix,
-      r, 0, 0, 0,
-      0, r, 0, 0,
-      0, 0, r, 0,
-      x, y, z, 1);
+      r, 0, 0, 0, // column 0
+      0, r, 0, 0, // column 1
+      0, 0, r, 0, // column 2
+      x, y, z, 1  // column 3
+    );
+
+    ents.push(ent);
+  }
+
+  for (var i = 0; i < sol.uv.length; ++i) {
+    var solBall = sol.uv[i];
+    var ent = new Entity('ball');
+
+    const r = 0.25;
+    const x = solBall.p[0];
+    const y = solBall.p[1];
+    const z = solBall.p[2];
+    ent.modelMatrix = mat4.create();
+    mat4.set(ent.modelMatrix,
+      r, 0, 0, 0, // column 0
+      0, r, 0, 0, // column 1
+      0, 0, r, 0, // column 2
+      x, y, z, 1  // column 3
+    );
 
     ents.push(ent);
   }
@@ -92,7 +114,7 @@ SolidModel.prototype.createObjects = function(gl) {
 }
 
 /*
- * Render model meshes of the given type. Pass a parentMatrix for hierarchical transform.
+ * Render entity meshes of the given type. Pass a parentMatrix for hierarchical transform.
  */
 SolidModel.prototype.drawMeshType = function(gl, state, meshType, parentMatrix) {
   var ents = this.ents;
@@ -105,6 +127,7 @@ SolidModel.prototype.drawMeshType = function(gl, state, meshType, parentMatrix) 
       if (parentMatrix) {
         var modelMatrix = mat4.create(); // TODO move this off the render path
         mat4.multiply(modelMatrix, parentMatrix, ent.getTransform());
+        // TODO update uniforms on actual change
         gl.uniformMatrix4fv(state.uModelID, false, modelMatrix);
       } else {
         gl.uniformMatrix4fv(state.uModelID, false, ent.getTransform());
@@ -118,20 +141,32 @@ SolidModel.prototype.drawMeshType = function(gl, state, meshType, parentMatrix) 
 /*
  * Render model meshes. Pass a parentMatrix for hierarchical transform.
  */
-SolidModel.prototype.drawBodies = function(gl, state, parentMatrix) {
+SolidModel.defaultOpts = {
+  parentMatrix: null, // Hierarchical transform.
+  depthtest: true,
+  depthmask: false
+};
+
+SolidModel.prototype.drawBodies = function(gl, state, opts) {
+  // sol_draw()
+
   // TODO
-  this.drawMeshType(gl, state, 'reflective', parentMatrix);
+  var opts = opts || SolidModel.defaultOpts;
 
-  this.drawMeshType(gl, state, 'opaque', parentMatrix);
-  this.drawMeshType(gl, state, 'opaqueDecal', parentMatrix);
+  // TODO
+  this.drawMeshType(gl, state, 'reflective', opts.parentMatrix);
 
-  // TODO?
-  gl.depthMask(false);
+  this.drawMeshType(gl, state, 'opaque', opts.parentMatrix);
+  this.drawMeshType(gl, state, 'opaqueDecal', opts.parentMatrix);
+
+  if (!opts.depthtest) gl.disable(gl.DEPTH_TEST);
+  if (!opts.depthmask) gl.depthMask(false);
   {
-    this.drawMeshType(gl, state, 'transparentDecal', parentMatrix);
-    this.drawMeshType(gl, state, 'transparent', parentMatrix);
+    this.drawMeshType(gl, state, 'transparentDecal', opts.parentMatrix);
+    this.drawMeshType(gl, state, 'transparent', opts.parentMatrix);
   }
-  gl.depthMask(true);
+  if (!opts.depthmask) gl.depthMask(true);
+  if (!opts.depthtest) gl.enable(gl.DEPTH_TEST);
 }
 
 /*
@@ -146,11 +181,24 @@ SolidModel.prototype.drawItems = function(gl, state) {
     // TODO
     if (ent.type === 'item_coin') {
       // Pass entity transform as a parent matrix for nested SolidModel rendering.
-      state.coinModel.drawBodies(gl, state, ent.getTransform());
+      state.coinModel.drawBodies(gl, state, { parentMatrix: ent.getTransform() });
     } else if (ent.type === 'item_grow') {
-      state.growModel.drawBodies(gl, state, ent.getTransform());
+      state.growModel.drawBodies(gl, state, { parentMatrix: ent.getTransform() });
     } else if (ent.type === 'item_shrink') {
-      state.shrinkModel.drawBodies(gl, state, ent.getTransform());
+      state.shrinkModel.drawBodies(gl, state, { parentMatrix: ent.getTransform() });
+    }
+  }
+}
+
+SolidModel.prototype.drawBalls = function(gl, state) {
+  var ents = this.ents;
+
+  for (var i = 0; i < ents.length; ++i) {
+    var ent = ents[i];
+
+    // TODO
+    if (ent.type === 'ball') {
+      state.ballModel.draw(gl, state, { parentMatrix: ent.getTransform() });
     }
   }
 }
