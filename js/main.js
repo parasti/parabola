@@ -26,6 +26,16 @@ var getDeltaTime = (function () {
   }
 })();
 
+function loadBall(gl, state, name) {
+  var name = name || 'basic-ball';
+
+  var basePath = 'ball/' + name + '/' + name;
+
+  BallModel.fetch(gl, basePath).then(function(model) {
+    state.loadBall(gl, model);
+  });
+}
+
 function init() {
   var canvas = document.getElementById('canvas');
   var gl = GLState.initGL(canvas);
@@ -49,9 +59,7 @@ function init() {
     state.loadShrink(gl, sol);
   });
 
-  BallModel.fetch(gl, 'ball/snowglobe/snowglobe').then(function(model) {
-    state.loadBall(gl, model);
-  });
+  loadBall(gl, state, 'snowglobe');
 
   function step(currTime) {
     var dt = getDeltaTime(currTime);
@@ -76,8 +84,16 @@ function init() {
   function pointerLockChange(e) {
     if (document.pointerLockElement === canvas) {
       document.addEventListener('mousemove', mouseMove);
+
+      window.addEventListener('keydown', keyDown);
+      window.addEventListener('keyup', keyUp);
+
+
     } else {
       document.removeEventListener('mousemove', mouseMove);
+
+      window.removeEventListener('keydown', keyDown);
+      window.removeEventListener('keyup', keyUp);
     }
   }
 
@@ -135,7 +151,7 @@ function init() {
     });
   }
 
-  window.addEventListener('keydown', function(e) {
+  function keyDown(e) {
     var code = e.code; // Not very portable.
 
     if (code === 'KeyW') {
@@ -148,9 +164,8 @@ function init() {
       view.moveRight(true);
     }
 
-  });
-
-  window.addEventListener('keyup', function(e) {
+  }
+  function keyUp(e) {
     var code = e.code;
 
     if (code === 'KeyW') {
@@ -163,7 +178,7 @@ function init() {
       view.moveRight(false);
     }
 
-  });
+  }
 
   canvas.addEventListener('wheel', function(e) {
     view.setMoveSpeed(-Math.sign(e.deltaY));
@@ -186,6 +201,12 @@ function init() {
       html += '</select>'
       materialElem.innerHTML = html;
     }
+  });
+
+  var ballNameElem = document.getElementById('ballName');
+  var ballButton = document.getElementById('loadBall');
+  ballButton.addEventListener('click', function(e) {
+    loadBall(gl, state, ballName.value);
   });
 }
 

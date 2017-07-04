@@ -4,16 +4,16 @@ var Solid = require('./solid.js').Solid;
 var SolidModel = require('./solid-model.js');
 
 function BallModel() {
-  this.solid = null;
-  this.inner = null;
-  this.outer = null;
+  this.solidModel = null;
+  this.innerModel = null;
+  this.outerModel = null;
 
   this.solidFlags = {};
   this.innerFlags = {};
   this.outerFlags = {};
 }
 
-function ballOpts(sol) {
+function ballFlags(sol) {
   var flags = {};
 
   flags.pendulum = sol.dv.pendulum === '1';
@@ -33,49 +33,54 @@ BallModel.fetch = function(gl, basePath) {
 
   var model = new BallModel();
 
-  var solidProm = Solid.fetch(solidPath).then(function(sol) {
-    model.solid = new SolidModel(gl, sol);
-    model.solidFlags = ballOpts(sol);
-    model.solid.transparentDepthTest = model.solidFlags.depthtest;
-    model.solid.transparentDepthMask = model.solidFlags.depthmask;
-    return model;
+  Solid.fetch(solidPath).then(function(sol) {
+    var flags = ballFlags(sol);
+
+    model.solidModel = new SolidModel(gl, sol);
+    model.solidModel.transparentDepthTest = flags.depthtest;
+    model.solidModel.transparentDepthMask = flags.depthmask;
+
+    model.solidFlags = flags;
   });
 
-  var innerProm = Solid.fetch(innerPath).then(function(sol) {
-    model.inner = new SolidModel(gl, sol);
-    model.innerFlags = ballOpts(sol);
-    model.inner.transparentDepthTest = model.innerFlags.depthtest;
-    model.inner.transparentDepthMask = model.innerFlags.depthmask;
-    return model;
+  Solid.fetch(innerPath).then(function(sol) {
+    var flags = ballFlags(sol);
+
+    model.innerModel = new SolidModel(gl, sol);
+    model.innerModel.transparentDepthTest = flags.depthtest;
+    model.innerModel.transparentDepthMask = flags.depthmask;
+
+    model.innerFlags = flags;
   });
 
-  var outerProm = Solid.fetch(outerPath).then(function(sol) {
-    model.outer = new SolidModel(gl, sol);
-    model.outerFlags = ballOpts(sol);
-    model.outer.transparentDepthTest = model.outerFlags.depthtest;
-    model.outer.transparentDepthMask = model.outerFlags.depthmask;
-    return model;
+  Solid.fetch(outerPath).then(function(sol) {
+    var flags = ballFlags(sol);
+
+    model.outerModel = new SolidModel(gl, sol);
+    model.outerModel.transparentDepthTest = flags.depthtest;
+    model.outerModel.transparentDepthMask = flags.depthmask;
+
+    model.outerFlags = flags;
   });
 
-  // TODO this is sketchy, but we don't know how many layers the model has.
-  return Promise.race([solidProm, innerProm, outerProm]);
+  return Promise.resolve(model); // TODO yup
 }
 
 BallModel.prototype.drawInner = function(gl, state, parentMatrix) {
-  if (this.inner) {
-    this.inner.drawBodies(gl, state, parentMatrix);
+  if (this.innerModel) {
+    this.innerModel.drawBodies(gl, state, parentMatrix);
   }
 }
 
 BallModel.prototype.drawSolid = function(gl, state, parentMatrix) {
-  if (this.solid) {
-    this.solid.drawBodies(gl, state, parentMatrix);
+  if (this.solidModel) {
+    this.solidModel.drawBodies(gl, state, parentMatrix);
   }
 }
 
 BallModel.prototype.drawOuter = function(gl, state, parentMatrix) {
-  if (this.outer) {
-    this.outer.drawBodies(gl, state, parentMatrix);
+  if (this.outerModel) {
+    this.outerModel.drawBodies(gl, state, parentMatrix);
   }
 }
 
@@ -116,6 +121,9 @@ BallModel.prototype.passOuter = function(gl, state, parentMatrix) {
     // Sort the outer ball with the solid ball using clip planes.
 
     // TODO Doable with the near/far planes?
+
+    this.passSolid(gl, state, parentMatrix);
+    this.drawOuter(gl, state, parentMatrix);
   } else if (this.outerFlags.drawback) {
     // Sort the outer ball with the solid ball using face culling.
 
@@ -138,14 +146,14 @@ BallModel.prototype.draw = function(gl, state, parentMatrix) {
 }
 
 BallModel.prototype.step = function(dt) {
-  if (this.solid) {
-    this.solid.step(dt);
+  if (this.solidModel) {
+    this.solidModel.step(dt);
   }
-  if (this.inner) {
-    this.inner.step(dt);
+  if (this.innerModel) {
+    this.innerModel.step(dt);
   }
-  if (this.outer) {
-    this.outer.step(dt);
+  if (this.outerModel) {
+    this.outerModel.step(dt);
   }
 }
 
