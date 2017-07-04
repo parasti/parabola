@@ -342,6 +342,9 @@ GLState.prototype.step = function(dt) {
   if (this.shrinkModel) {
     this.shrinkModel.step(dt);
   }
+  if (this.ballModel) {
+    this.ballModel.step(dt);
+  }
 }
 
 module.exports = GLState;

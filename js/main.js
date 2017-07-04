@@ -49,7 +49,7 @@ function init() {
     state.loadShrink(gl, sol);
   });
 
-  BallModel.fetch(gl, 'ball/basic-ball/basic-ball').then(function(model) {
+  BallModel.fetch(gl, 'ball/snowglobe/snowglobe').then(function(model) {
     state.loadBall(gl, model);
   });
 

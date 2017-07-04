@@ -139,34 +139,34 @@ SolidModel.prototype.drawMeshType = function(gl, state, meshType, parentMatrix) 
 }
 
 /*
+ * Transparency hacks. These are the defaults, to be overriden per object.
+ */
+SolidModel.prototype.transparentDepthTest = true;
+SolidModel.prototype.transparentDepthMask = false;
+
+/*
  * Render model meshes. Pass a parentMatrix for hierarchical transform.
  */
-SolidModel.defaultOpts = {
-  parentMatrix: null, // Hierarchical transform.
-  depthtest: true,
-  depthmask: false
-};
-
-SolidModel.prototype.drawBodies = function(gl, state, opts) {
+SolidModel.prototype.drawBodies = function(gl, state, parentMatrix) {
   // sol_draw()
 
-  // TODO
-  var opts = opts || SolidModel.defaultOpts;
+  const mask = this.transparentDepthMask;
+  const test = this.transparentDepthTest;
 
-  // TODO
-  this.drawMeshType(gl, state, 'reflective', opts.parentMatrix);
+  // TODO mirrors
+  this.drawMeshType(gl, state, 'reflective', parentMatrix);
 
-  this.drawMeshType(gl, state, 'opaque', opts.parentMatrix);
-  this.drawMeshType(gl, state, 'opaqueDecal', opts.parentMatrix);
+  this.drawMeshType(gl, state, 'opaque', parentMatrix);
+  this.drawMeshType(gl, state, 'opaqueDecal', parentMatrix);
 
-  if (!opts.depthtest) gl.disable(gl.DEPTH_TEST);
-  if (!opts.depthmask) gl.depthMask(false);
+  if (!test) gl.disable(gl.DEPTH_TEST);
+  if (!mask) gl.depthMask(false);
   {
-    this.drawMeshType(gl, state, 'transparentDecal', opts.parentMatrix);
-    this.drawMeshType(gl, state, 'transparent', opts.parentMatrix);
+    this.drawMeshType(gl, state, 'transparentDecal', parentMatrix);
+    this.drawMeshType(gl, state, 'transparent', parentMatrix);
   }
-  if (!opts.depthmask) gl.depthMask(true);
-  if (!opts.depthtest) gl.enable(gl.DEPTH_TEST);
+  if (!mask) gl.depthMask(true);
+  if (!test) gl.enable(gl.DEPTH_TEST);
 }
 
 /*
@@ -181,11 +181,11 @@ SolidModel.prototype.drawItems = function(gl, state) {
     // TODO
     if (ent.type === 'item_coin') {
       // Pass entity transform as a parent matrix for nested SolidModel rendering.
-      state.coinModel.drawBodies(gl, state, { parentMatrix: ent.getTransform() });
+      state.coinModel.drawBodies(gl, state, ent.getTransform());
     } else if (ent.type === 'item_grow') {
-      state.growModel.drawBodies(gl, state, { parentMatrix: ent.getTransform() });
+      state.growModel.drawBodies(gl, state, ent.getTransform());
     } else if (ent.type === 'item_shrink') {
-      state.shrinkModel.drawBodies(gl, state, { parentMatrix: ent.getTransform() });
+      state.shrinkModel.drawBodies(gl, state, ent.getTransform());
     }
   }
 }
@@ -198,7 +198,7 @@ SolidModel.prototype.drawBalls = function(gl, state) {
 
     // TODO
     if (ent.type === 'ball') {
-      state.ballModel.draw(gl, state, { parentMatrix: ent.getTransform() });
+      state.ballModel.draw(gl, state, ent.getTransform());
     }
   }
 }
