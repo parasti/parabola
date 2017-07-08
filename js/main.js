@@ -52,6 +52,12 @@ function init() {
   Solid.fetch('item/coin/coin.sol').then(function(sol) {
     state.loadCoin(gl, sol);
   });
+  Solid.fetch('item/coin/coin5.sol').then(function(sol) {
+    state.loadCoin5(gl, sol);
+  });
+  Solid.fetch('item/coin/coin10.sol').then(function(sol) {
+    state.loadCoin10(gl, sol);
+  });
   Solid.fetch('item/grow/grow.sol').then(function(sol) {
     state.loadGrow(gl, sol);
   });
@@ -188,19 +194,6 @@ function init() {
   var textureInput = document.getElementById('textures');
   textureInput.addEventListener('change', function(e) {
     state.enableTextures = this.checked;
-  });
-
-  var materialElem = document.getElementById('materials');
-  var listMaterials = document.getElementById('listMaterials');
-  listMaterials.addEventListener('click', function(e) {
-    if (solFile) {
-      var html = '<select size="10">';
-      for (var i = 0; i < solFile.mv.length; ++i) {
-        html += '<option>' + solFile.mv[i].f + '</option>';
-      }
-      html += '</select>'
-      materialElem.innerHTML = html;
-    }
   });
 
   var ballNameElem = document.getElementById('ballName');

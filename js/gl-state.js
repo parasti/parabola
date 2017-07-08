@@ -37,8 +37,12 @@ function GLState(gl) {
 
   this.levelModel = null;
   this.coinModel = null; // TODO
+  this.coin5Model = null;
+  this.coin10Model = null;
   this.growModel = null;
   this.shrinkModel = null;
+
+  this.globalTime = 0.0;
 }
 
 // Some WebGL fun:
@@ -287,6 +291,14 @@ GLState.prototype.loadCoin = function(gl, sol) {
   this.coinModel = new SolidModel(gl, sol);
 }
 
+GLState.prototype.loadCoin5 = function(gl, sol) {
+  this.coin5Model = new SolidModel(gl, sol);
+}
+
+GLState.prototype.loadCoin10 = function(gl, sol) {
+  this.coin10Model = new SolidModel(gl, sol);
+}
+
 GLState.prototype.loadGrow = function(gl, sol) {
   this.growModel = new SolidModel(gl, sol);
 }
@@ -330,11 +342,19 @@ GLState.prototype.draw = function(gl) {
 }
 
 GLState.prototype.step = function(dt) {
+  this.globalTime += dt;
+
   if (this.levelModel) {
     this.levelModel.step(dt);
   }
   if (this.coinModel) {
     this.coinModel.step(dt);
+  }
+  if (this.coin5Model) {
+    this.coin5Model.step(dt);
+  }
+  if (this.coin10Model) {
+    this.coin10Model.step(dt);
   }
   if (this.growModel) {
     this.growModel.step(dt);
