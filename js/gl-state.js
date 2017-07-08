@@ -113,7 +113,7 @@ vec2 calcSphereMap(vec3 n) {
 
 void main() {
   // TODO eye coordinates
-  vec4 eyeNormal = vec4(aNormal, 1.0);
+  vec4 eyeNormal = normalize(uModel * vec4(aNormal, 0.0));
 
   vec4 lightColor =
     uEmissive +
