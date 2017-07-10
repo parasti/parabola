@@ -28,10 +28,9 @@ var getDeltaTime = (function () {
 
 function loadBall(gl, state, name) {
   var name = name || 'basic-ball';
-
   var basePath = 'ball/' + name + '/' + name;
 
-  BallModel.fetch(gl, basePath).then(function(model) {
+  BallModel.fetch(basePath).then(function(model) {
     state.loadBall(gl, model);
   });
 }

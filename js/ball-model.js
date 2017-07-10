@@ -11,6 +11,10 @@ function BallModel() {
   this.solidFlags = {};
   this.innerFlags = {};
   this.outerFlags = {};
+
+  this._solidProm = null;
+  this._innerProm = null;
+  this._outerProm = null;
 }
 
 function ballFlags(sol) {
@@ -25,7 +29,20 @@ function ballFlags(sol) {
   return flags;
 }
 
-BallModel.fetch = function(gl, basePath) {
+function loadLayerFromSol(sol) {
+  var model = SolidModel.fromSol(sol);
+  var flags = ballFlags(sol);
+
+  model.transparentDepthTest = flags.depthtest;
+  model.transparentDepthMask = flags.depthmask;
+
+  return { model, flags };
+}
+
+/*
+ * Fetch the ball model layers. Return a promise.
+ */
+BallModel.fetch = function(basePath) {
   // TODO json this
   const solidPath = basePath + '-solid.sol';
   const innerPath = basePath + '-inner.sol';
@@ -33,40 +50,45 @@ BallModel.fetch = function(gl, basePath) {
 
   var model = new BallModel();
 
-  Solid.fetch(solidPath).then(function(sol) {
-    var flags = ballFlags(sol);
-
-    model.solidModel = new SolidModel(gl, sol);
-    model.solidModel.transparentDepthTest = flags.depthtest;
-    model.solidModel.transparentDepthMask = flags.depthmask;
-
-    model.solidFlags = flags;
+  model._solidProm = Solid.fetch(solidPath).then(function(sol) {
+    var layer = loadLayerFromSol(sol);
+    model.solidModel = layer.model;
+    model.solidFlags = layer.flags;
+    return model.solidModel;
+  });
+  
+  model._innerProm = Solid.fetch(innerPath).then(function(sol) {
+    var layer = loadLayerFromSol(sol);
+    model.innerModel = layer.model;
+    model.innerFlags = layer.flags;
+    return model.innerModel;
   });
 
-  Solid.fetch(innerPath).then(function(sol) {
-    var flags = ballFlags(sol);
-
-    model.innerModel = new SolidModel(gl, sol);
-    model.innerModel.transparentDepthTest = flags.depthtest;
-    model.innerModel.transparentDepthMask = flags.depthmask;
-
-    model.innerFlags = flags;
+  model._outerProm = Solid.fetch(outerPath).then(function(sol) {
+    var layer = loadLayerFromSol(sol);
+    model.outerModel = layer.model;
+    model.outerFlags = layer.flags;
+    return model.outerModel;
   });
 
-  Solid.fetch(outerPath).then(function(sol) {
-    var flags = ballFlags(sol);
+  return Promise.resolve(model); // TODO Yup.
+}
 
-    model.outerModel = new SolidModel(gl, sol);
-    model.outerModel.transparentDepthTest = flags.depthtest;
-    model.outerModel.transparentDepthMask = flags.depthmask;
+/*
+ * Asynchronously create GL resources for any fetched SOLs.
+ */
+BallModel.prototype.createObjects = function(gl) {
+  function createModelObjects(model) {
+    model.createObjects(gl);
+  }
 
-    model.outerFlags = flags;
-  });
-
-  return Promise.resolve(model); // TODO yup
+  this._solidProm.then(createModelObjects);
+  this._innerProm.then(createModelObjects);
+  this._outerProm.then(createModelObjects);
 }
 
 BallModel.prototype.drawInner = function(gl, state, parentMatrix) {
+  // TODO billboards
   if (this.innerModel) {
     this.innerModel.drawBodies(gl, state, parentMatrix);
   }

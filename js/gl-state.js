@@ -284,31 +284,38 @@ GLState.prototype.calcPerspective = function(w, h) {
 }
 
 GLState.prototype.loadLevel = function(gl, sol) {
-  this.levelModel = new SolidModel(gl, sol);
+  this.levelModel = SolidModel.fromSol(sol);
+  this.levelModel.createObjects(gl);
 }
 
 GLState.prototype.loadCoin = function(gl, sol) {
-  this.coinModel = new SolidModel(gl, sol);
+  this.coinModel = SolidModel.fromSol(sol);
+  this.coinModel.createObjects(gl);
 }
 
 GLState.prototype.loadCoin5 = function(gl, sol) {
-  this.coin5Model = new SolidModel(gl, sol);
+  this.coin5Model = SolidModel.fromSol(sol);
+  this.coin5Model.createObjects(gl);
 }
 
 GLState.prototype.loadCoin10 = function(gl, sol) {
-  this.coin10Model = new SolidModel(gl, sol);
+  this.coin10Model = SolidModel.fromSol(sol);
+  this.coin10Model.createObjects(gl);
 }
 
 GLState.prototype.loadGrow = function(gl, sol) {
-  this.growModel = new SolidModel(gl, sol);
+  this.growModel = SolidModel.fromSol(sol);
+  this.growModel.createObjects(gl);
 }
 
 GLState.prototype.loadShrink = function(gl, sol) {
-  this.shrinkModel = new SolidModel(gl, sol);
+  this.shrinkModel = SolidModel.fromSol(sol);
+  this.shrinkModel.createObjects(gl);
 }
 
 GLState.prototype.loadBall = function(gl, model) {
   this.ballModel = model;
+  this.ballModel.createObjects(gl);
 }
 
 GLState.prototype.draw = function(gl) {

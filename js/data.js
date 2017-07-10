@@ -1,7 +1,7 @@
 'use strict';
 
 function fetchBinaryFile(path) {
-  return new Promise(function(resolve) {
+  return new Promise(function(resolve, reject) {
     var req = new XMLHttpRequest();
     req.responseType = 'arraybuffer';
     req.onload = function() {

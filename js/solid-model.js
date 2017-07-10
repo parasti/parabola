@@ -10,14 +10,9 @@ var Mtrl = require('./mtrl.js');
 var Mover = require('./mover.js');
 var BodyModel = require('./body-model.js');
 
-function SolidModel(gl, sol) {
+function SolidModel() {
   this.entities = null;
   this.models = null;
-
-  if (sol && gl) {
-    this.fromSol(sol);
-    this.createObjects(gl);
-  }
 }
 
 /*
@@ -74,9 +69,11 @@ function Billboard() {
 /*
  * Load entities from SOL.
  */
-SolidModel.prototype.fromSol = function(sol) {
-  var ents = this.entities = nanoECS();
-  var models = this.models = [];
+SolidModel.fromSol = function(sol) {
+  var solidModel = new SolidModel();
+
+  var ents = solidModel.entities = nanoECS();
+  var models = solidModel.models = [];
 
   // Bodies
 
@@ -170,6 +167,8 @@ SolidModel.prototype.fromSol = function(sol) {
     var solBill = sol.rv[i];
     var ent = ents.createEntity().addTag('billboard');
   }
+
+  return solidModel;
 }
 
 SolidModel.prototype.step = function(dt) {

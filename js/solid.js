@@ -48,8 +48,7 @@ Solid.VERSION = 7;
  * Asynchronously fetch the SOL at relative path.
  */
 Solid.fetch = function(path) {
-  return data.fetchBinaryFile(path)
-  .then(function(buffer) {
+  return data.fetchBinaryFile(path).then(function(buffer) {
     return Solid.load(buffer);
   });
 }
