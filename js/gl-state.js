@@ -279,8 +279,14 @@ GLState.prototype.createShaders = function(gl) {
  * Compute a Neverball perspective matrix.
  */
 GLState.prototype.calcPerspective = function(w, h) {
-  // TODO pass fov? for teleport effects
-  misc.calcPersp(this.perspMatrix, w, h);
+  var fov = 50 * Math.PI / 180; // TODO pass as a param?
+  var a = w / h;
+
+  // Neverball defaults.
+  var n = 0.1;
+  var f = 512.0;
+
+  mat4.perspective(this.perspMatrix, fov, a, n, f);
 }
 
 GLState.prototype.loadLevel = function(gl, sol) {
