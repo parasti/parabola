@@ -5,6 +5,7 @@ var misc = require('./misc.js');
 
 var SolidModel = require('./solid-model.js');
 var BallModel = require('./ball-model.js');
+var Mesh = require('./mesh.js');
 
 function GLState(gl) {
   this.defaultTexture = null;
@@ -42,7 +43,7 @@ function GLState(gl) {
   this.growModel = null;
   this.shrinkModel = null;
 
-  this.globalTime = 0.0;
+  this.time = 0.0;
 }
 
 // Some WebGL fun:
@@ -336,9 +337,7 @@ GLState.prototype.draw = function(gl) {
     gl.uniformMatrix4fv(this.uPerspID, false, this.perspMatrix);
     gl.uniformMatrix4fv(this.uViewID, false, this.viewMatrix);
 
-    gl.enableVertexAttribArray(this.aPositionID);
-    gl.enableVertexAttribArray(this.aNormalID);
-    gl.enableVertexAttribArray(this.aTexCoordID);
+    Mesh.enableArrays(gl, this);
 
     if (this.levelModel) {
       this.levelModel.drawItems(gl, this);
@@ -346,16 +345,14 @@ GLState.prototype.draw = function(gl) {
       this.levelModel.drawBalls(gl, this);
     }
 
-    gl.disableVertexAttribArray(this.aPositionID);
-    gl.disableVertexAttribArray(this.aNormalID);
-    gl.disableVertexAttribArray(this.aTexCoordID);
+    Mesh.disableArrays(gl, this);
 
     gl.useProgram(null);
   }
 }
 
 GLState.prototype.step = function(dt) {
-  this.globalTime += dt;
+  this.time += dt;
 
   if (this.levelModel) {
     this.levelModel.step(dt);

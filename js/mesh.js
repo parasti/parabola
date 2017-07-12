@@ -53,6 +53,21 @@ Mesh.prototype.draw = function (gl, state) {
 };
 
 /*
+ * Setup vertex attribute arrays.
+ */
+Mesh.enableArrays = function (gl, state) {
+  gl.enableVertexAttribArray(state.aPositionID);
+  gl.enableVertexAttribArray(state.aNormalID);
+  gl.enableVertexAttribArray(state.aTexCoordID);
+}
+
+Mesh.disableArrays = function (gl, state) {
+  gl.disableVertexAttribArray(state.aPositionID);
+  gl.disableVertexAttribArray(state.aNormalID);
+  gl.disableVertexAttribArray(state.aTexCoordID);
+}
+
+/*
  * Exports.
  */
 module.exports = Mesh;

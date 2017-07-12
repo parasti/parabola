@@ -56,14 +56,19 @@ function Item() {
 }
 
 function Billboard() {
-  this.time = 1.0; // Neverball default.
+  this.mtrl = null; // TODO
 
-  this.animW = vec3.create();
-  this.animH = vec3.create();
+  // Neverball defaults.
+  this.time = 1.0;
 
-  this.animX = vec3.create();
-  this.animY = vec3.create();
-  this.animZ = vec3.create();
+  this.width = vec3.create();
+  this.height = vec3.create();
+
+  this.rotX = vec3.create();
+  this.rotY = vec3.create();
+  this.rotZ = vec3.create();
+
+  this.flags = 0;
 }
 
 /*
@@ -166,6 +171,8 @@ SolidModel.fromSol = function(sol) {
   for (var i = 0; i < sol.rv.length; ++i) {
     var solBill = sol.rv[i];
     var ent = ents.createEntity().addTag('billboard');
+
+    ent.addComponent(Billboard);
   }
 
   return solidModel;
