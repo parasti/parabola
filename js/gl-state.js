@@ -210,7 +210,7 @@ GLState.loadShader = function(gl, type, source) {
 GLState.prototype.init = function(gl) {
   this.createDefaultTexture(gl);
   this.createShaders(gl);
-  this.calcPerspective(canvas.width, canvas.height);
+  this.calcPerspective(gl.canvas.width, gl.canvas.height);
 }
 
 /*
