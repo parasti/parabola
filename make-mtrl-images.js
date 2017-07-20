@@ -43,14 +43,8 @@ var mtrls = {};
 for (var i = 0; i < images.length; ++i) {
   var file = path.relative(dataDir, images[i]);
 
-  var img = file.replace(/\\/g, '/');
-  var mtrl =
-      img.startsWith('textures/') ?
-      img.substr(9) :
-      img;
-
-  // Remove extension.
-  mtrl = mtrl.substr(0, mtrl.length - 4);
+  var img = file.replace(/\\/g, '/'); // Normalize.
+  var mtrl = img.replace(/^textures\//, '').replace(/\.png$|\.jpg$/, ''); // Materialize.
 
   mtrls[mtrl] = img;
 }
