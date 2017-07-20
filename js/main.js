@@ -40,12 +40,11 @@ function init() {
   var gl = GLState.initGL(canvas);
   var state = new GLState(gl);
   var solFile = null;
-  var view = new View();
 
   Solid.fetch('map-fwp/adventure.sol').then(function(sol) {
     solFile = sol;
     state.loadLevel(gl, sol);
-    view.setFromSol(sol, 1.0);
+    state.view.setFromSol(sol, 1.0);
   });
 
   Solid.fetch('item/coin/coin.sol').then(function(sol) {
@@ -70,12 +69,13 @@ function init() {
     var dt = getDeltaTime(currTime);
 
     // TODO
-    view.mouseLook(0, 0); // lerp until stop
-    view.step(dt);
+    state.view.mouseLook(0, 0); // lerp until stop
+    state.view.step(dt);
 
     state.step(dt);
 
-    mat4.copy(state.viewMatrix, view.getMatrix());
+    // TODO Move view to state?
+    mat4.copy(state.viewMatrix, state.view.getMatrix());
     state.draw(gl);
 
     window.requestAnimationFrame(step);
@@ -83,7 +83,7 @@ function init() {
   window.requestAnimationFrame(step);
 
   function mouseMove(e) {
-    view.mouseLook(e.movementX, e.movementY);
+    state.view.mouseLook(e.movementX, e.movementY);
   }
 
   function pointerLockChange(e) {
@@ -116,7 +116,7 @@ function init() {
   var viewPosition = document.getElementById('viewPosition');
   viewPosition.addEventListener('input', function() {
     if (solFile) {
-      view.setFromSol(solFile, this.value);
+      state.view.setFromSol(solFile, this.value);
     }
   });
 
@@ -160,33 +160,32 @@ function init() {
     var code = e.code; // Not very portable.
 
     if (code === 'KeyW') {
-      view.moveForward(true);
+      state.view.moveForward(true);
     } else if (code === 'KeyA') {
-      view.moveLeft(true);
+      state.view.moveLeft(true);
     } else if (code === 'KeyS') {
-      view.moveBackward(true);
+      state.view.moveBackward(true);
     } else if (code === 'KeyD') {
-      view.moveRight(true);
+      state.view.moveRight(true);
     }
-
   }
   function keyUp(e) {
     var code = e.code;
 
     if (code === 'KeyW') {
-      view.moveForward(false);
+      state.view.moveForward(false);
     } else if (code === 'KeyA') {
-      view.moveLeft(false);
+      state.view.moveLeft(false);
     } else if (code === 'KeyS') {
-      view.moveBackward(false);
+      state.view.moveBackward(false);
     } else if (code === 'KeyD') {
-      view.moveRight(false);
+      state.view.moveRight(false);
     }
 
   }
 
   canvas.addEventListener('wheel', function(e) {
-    view.setMoveSpeed(-Math.sign(e.deltaY));
+    state.view.setMoveSpeed(-Math.sign(e.deltaY));
     e.preventDefault();
   });
 

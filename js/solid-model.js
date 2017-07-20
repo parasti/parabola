@@ -13,6 +13,7 @@ var BodyModel = require('./body-model.js');
 function SolidModel() {
   this.entities = null;
   this.models = null;
+  this.materials = null;
 }
 
 /*
@@ -46,6 +47,19 @@ function Spatial() {
   this.scale = 1.0;
 }
 
+Spatial.prototype.getTransform = (function () {
+  var s = vec3.create();
+
+  return function(M) {
+    var p = this.position;
+    var e = this.orientation;
+    
+    vec3.set(s, this.scale, this.scale, this.scale);
+
+    mat4.fromRotationTranslationScale(M, e, p, s);
+  }
+})();
+
 function Movers() {
   this.translate = null;
   this.rotate = null;
@@ -58,17 +72,44 @@ function Item() {
 function Billboard() {
   this.mtrl = null; // TODO
 
-  // Neverball defaults.
-  this.time = 1.0;
+  this.t = 1.0;
 
-  this.width = vec3.create();
-  this.height = vec3.create();
+  this.w = vec3.create();
+  this.h = vec3.create();
 
-  this.rotX = vec3.create();
-  this.rotY = vec3.create();
-  this.rotZ = vec3.create();
+  this.rx = vec3.create();
+  this.ry = vec3.create();
+  this.rz = vec3.create();
 
   this.flags = 0;
+}
+
+Billboard.prototype.getForegroundTransform = function(M, globalTime) {
+  // sol_bill
+
+  var T = this.t * globalTime;
+  var S = Math.sin(T);
+
+  var w = this.w[0] + this.w[1] * T + this.w[2] * S;
+  var h = this.h[0] + this.h[1] * T + this.h[2] * S;
+
+  var rx = this.rx[0] + this.rx[1] * T + this.rx[2] * S;
+  var ry = this.ry[0] + this.ry[1] * T + this.ry[2] * S;
+  var rz = this.rz[0] + this.rz[1] * T + this.rz[2] * S;
+
+  // Preserve passed transform.
+  //mat4.identity(M);
+
+  // TODO multiply by view basis.
+  // or... can be done by the caller.
+
+  if (rx) mat4.rotateX(M, M, rx);
+  if (ry) mat4.rotateY(M, M, ry);
+  if (rz) mat4.rotateZ(M, M, rz);
+
+  mat4.scale(M, M, [w, h, 0.0]);
+
+  return M;
 }
 
 /*
@@ -79,6 +120,14 @@ SolidModel.fromSol = function(sol) {
 
   var ents = solidModel.entities = nanoECS();
   var models = solidModel.models = [];
+  var materials = solidModel.materials = [];
+
+  // Materials
+
+  for (var i = 0; i < sol.mv.length; ++i) {
+    // Just use SOL materials.
+    materials.push(sol.mv[i]);
+  }
 
   // Bodies
 
@@ -172,7 +221,12 @@ SolidModel.fromSol = function(sol) {
     var solBill = sol.rv[i];
     var ent = ents.createEntity().addTag('billboard');
 
+    ent.addComponent(Spatial);
     ent.addComponent(Billboard);
+
+    vec3.copy(ent.spatial.position, solBill.p);
+
+    ent.billboard.mtrl = sol.mv[solBill.mi];
   }
 
   return solidModel;
@@ -214,12 +268,18 @@ SolidModel.prototype.step = function(dt) {
  */
 SolidModel.prototype.createObjects = function(gl) {
   var models = this.models;
+  var materials = this.materials;
 
   for (var i = 0; i < models.length; ++i) {
     var model = models[i];
     if (model) {
       model.createObjects(gl);
     }
+  }
+
+  for (var i = 0; i < materials.length; ++i) {
+    var mtrl = materials[i];
+    mtrl.loadTexture(gl);
   }
 }
 
@@ -321,8 +381,26 @@ SolidModel.prototype.drawBalls = function(gl, state) {
   }
 }
 
-SolidModel.prototype.drawBills = function(gl, state) {
+SolidModel.prototype.drawBills = function(gl, state, parentMatrix) {
   var ents = this.entities.queryComponents([Billboard]);
+
+  state.billboardMesh.enableDraw(gl, state);
+
+  for (var i = 0; i < ents.length; ++i) {
+    var ent = ents[i];
+
+    // position *
+    // view basis (optional) *
+    // billboard transform
+
+    // draw billboard material
+    // draw billboard mesh (same for all of them)
+
+    ent.billboard.mtrl.draw(gl, state);
+    state.billboardMesh.draw(gl, state);
+  }
+
+  state.billboardMesh.disableDraw(gl, state);
 }
 
 module.exports = SolidModel;

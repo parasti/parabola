@@ -42,6 +42,10 @@ Mesh.prototype.draw = function (gl, state) {
   this.mtrl.draw(gl, state);
 
   if (this.vbo) {
+    state.enableArray(gl, state.uPositionID);
+    state.enableArray(gl, state.aNormalID);
+    state.enableArray(gl, state.aTexCoordID);
+
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
     gl.vertexAttribPointer(state.aPositionID, 3, gl.FLOAT, false, Mesh.stride * 4, 0);
     gl.vertexAttribPointer(state.aNormalID, 3, gl.FLOAT, false, Mesh.stride * 4, 12);
@@ -51,21 +55,6 @@ Mesh.prototype.draw = function (gl, state) {
     gl.drawArrays(gl.TRIANGLES, 0, this.count);
   }
 };
-
-/*
- * Setup vertex attribute arrays.
- */
-Mesh.enableArrays = function (gl, state) {
-  gl.enableVertexAttribArray(state.aPositionID);
-  gl.enableVertexAttribArray(state.aNormalID);
-  gl.enableVertexAttribArray(state.aTexCoordID);
-}
-
-Mesh.disableArrays = function (gl, state) {
-  gl.disableVertexAttribArray(state.aPositionID);
-  gl.disableVertexAttribArray(state.aNormalID);
-  gl.disableVertexAttribArray(state.aTexCoordID);
-}
 
 /*
  * Exports.

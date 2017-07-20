@@ -24,7 +24,7 @@ BodyModel.prototype.createObjects = function(gl) {
     var mesh = meshes[j];
     mesh.createVBO(gl);
     // TODO Keep a list of materials
-    mesh.mtrl.loadTexture(gl);
+    //mesh.mtrl.loadTexture(gl);
   }
 }
 

@@ -6,6 +6,8 @@ var misc = require('./misc.js');
 var SolidModel = require('./solid-model.js');
 var BallModel = require('./ball-model.js');
 var Mesh = require('./mesh.js');
+var View = require('./view.js');
+var BillboardMesh = require('./billboard-mesh.js');
 
 function GLState(gl) {
   this.defaultTexture = null;
@@ -29,12 +31,12 @@ function GLState(gl) {
   this.aNormalID = 1;
   this.aTexCoordID = 2;
 
+  this.enabledArrays = []; // TODO
+
   this.perspMatrix = mat4.create();
   this.viewMatrix = mat4.create();
 
-  if (gl) {
-    this.init(gl);
-  }
+  this.view = new View();
 
   this.levelModel = null;
   this.coinModel = null; // TODO
@@ -43,7 +45,14 @@ function GLState(gl) {
   this.growModel = null;
   this.shrinkModel = null;
 
+  this.billboardMesh = null;
+
   this.time = 0.0;
+
+  // TODO What's the extent of this?
+  if (gl) {
+    this.init(gl);
+  }
 }
 
 // Some WebGL fun:
@@ -211,6 +220,10 @@ GLState.prototype.init = function(gl) {
   this.createDefaultTexture(gl);
   this.createShaders(gl);
   this.calcPerspective(gl.canvas.width, gl.canvas.height);
+
+  // Create billboard mesh.
+  this.billboardMesh = new BillboardMesh();
+  this.billboardMesh.createVBO(gl);
 }
 
 /*
@@ -325,7 +338,30 @@ GLState.prototype.loadBall = function(gl, model) {
   this.ballModel.createObjects(gl);
 }
 
+/*
+ * Track vertex attribute array enabled/disabled state.
+ * TODO is this per-shader or global? Fuck if I know.
+ */
+GLState.prototype.enableArray = function(gl, index) {
+  if (!this.enabledArrays[index]) {
+    gl.enableVertexAttribArray(index);
+    this.enabledArrays[index] = true;
+  }
+}
+
+GLState.prototype.disableArray = function(gl, index) {
+  if (this.enabledArrays[index]) {
+    gl.disableVertexAttribArray(index);
+    this.enabledArrays[index] = false;
+  }
+}
+
+/*
+ * Render everything.
+ */
 GLState.prototype.draw = function(gl) {
+  // game_draw
+
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
   if (this.prog) {
@@ -337,15 +373,15 @@ GLState.prototype.draw = function(gl) {
     gl.uniformMatrix4fv(this.uPerspID, false, this.perspMatrix);
     gl.uniformMatrix4fv(this.uViewID, false, this.viewMatrix);
 
-    Mesh.enableArrays(gl, this);
-
     if (this.levelModel) {
       this.levelModel.drawItems(gl, this);
       this.levelModel.drawBodies(gl, this);
       this.levelModel.drawBalls(gl, this);
-    }
 
-    Mesh.disableArrays(gl, this);
+      gl.depthMask(false);
+      this.levelModel.drawBills(gl, this);
+      gl.depthMask(true);
+    }
 
     gl.useProgram(null);
   }
