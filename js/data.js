@@ -14,12 +14,14 @@ function fetchBinaryFile(path) {
   });
 }
 
-function fetchImage(path, onload) {
-  var img = new Image();
-  img.onload = function () {
-    onload.call(this);
-  };
-  img.src = 'data/' + path;
+function fetchImage(path) {
+  return new Promise(function (resolve, reject) {
+    var img = new Image();
+    img.onload = function() {
+      resolve(this);
+    };
+    img.src = 'data/' + path;
+  });
 }
 
 function loadFile(file, onload) {

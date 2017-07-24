@@ -146,8 +146,8 @@ Mtrl.prototype.loadTexture = function (gl) {
   // Prevent multiple loads. This is probably dumb.
   this._loading = true;
   var self = this;
-  data.fetchImage(mtrlImages[self.f], function() {
-    self.createTexture(gl, this);
+  data.fetchImage(mtrlImages[self.f]).then(function(image) {
+    self.createTexture(gl, image);
     delete self._loading;
   });
 };
