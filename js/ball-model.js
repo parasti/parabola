@@ -90,18 +90,25 @@ BallModel.prototype.createObjects = function(gl) {
 BallModel.prototype.drawInner = function(gl, state, parentMatrix) {
   // TODO billboards
   if (this.innerModel) {
+    this.innerModel.drawBills(gl, state, parentMatrix);
+
     this.innerModel.drawBodies(gl, state, parentMatrix);
   }
 }
 
 BallModel.prototype.drawSolid = function(gl, state, parentMatrix) {
   if (this.solidModel) {
+    // TODO disable lighting
+    this.solidModel.drawBills(gl, state, parentMatrix);
+
     this.solidModel.drawBodies(gl, state, parentMatrix);
   }
 }
 
 BallModel.prototype.drawOuter = function(gl, state, parentMatrix) {
   if (this.outerModel) {
+    this.outerModel.drawBills(gl, state, parentMatrix);
+
     this.outerModel.drawBodies(gl, state, parentMatrix);
   }
 }

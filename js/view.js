@@ -2,6 +2,7 @@
 
 var vec3 = require('gl-matrix').vec3;
 var mat4 = require('gl-matrix').mat4;
+var toRadian = require('gl-matrix').glMatrix.toRadian;
 
 var View = function (p, c) {
   this.p = vec3.create();
@@ -189,8 +190,6 @@ View.prototype.step = (function() {
     }
   }
 })();
-
-var toRadian = require('gl-matrix').glMatrix.toRadian;
 
 View.prototype.mouseLook = function(dx, dy) {
   // dx = rotate around Y

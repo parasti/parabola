@@ -118,6 +118,20 @@ Mtrl.prototype.draw = function (gl, state) {
     gl.uniform1i(state.uEnvironment, 0);
   }
 
+  if (this.fl & Mtrl.ADDITIVE) {
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+    //gl.uniform1f(state.uAdditivity, 1.0);
+  } else {
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    //gl.uniform1f(state.uAdditivity, 0.0);
+  }
+
+  if (this.fl & Mtrl.TWO_SIDED) {
+    gl.disable(gl.CULL_FACE);
+  } else {
+    gl.enable(gl.CULL_FACE);
+  }
+
   if (this.fl & Mtrl.DECAL) {
     gl.enable(gl.POLYGON_OFFSET_FILL);
     gl.polygonOffset(-1.0, -2.0);

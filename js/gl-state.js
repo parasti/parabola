@@ -60,7 +60,7 @@ function GLState(gl) {
 // 2) Don't ask for an "alpha: false" context.
 // 3) Clear draw buffer to zero alpha.
 // 4) Composite GL with HTML content.
-GLState.composite = true;
+GLState.composite = false;
 
 GLState.vertShader = `
 
@@ -136,7 +136,7 @@ void main() {
     calcLight(Light1, eyeNormal);
 
   vLightColor = clamp(vec4(lightColor.rgb, uDiffuse.a), 0.0, 1.0);
-  vLightColor.rgb = vLightColor.rgb * vLightColor.a; // Premultiply.
+  //vLightColor.rgb = vLightColor.rgb * vLightColor.a; // Premultiply.
 
   if (uEnvironment)
     vTexCoord = calcSphereMap(eyeNormal.xyz);
@@ -182,14 +182,14 @@ GLState.initGL = function(canvas) {
   // Straight alpha vs premultiplied alpha:
   // https://limnu.com/webgl-blending-youre-probably-wrong/
   // https://developer.nvidia.com/content/alpha-blending-pre-or-not-pre
-  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
-  gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+  //gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+  //gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
   //gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-  //gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
   gl.depthFunc(gl.LEQUAL);
 
-  gl.clearColor(0, 0, 0, GLState.composite ? 0.1 : 1.0);
+  gl.clearColor(0, 0, 0, GLState.composite ? 0.0 : 1.0);
 
   // Fix upside down images.
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -219,11 +219,13 @@ GLState.loadShader = function(gl, type, source) {
 GLState.prototype.init = function(gl) {
   this.createDefaultTexture(gl);
   this.createShaders(gl);
-  this.calcPerspective(gl.canvas.width, gl.canvas.height);
 
   // Create billboard mesh.
+  // TODO mesh/model/what?
   this.billboardMesh = new BillboardMesh();
   this.billboardMesh.createVBO(gl);
+
+  this.calcPerspective(gl.canvas.width, gl.canvas.height);
 }
 
 /*
@@ -378,9 +380,7 @@ GLState.prototype.draw = function(gl) {
       this.levelModel.drawBodies(gl, this);
       this.levelModel.drawBalls(gl, this);
 
-      gl.depthMask(false);
       this.levelModel.drawBills(gl, this);
-      gl.depthMask(true);
     }
 
     gl.useProgram(null);

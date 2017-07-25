@@ -12,8 +12,15 @@ var BodyModel = require('./body-model.js');
 
 function SolidModel() {
   this.entities = null;
+
   this.models = null;
   this.materials = null;
+
+  /*
+   * Transparency defaults. Overridden by ball skins, primarily.
+   */
+  this.transparentDepthTest = true;
+  this.transparentDepthMask = false;
 }
 
 /*
@@ -103,9 +110,9 @@ Billboard.prototype.getForegroundTransform = function(M, globalTime) {
   // TODO multiply by view basis.
   // or... can be done by the caller.
 
-  if (rx) mat4.rotateX(M, M, rx);
-  if (ry) mat4.rotateY(M, M, ry);
-  if (rz) mat4.rotateZ(M, M, rz);
+  if (rx) mat4.rotateX(M, M, rx / 180.0 * Math.PI);
+  if (ry) mat4.rotateY(M, M, ry / 180.0 * Math.PI);
+  if (rz) mat4.rotateZ(M, M, rz / 180.0 * Math.PI);
 
   mat4.scale(M, M, [w, h, 0.0]);
 
@@ -221,10 +228,21 @@ SolidModel.fromSol = function(sol) {
     var solBill = sol.rv[i];
     var ent = ents.createEntity().addTag('billboard');
 
+    ent.addComponent(ModelMatrix);
     ent.addComponent(Spatial);
     ent.addComponent(Billboard);
 
     vec3.copy(ent.spatial.position, solBill.p);
+
+    vec3.copy(ent.billboard.w, solBill.w);
+    vec3.copy(ent.billboard.h, solBill.h);
+    vec3.copy(ent.billboard.rx, solBill.rx);
+    vec3.copy(ent.billboard.ry, solBill.ry);
+    vec3.copy(ent.billboard.rz, solBill.rz);
+
+    ent.billboard.t = solBill.t;
+
+    ent.spatial.getTransform(ent.modelMatrix);
 
     ent.billboard.mtrl = sol.mv[solBill.mi];
   }
@@ -293,26 +311,21 @@ SolidModel.prototype.drawMeshType = function(gl, state, meshType, parentMatrix) 
     var ent = ents[i];
     var model = ent.drawable.model;
 
-    if (model) {
-      if (parentMatrix) {
-        var modelMatrix = mat4.create(); // TODO move this off the render path
-        mat4.multiply(modelMatrix, parentMatrix, ent.modelMatrix);
-        // TODO update uniforms on actual change
-        gl.uniformMatrix4fv(state.uModelID, false, modelMatrix);
-      } else {
-        gl.uniformMatrix4fv(state.uModelID, false, ent.modelMatrix);
-      }
-
-      model.drawMeshType(gl, state, meshType);
+    if (parentMatrix) {
+      // TODO move this off the render path.
+      var modelMatrix = mat4.create();
+      mat4.multiply(modelMatrix, parentMatrix, ent.modelMatrix);
+      // TODO update uniforms on actual change
+      gl.uniformMatrix4fv(state.uModelID, false, modelMatrix);
+    } else {
+      gl.uniformMatrix4fv(state.uModelID, false, ent.modelMatrix);
     }
+
+    // TODO tag entities w/ models that have this mesh type?
+    // Iterate over tagged lists?
+    model.drawMeshType(gl, state, meshType);
   }
 }
-
-/*
- * Transparency hacks. These are the defaults, to be overriden per model.
- */
-SolidModel.prototype.transparentDepthTest = true;
-SolidModel.prototype.transparentDepthMask = false;
 
 /*
  * Render model meshes. Pass a parentMatrix for hierarchical transform.
@@ -382,23 +395,40 @@ SolidModel.prototype.drawBalls = function(gl, state) {
 }
 
 SolidModel.prototype.drawBills = function(gl, state, parentMatrix) {
-  var ents = this.entities.queryComponents([Billboard]);
+  var ents = this.entities.queryComponents([Billboard, Spatial, ModelMatrix]);
+
+  // TODO
+  var viewBasis = state.view.getBasis();
+  var modelMatrix = mat4.create();
 
   state.billboardMesh.enableDraw(gl, state);
+
+  const test = this.transparentDepthTest;
+  const mask = this.transparentDepthMask;
+
+  if (!test) gl.disable(gl.DEPTH_TEST);
+  if (!mask) gl.depthMask(false);
 
   for (var i = 0; i < ents.length; ++i) {
     var ent = ents[i];
 
-    // position *
-    // view basis (optional) *
-    // billboard transform
+    // TODO lots of math for a draw frame
+    ent.spatial.getTransform(modelMatrix);
+    // if (!B_NOFACE)
+    mat4.multiply(modelMatrix, modelMatrix, viewBasis);
+    ent.billboard.getForegroundTransform(modelMatrix, state.time);
 
-    // draw billboard material
-    // draw billboard mesh (same for all of them)
+    if (parentMatrix) {
+      mat4.multiply(modelMatrix, parentMatrix, modelMatrix);
+    }
+    gl.uniformMatrix4fv(state.uModelID, false, modelMatrix);
 
     ent.billboard.mtrl.draw(gl, state);
     state.billboardMesh.draw(gl, state);
   }
+
+  if (!mask) gl.depthMask(true);
+  if (!test) gl.enable(gl.DEPTH_TEST);
 
   state.billboardMesh.disableDraw(gl, state);
 }
