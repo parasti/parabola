@@ -7,6 +7,9 @@
     "start": "beefy js/parabola.js:parabola.js --live",
     "check": "browserify js/parabola.js -t eslintify"
   },
+  "browserify": {
+    "transform": ["glslify"]
+  },
   "author": "Jānis Rūcis",
   "license": "GPL-3.0",
   "dependencies": {
