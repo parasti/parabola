@@ -41,7 +41,7 @@ function init() {
   var state = new GLState(gl);
   var solFile = null;
 
-  Solid.fetch('map-fwp/adventure.sol').then(function(sol) {
+  Solid.fetch('map-easy/easy.sol').then(function(sol) {
     solFile = sol;
     state.loadLevel(gl, sol);
     state.view.setFromSol(sol, 1.0);
