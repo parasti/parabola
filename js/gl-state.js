@@ -2,7 +2,6 @@
 
 var glsl = require('glslify');
 var mat4 = require('gl-matrix').mat4;
-var misc = require('./misc.js');
 
 var SolidModel = require('./solid-model.js');
 var BallModel = require('./ball-model.js');

@@ -1,6 +1,21 @@
 'use strict';
 
-var misc = require('./misc.js');
+var SolidCursor = require('cursor').extend({
+  readFloatLEArray: function (length) {
+    var value = new Float32Array(length);
+    for (var i = 0; i < length; ++i)
+      value[i] = this.readFloatLE();
+    return value;
+  },
+
+  readInt32LEArray: function (length) {
+   var value = new Int32Array(length);
+   for (var i = 0; i < length; ++i)
+     value[i] = this.readInt32LE();
+   return value;
+  }
+});
+
 var Mtrl = require('./mtrl.js');
 
 /*
@@ -41,50 +56,50 @@ Solid.VERSION = 7;
  */
 Solid.load = function (buffer) {
   // TODO move to a worker
-  var stream = new misc.DataStream(buffer);
+  var stream = SolidCursor(buffer);
 
-  var magic = stream.getInt32();
+  var magic = stream.readInt32LE();
 
   if (magic !== Solid.MAGIC) {
     console.error('Failed to load SOL: not a SOL file');
     return;
   }
 
-  var version = stream.getInt32();
+  var version = stream.readInt32LE();
 
   if (version !== Solid.VERSION) {
     console.error('Failed to load SOL: not a version ' + Solid.VERSION + ' SOL file');
     return;
   }
 
-  var ac = stream.getInt32();
-  var dc = stream.getInt32();
-  var mc = stream.getInt32();
-  var vc = stream.getInt32();
-  var ec = stream.getInt32();
-  var sc = stream.getInt32();
-  var tc = stream.getInt32();
-  var oc = stream.getInt32();
-  var gc = stream.getInt32();
-  var lc = stream.getInt32();
-  var nc = stream.getInt32();
-  var pc = stream.getInt32();
-  var bc = stream.getInt32();
-  var hc = stream.getInt32();
-  var zc = stream.getInt32();
-  var jc = stream.getInt32();
-  var xc = stream.getInt32();
-  var rc = stream.getInt32();
-  var uc = stream.getInt32();
-  var wc = stream.getInt32();
-  var ic = stream.getInt32();
+  var ac = stream.readInt32LE();
+  var dc = stream.readInt32LE();
+  var mc = stream.readInt32LE();
+  var vc = stream.readInt32LE();
+  var ec = stream.readInt32LE();
+  var sc = stream.readInt32LE();
+  var tc = stream.readInt32LE();
+  var oc = stream.readInt32LE();
+  var gc = stream.readInt32LE();
+  var lc = stream.readInt32LE();
+  var nc = stream.readInt32LE();
+  var pc = stream.readInt32LE();
+  var bc = stream.readInt32LE();
+  var hc = stream.readInt32LE();
+  var zc = stream.readInt32LE();
+  var jc = stream.readInt32LE();
+  var xc = stream.readInt32LE();
+  var rc = stream.readInt32LE();
+  var uc = stream.readInt32LE();
+  var wc = stream.readInt32LE();
+  var ic = stream.readInt32LE();
 
   var sol = new Solid();
 
   sol.magic = magic;
   sol.version = version;
 
-  sol.av = stream.getUint8Array(ac);
+  sol.av = stream.slice(ac).buffer();
   sol.dv = loadDicts(stream, dc, sol.av);
   sol.mv = loadMtrls(stream, mc);
   sol.vv = loadVerts(stream, vc);
@@ -104,20 +119,20 @@ Solid.load = function (buffer) {
   sol.rv = loadBills(stream, rc);
   sol.uv = loadBalls(stream, uc);
   sol.wv = loadViews(stream, wc);
-  sol.iv = stream.getInt32Array(ic);
+  sol.iv = stream.readInt32LEArray(ic);
 
   return sol;
 };
 
-function loadDicts(stream, count, bytes) {
+function loadDicts(stream, count, byteBuffer) {
   var dicts = {};
 
   for (var i = 0; i < count; ++i) {
-    var ai = stream.getInt32();
-    var aj = stream.getInt32();
+    var ai = stream.readInt32LE();
+    var aj = stream.readInt32LE();
 
-    var key = misc.getCString(bytes, ai);
-    var val = misc.getCString(bytes, aj);
+    var key = byteBuffer.toString('utf8', ai, byteBuffer.indexOf(0, ai));
+    var val = byteBuffer.toString('utf8', aj, byteBuffer.indexOf(0, aj));
 
     dicts[key] = val;
   }
@@ -131,18 +146,19 @@ function loadMtrls(stream, count) {
   for (var i = 0; i < count; ++i) {
     var mtrl = new Mtrl();
 
-    mtrl.d = stream.getFloat32Array(4);
-    mtrl.a = stream.getFloat32Array(4);
-    mtrl.s = stream.getFloat32Array(4);
-    mtrl.e = stream.getFloat32Array(4);
-    mtrl.h = stream.getFloat32Array(1);
-    mtrl.fl = stream.getInt32();
+    mtrl.d = stream.readFloatLEArray(4);
+    mtrl.a = stream.readFloatLEArray(4);
+    mtrl.s = stream.readFloatLEArray(4);
+    mtrl.e = stream.readFloatLEArray(4);
+    mtrl.h = stream.readFloatLEArray(1);
+    mtrl.fl = stream.readInt32LE();
 
-    mtrl.f = misc.getCString(stream.getUint8Array(64));
+    var byteBuffer = stream.slice(64).buffer();
+    mtrl.f = byteBuffer.toString('utf8', 0, byteBuffer.indexOf(0));
 
     if (mtrl.fl & Mtrl.ALPHA_TEST) {
-      mtrl.alpha_func = stream.getInt32();
-      mtrl.alpha_ref = stream.getFloat32();
+      mtrl.alpha_func = stream.readInt32LE();
+      mtrl.alpha_ref = stream.readFloatLE();
     } else {
       mtrl.alpha_func = 0;
       mtrl.alpha_ref = 0.0;
@@ -158,7 +174,7 @@ function loadVerts(stream, count) {
   var verts = [];
 
   for (var i = 0; i < count; ++i) {
-    verts.push(stream.getFloat32Array(3));
+    verts.push(stream.readFloatLEArray(3));
   }
 
   return verts;
@@ -169,8 +185,8 @@ function loadEdges(stream, count) {
 
   for (var i = 0; i < count; ++i) {
     edges.push({
-      vi: stream.getInt32(),
-      vj: stream.getInt32()
+      vi: stream.readInt32LE(),
+      vj: stream.readInt32LE()
     });
   }
 
@@ -182,8 +198,8 @@ function loadSides(stream, count) {
 
   for (var i = 0; i < count; ++i) {
     sides.push({
-      n: stream.getFloat32Array(3),
-      d: stream.getFloat32()
+      n: stream.readFloatLEArray(3),
+      d: stream.readFloatLE()
     });
   }
 
@@ -194,7 +210,7 @@ function loadTexcs(stream, count) {
   var texcs = [];
 
   for (var i = 0; i < count; ++i) {
-    texcs.push(stream.getFloat32Array(2));
+    texcs.push(stream.readFloatLEArray(2));
   }
 
   return texcs;
@@ -205,9 +221,9 @@ function loadOffs(stream, count) {
 
   for (var i = 0; i < count; ++i) {
     offs.push({
-      ti: stream.getInt32(),
-      si: stream.getInt32(),
-      vi: stream.getInt32()
+      ti: stream.readInt32LE(),
+      si: stream.readInt32LE(),
+      vi: stream.readInt32LE()
     });
   }
 
@@ -219,10 +235,10 @@ function loadGeoms(stream, count) {
 
   for (var i = 0; i < count; ++i) {
     geoms.push({
-      mi: stream.getInt32(),
-      oi: stream.getInt32(),
-      oj: stream.getInt32(),
-      ok: stream.getInt32()
+      mi: stream.readInt32LE(),
+      oi: stream.readInt32LE(),
+      oj: stream.readInt32LE(),
+      ok: stream.readInt32LE()
     });
   }
 
@@ -234,15 +250,15 @@ function loadLumps(stream, count) {
 
   for (var i = 0; i < count; ++i) {
     lumps.push({
-      fl: stream.getInt32(),
-      v0: stream.getInt32(),
-      vc: stream.getInt32(),
-      e0: stream.getInt32(),
-      ec: stream.getInt32(),
-      g0: stream.getInt32(),
-      gc: stream.getInt32(),
-      s0: stream.getInt32(),
-      sc: stream.getInt32()
+      fl: stream.readInt32LE(),
+      v0: stream.readInt32LE(),
+      vc: stream.readInt32LE(),
+      e0: stream.readInt32LE(),
+      ec: stream.readInt32LE(),
+      g0: stream.readInt32LE(),
+      gc: stream.readInt32LE(),
+      s0: stream.readInt32LE(),
+      sc: stream.readInt32LE()
     });
   }
 
@@ -254,11 +270,11 @@ function loadNodes(stream, count) {
 
   for (var i = 0; i < count; ++i) {
     nodes.push({
-      si: stream.getInt32(),
-      ni: stream.getInt32(),
-      nj: stream.getInt32(),
-      l0: stream.getInt32(),
-      lc: stream.getInt32()
+      si: stream.readInt32LE(),
+      ni: stream.readInt32LE(),
+      nj: stream.readInt32LE(),
+      l0: stream.readInt32LE(),
+      lc: stream.readInt32LE()
     });
   }
 
@@ -272,16 +288,16 @@ function loadPaths(stream, count) {
 
   for (var i = 0; i < count; ++i) {
     var path = {
-      p: stream.getFloat32Array(3),
-      t: stream.getFloat32(),
-      pi: stream.getInt32(),
-      f: stream.getInt32(),
-      s: stream.getInt32(),
-      fl: stream.getInt32()
+      p: stream.readFloatLEArray(3),
+      t: stream.readFloatLE(),
+      pi: stream.readInt32LE(),
+      f: stream.readInt32LE(),
+      s: stream.readInt32LE(),
+      fl: stream.readInt32LE()
     };
 
     if (path.fl & P_ORIENTED) {
-      var e = stream.getFloat32Array(4);
+      var e = stream.readFloatLEArray(4);
 
       // Convert Neverball's W X Y Z to glMatrix's X Y Z W.
       var w = e[0];
@@ -317,13 +333,13 @@ function loadBodies(stream, count) {
 
   for (var i = 0; i < count; ++i) {
     bodies.push({
-      pi: stream.getInt32(),
-      pj: stream.getInt32(),
-      ni: stream.getInt32(),
-      l0: stream.getInt32(),
-      lc: stream.getInt32(),
-      g0: stream.getInt32(),
-      gc: stream.getInt32()
+      pi: stream.readInt32LE(),
+      pj: stream.readInt32LE(),
+      ni: stream.readInt32LE(),
+      l0: stream.readInt32LE(),
+      lc: stream.readInt32LE(),
+      g0: stream.readInt32LE(),
+      gc: stream.readInt32LE()
     });
 
     if (bodies[i].pj < 0)
@@ -338,9 +354,9 @@ function loadItems(stream, count) {
 
   for (var i = 0; i < count; ++i) {
     items.push({
-      p: stream.getFloat32Array(3),
-      t: stream.getInt32(),
-      n: stream.getInt32()
+      p: stream.readFloatLEArray(3),
+      t: stream.readInt32LE(),
+      n: stream.readInt32LE()
     });
   }
 
@@ -352,8 +368,8 @@ function loadGoals(stream, count) {
 
   for (var i = 0; i < count; ++i) {
     goals.push({
-      p: stream.getFloat32Array(3),
-      r: stream.getFloat32()
+      p: stream.readFloatLEArray(3),
+      r: stream.readFloatLE()
     });
   }
 
@@ -365,9 +381,9 @@ function loadJumps(stream, count) {
 
   for (var i = 0; i < count; ++i) {
     jumps.push({
-      p: stream.getFloat32Array(3),
-      q: stream.getFloat32Array(3),
-      r: stream.getFloat32()
+      p: stream.readFloatLEArray(3),
+      q: stream.readFloatLEArray(3),
+      r: stream.readFloatLE()
     });
   }
 
@@ -379,12 +395,12 @@ function loadSwitches(stream, count) {
 
   for (var i = 0; i < count; ++i) {
     switches.push({
-      p: stream.getFloat32Array(3),
-      r: stream.getFloat32(),
-      pi: stream.getInt32(),
-      t: stream.getFloat32Array(2)[0], // Consume unused padding.
-      f: stream.getFloat32Array(2)[0], // Consume unused padding.
-      i: stream.getInt32()
+      p: stream.readFloatLEArray(3),
+      r: stream.readFloatLE(),
+      pi: stream.readInt32LE(),
+      t: stream.readFloatLEArray(2)[0], // Consume unused padding.
+      f: stream.readFloatLEArray(2)[0], // Consume unused padding.
+      i: stream.readInt32LE()
     });
   }
 
@@ -396,17 +412,17 @@ function loadBills(stream, count) {
 
   for (var i = 0; i < count; ++i) {
     bills.push({
-      fl: stream.getInt32(),
-      mi: stream.getInt32(),
-      t: stream.getFloat32(),
-      d: stream.getFloat32(),
+      fl: stream.readInt32LE(),
+      mi: stream.readInt32LE(),
+      t: stream.readFloatLE(),
+      d: stream.readFloatLE(),
 
-      w: stream.getFloat32Array(3),
-      h: stream.getFloat32Array(3),
-      rx: stream.getFloat32Array(3),
-      ry: stream.getFloat32Array(3),
-      rz: stream.getFloat32Array(3),
-      p: stream.getFloat32Array(3)
+      w: stream.readFloatLEArray(3),
+      h: stream.readFloatLEArray(3),
+      rx: stream.readFloatLEArray(3),
+      ry: stream.readFloatLEArray(3),
+      rz: stream.readFloatLEArray(3),
+      p: stream.readFloatLEArray(3)
     });
   }
 
@@ -418,8 +434,8 @@ function loadBalls(stream, count) {
 
   for (var i = 0; i < count; ++i) {
     balls.push({
-      p: stream.getFloat32Array(3),
-      r: stream.getFloat32()
+      p: stream.readFloatLEArray(3),
+      r: stream.readFloatLE()
     });
   }
 
@@ -431,8 +447,8 @@ function loadViews(stream, count) {
 
   for (var i = 0; i < count; ++i) {
     views.push({
-      p: stream.getFloat32Array(3),
-      q: stream.getFloat32Array(3)
+      p: stream.readFloatLEArray(3),
+      q: stream.readFloatLEArray(3)
     });
   }
 

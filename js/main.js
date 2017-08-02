@@ -2,8 +2,6 @@
 
 var mat4 = require('gl-matrix').mat4;
 var screenfull = require('screenfull');
-
-var misc = require('./misc.js');
 var data = require('./data.js');
 
 var Solid = require('./solid.js').Solid;
