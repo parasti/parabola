@@ -41,25 +41,25 @@ function init() {
   var state = new GLState(gl);
   var solFile = null;
 
-  Solid.fetch('map-easy/easy.sol').then(function(sol) {
+  data.fetchSolid('map-easy/easy.sol').then(function(sol) {
     solFile = sol;
     state.loadLevel(gl, sol);
     state.view.setFromSol(sol, 1.0);
   });
 
-  Solid.fetch('item/coin/coin.sol').then(function(sol) {
+  data.fetchSolid('item/coin/coin.sol').then(function(sol) {
     state.loadCoin(gl, sol);
   });
-  Solid.fetch('item/coin/coin5.sol').then(function(sol) {
+  data.fetchSolid('item/coin/coin5.sol').then(function(sol) {
     state.loadCoin5(gl, sol);
   });
-  Solid.fetch('item/coin/coin10.sol').then(function(sol) {
+  data.fetchSolid('item/coin/coin10.sol').then(function(sol) {
     state.loadCoin10(gl, sol);
   });
-  Solid.fetch('item/grow/grow.sol').then(function(sol) {
+  data.fetchSolid('item/grow/grow.sol').then(function(sol) {
     state.loadGrow(gl, sol);
   });
-  Solid.fetch('item/shrink/shrink.sol').then(function(sol) {
+  data.fetchSolid('item/shrink/shrink.sol').then(function(sol) {
     state.loadShrink(gl, sol);
   });
 

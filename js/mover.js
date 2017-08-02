@@ -3,8 +3,6 @@
 var vec3 = require('gl-matrix').vec3;
 var quat = require('gl-matrix').quat;
 
-var Path = require('./solid.js').Path;
-
 /*
  * Walk the path entities in life. Don't we all.
  */
@@ -67,6 +65,8 @@ Mover.prototype.getPosition = function(p, dt) {
 Mover.prototype.getOrientation = function(e, dt) {
   // sol_body_e
 
+  const P_ORIENTED = 0x1;
+
   var dt = dt || 0.0;
 
   quat.identity(e);
@@ -75,7 +75,7 @@ Mover.prototype.getOrientation = function(e, dt) {
     var thisPath = this.path;
     var nextPath = this.path.next;
 
-    if (thisPath.fl & Path.ORIENTED || nextPath.fl & Path.ORIENTED) {
+    if (thisPath.fl & P_ORIENTED || nextPath.fl & P_ORIENTED) {
       if (thisPath.f) {
         var s = (this.time + dt) / thisPath.t;
       } else {

@@ -1,6 +1,6 @@
 'use strict';
 
-var Solid = require('./solid.js').Solid;
+var data = require('./data.js');
 var SolidModel = require('./solid-model.js');
 
 function BallModel() {
@@ -50,21 +50,21 @@ BallModel.fetch = function(basePath) {
 
   var model = new BallModel();
 
-  model._solidProm = Solid.fetch(solidPath).then(function(sol) {
+  model._solidProm = data.fetchSolid(solidPath).then(function(sol) {
     var layer = loadLayerFromSol(sol);
     model.solidModel = layer.model;
     model.solidFlags = layer.flags;
     return model.solidModel;
   });
   
-  model._innerProm = Solid.fetch(innerPath).then(function(sol) {
+  model._innerProm = data.fetchSolid(innerPath).then(function(sol) {
     var layer = loadLayerFromSol(sol);
     model.innerModel = layer.model;
     model.innerFlags = layer.flags;
     return model.innerModel;
   });
 
-  model._outerProm = Solid.fetch(outerPath).then(function(sol) {
+  model._outerProm = data.fetchSolid(outerPath).then(function(sol) {
     var layer = loadLayerFromSol(sol);
     model.outerModel = layer.model;
     model.outerFlags = layer.flags;

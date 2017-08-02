@@ -1,15 +1,9 @@
 'use strict';
 
-var mat4 = require('gl-matrix').mat4;
-var vec3 = require('gl-matrix').vec3;
-var quat = require('gl-matrix').quat;
-
 var misc = require('./misc.js');
-var data = require('./data');
 
 var Mtrl = require('./mtrl.js');
 var Mesh = require('./mesh.js');
-var View = require('./view.js');
 
 /*
  * Neverball SOL file.
@@ -43,15 +37,6 @@ function Solid() {
 
 Solid.MAGIC = 0x4c4f53af;
 Solid.VERSION = 7;
-
-/*
- * Asynchronously fetch the SOL at relative path.
- */
-Solid.fetch = function(path) {
-  return data.fetchBinaryFile(path).then(function(buffer) {
-    return Solid.load(buffer);
-  });
-}
 
 /*
  * Load a SOL file from the given ArrayBuffer.
@@ -282,32 +267,37 @@ function loadNodes(stream, count) {
   return nodes;
 };
 
-// TODO
-function Path() {
-}
-
-Path.ORIENTED = 1;
-
 function loadPaths(stream, count) {
+  const P_ORIENTED = 0x1;
+
   var paths = [];
 
   for (var i = 0; i < count; ++i) {
-    var path = new Path();
+    var path = {
+      p: stream.getFloat32Array(3),
+      t: stream.getFloat32(),
+      pi: stream.getInt32(),
+      f: stream.getInt32(),
+      s: stream.getInt32(),
+      fl: stream.getInt32()
+    };
 
-    path.p = stream.getFloat32Array(3);
-    path.t = stream.getFloat32();
-    path.pi = stream.getInt32();
-    path.f = stream.getInt32();
-    path.s = stream.getInt32();
-
-    path.fl = stream.getInt32();
-
-    if (path.fl & Path.ORIENTED) {
-      // Neverball quaternions are the other way around.
+    if (path.fl & P_ORIENTED) {
       var e = stream.getFloat32Array(4);
-      path.e = quat.fromValues(e[1], e[2], e[3], e[0]);
+
+      // Convert Neverball's W X Y Z to glMatrix's X Y Z W.
+      var w = e[0];
+
+      e[0] = e[1];
+      e[1] = e[2];
+      e[2] = e[3];
+      e[3] = w;
+
+      // Orientation quaternion.
+      path.e = e;
     } else {
-      path.e = quat.create();
+      // Identity quaternion.
+      path.e = new Float32Array([0, 0, 0, 1]);
     }
 
     paths.push(path);
@@ -523,7 +513,4 @@ Solid.prototype.getBodyMeshes = function (body) {
 /*
  * Exports.
  */
-module.exports = {
-  Solid: Solid,
-  Path: Path
-};
+module.exports = Solid;

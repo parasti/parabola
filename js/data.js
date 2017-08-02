@@ -1,6 +1,6 @@
-'use strict';
+var data = module.exports;
 
-function fetchBinaryFile(path) {
+data.fetchBinaryFile = function (path) {
   return new Promise(function(resolve, reject) {
     var req = new XMLHttpRequest();
     req.responseType = 'arraybuffer';
@@ -14,7 +14,7 @@ function fetchBinaryFile(path) {
   });
 }
 
-function fetchImage(path) {
+data.fetchImage = function (path) {
   return new Promise(function (resolve, reject) {
     var img = new Image();
     img.onload = function() {
@@ -24,16 +24,16 @@ function fetchImage(path) {
   });
 }
 
-function loadFile(file, onload) {
+data.fetchSolid = function (path) {
+  return data.fetchBinaryFile(path).then(function(buffer) {
+    return require('./solid.js').load(buffer);
+  });
+}
+
+data.loadFile = function (file, onload) {
   var reader = new FileReader();
   reader.addEventListener('load', function (e) {
     onload.call(this, e);
   });
   reader.readAsArrayBuffer(file);
 }
-
-module.exports = {
-  fetchBinaryFile,
-  fetchImage,
-  loadFile
-};
