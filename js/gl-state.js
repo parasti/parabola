@@ -6,7 +6,6 @@ var misc = require('./misc.js');
 
 var SolidModel = require('./solid-model.js');
 var BallModel = require('./ball-model.js');
-var Mesh = require('./mesh.js');
 var View = require('./view.js');
 var BillboardMesh = require('./billboard-mesh.js');
 

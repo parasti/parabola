@@ -1,9 +1,7 @@
 'use strict';
 
 var misc = require('./misc.js');
-
 var Mtrl = require('./mtrl.js');
-var Mesh = require('./mesh.js');
 
 /*
  * Neverball SOL file.
@@ -442,25 +440,30 @@ function loadViews(stream, count) {
 };
 
 /*
- * Collect body geoms into an array indexed by SOL material ID.
+ * Index body geoms by SOL material ID. The result is a sparse array.
  */
-function addGeomByMtrl(geoms, geom) {
+function indexGeomByMtrl(geoms, geom) {
   var mi = geom.mi;
-  geoms[mi] = geoms[mi] || [];
+
+  if (!geoms[mi])
+    geoms[mi] = [];
+
   geoms[mi].push(geom);
 }
 
 Solid.prototype.getBodyGeomsByMtrl = function (body) {
   var geoms = [];
 
+  // OBJ geometry.
   for (var gi = 0; gi < body.gc; ++gi) {
-    addGeomByMtrl(geoms, this.gv[this.iv[body.g0 + gi]]);
+    indexGeomByMtrl(geoms, this.gv[this.iv[body.g0 + gi]]);
   }
 
+  // Lump geometry.
   for (var li = 0; li < body.lc; ++li) {
     var lump = this.lv[body.l0 + li];
     for (var gi = 0; gi < lump.gc; ++gi) {
-      addGeomByMtrl(geoms, this.gv[this.iv[lump.g0 + gi]]);
+      indexGeomByMtrl(geoms, this.gv[this.iv[lump.g0 + gi]]);
     }
   }
 
@@ -468,7 +471,7 @@ Solid.prototype.getBodyGeomsByMtrl = function (body) {
 };
 
 /*
- * Collect vertex attributes described by a SOL offs into a Float32Array.
+ * Collect vertex attributes described by a SOL offs into a Float32Array[8] (position+normal+uv).
  */
 Solid.prototype.getVert = function (vert, offs) {
   var vp = this.vv[offs.vi];
@@ -487,22 +490,37 @@ Solid.prototype.getVert = function (vert, offs) {
   vert[7] = tp[1];
 };
 
+function addVertToMesh(mesh, sol, offs) {
+  var pos = mesh.count * 8;
+  var vert = mesh.verts.subarray(pos, pos + 8);
+
+  sol.getVert(vert, offs);
+
+  mesh.count++;
+};
+
 /*
  * Create a list of meshes from a SOL body, mesh per each used material.
  */
 Solid.prototype.getBodyMeshes = function (body) {
   var meshes = [];
-  var self = this;
+  var sol = this;
 
   this.getBodyGeomsByMtrl(body).forEach(function (geoms, mi) {
-    var mtrl = self.mv[mi];
-    var mesh = new Mesh(geoms.length * 3, mtrl);
+    var mesh = {
+      mtrl: sol.mv[mi],
+      // 1 geom = 3 verts = 3 * (3 + 3 + 2) floats
+      verts: new Float32Array(geoms.length * 3 * 8),
+      count: 0
+    };
 
-    geoms.forEach(function (geom) {
-      mesh.addVertFromSol(self, self.ov[geom.oi]);
-      mesh.addVertFromSol(self, self.ov[geom.oj]);
-      mesh.addVertFromSol(self, self.ov[geom.ok]);
-    });
+    for (var i = 0; i < geoms.length; ++i) {
+      var geom = geoms[i];
+
+      addVertToMesh(mesh, sol, sol.ov[geom.oi]);
+      addVertToMesh(mesh, sol, sol.ov[geom.oj]);
+      addVertToMesh(mesh, sol, sol.ov[geom.ok]);
+    }
 
     meshes.push(mesh);
   });
