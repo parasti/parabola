@@ -16,8 +16,6 @@ var SolidCursor = require('cursor').extend({
   }
 });
 
-var Mtrl = require('./mtrl.js');
-
 /*
  * Neverball SOL file.
  */
@@ -141,22 +139,24 @@ function loadDicts(stream, count, byteBuffer) {
 };
 
 function loadMtrls(stream, count) {
+  const M_ALPHA_TEST = (1 << 9);
+
   var mtrls = [];
 
   for (var i = 0; i < count; ++i) {
-    var mtrl = new Mtrl();
-
-    mtrl.d = stream.readFloatLEArray(4);
-    mtrl.a = stream.readFloatLEArray(4);
-    mtrl.s = stream.readFloatLEArray(4);
-    mtrl.e = stream.readFloatLEArray(4);
-    mtrl.h = stream.readFloatLEArray(1);
-    mtrl.fl = stream.readInt32LE();
+    var mtrl = {
+      d: stream.readFloatLEArray(4),
+      a: stream.readFloatLEArray(4),
+      s: stream.readFloatLEArray(4),
+      e: stream.readFloatLEArray(4),
+      h: stream.readFloatLEArray(1),
+      fl: stream.readInt32LE()
+    }
 
     var byteBuffer = stream.slice(64).buffer();
     mtrl.f = byteBuffer.toString('utf8', 0, byteBuffer.indexOf(0));
 
-    if (mtrl.fl & Mtrl.ALPHA_TEST) {
+    if (mtrl.fl & M_ALPHA_TEST) {
       mtrl.alpha_func = stream.readInt32LE();
       mtrl.alpha_ref = stream.readFloatLE();
     } else {

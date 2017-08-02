@@ -132,8 +132,9 @@ SolidModel.fromSol = function(sol) {
   // Materials
 
   for (var i = 0; i < sol.mv.length; ++i) {
-    // Just use SOL materials.
-    materials.push(sol.mv[i]);
+    var mtrl = new Mtrl(sol.mv[i]);
+    materials.push(mtrl);
+    sol.mv[i]._cachedMaterial = mtrl; // TODO FIXME
   }
 
   // Bodies
@@ -423,7 +424,7 @@ SolidModel.prototype.drawBills = function(gl, state, parentMatrix) {
     }
     gl.uniformMatrix4fv(state.uModelID, false, modelMatrix);
 
-    ent.billboard.mtrl.draw(gl, state);
+    ent.billboard.mtrl._cachedMaterial.draw(gl, state);
     state.billboardMesh.draw(gl, state);
   }
 

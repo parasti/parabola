@@ -4,17 +4,21 @@ var data = require('./data.js');
 
 var mtrlImages = require('./mtrl-images.json');
 
-var Mtrl = function () {
-  this.d = new Float32Array([0.8, 0.8, 0.8, 1.0]);
-  this.a = new Float32Array([0.2, 0.2, 0.2, 1.0]);
-  this.s = new Float32Array([0, 0, 0, 1]);
-  this.e = new Float32Array([0, 0, 0, 1]);
-  this.h = new Float32Array([0]);
-  this.fl = 0;
-  this.f = '';
+var Mtrl = function (solMtrl) {
+  if (solMtrl) {
+    Object.assign(this, solMtrl);
+  } else {
+    this.d = new Float32Array([0.8, 0.8, 0.8, 1.0]);
+    this.a = new Float32Array([0.2, 0.2, 0.2, 1.0]);
+    this.s = new Float32Array([0, 0, 0, 1]);
+    this.e = new Float32Array([0, 0, 0, 1]);
+    this.h = new Float32Array([0]);
+    this.fl = 0;
+    this.f = '';
 
-  this.alpha_func = 0;
-  this.alpha_ref = 0.0;
+    this.alpha_func = 0;
+    this.alpha_ref = 0.0;
+  }
 
   this.tex = null;
 };
@@ -47,28 +51,28 @@ Mtrl.transparentDecalRules = { in: Mtrl.DECAL | Mtrl.TRANSPARENT, ex: Mtrl.REFLE
 Mtrl.transparentRules = { in: Mtrl.TRANSPARENT, ex: Mtrl.REFLECTIVE | Mtrl.DECAL };
 Mtrl.reflectiveRules = { in: Mtrl.REFLECTIVE, ex: 0 };
 
-Mtrl.prototype.test = function(rules) {
-  return ((this.fl & rules.in) === rules.in && (this.fl & rules.ex) === 0);
+Mtrl.test = function (mtrl, rules) {
+  return ((mtrl.fl & rules.in) === rules.in && (mtrl.fl & rules.ex) === 0);
 }
 
-Mtrl.prototype.isOpaque = function() {
-  return this.test(Mtrl.opaqueRules);
+Mtrl.isOpaque = function (mtrl) {
+  return Mtrl.test(mtrl, Mtrl.opaqueRules);
 }
 
-Mtrl.prototype.isOpaqueDecal = function() {
-  return this.test(Mtrl.opaqueDecalRules);
+Mtrl.isOpaqueDecal = function (mtrl) {
+  return Mtrl.test(mtrl, Mtrl.opaqueDecalRules);
 }
 
-Mtrl.prototype.isTransparentDecal = function() {
-  return this.test(Mtrl.transparentDecalRules);
+Mtrl.isTransparentDecal = function (mtrl) {
+  return Mtrl.test(mtrl, Mtrl.transparentDecalRules);
 }
 
-Mtrl.prototype.isTransparent = function() {
-  return this.test(Mtrl.transparentRules);
+Mtrl.isTransparent = function (mtrl) {
+  return Mtrl.test(mtrl, Mtrl.transparentRules);
 }
 
-Mtrl.prototype.isReflective = function() {
-  return this.test(Mtrl.reflectiveRules);
+Mtrl.isReflective = function (mtrl) {
+  return Mtrl.test(mtrl, Mtrl.reflectiveRules);
 }
 
 /*

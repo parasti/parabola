@@ -2,6 +2,8 @@
 
 module.exports = BodyModel;
 
+var Mtrl = require('./mtrl.js');
+
 function BodyModel() {
   this.meshes = null;
 
@@ -39,15 +41,15 @@ BodyModel.prototype.sortMeshes = function() {
     var mesh = this.meshes[i];
     var mtrl = mesh.mtrl;
 
-    if (mtrl.isOpaque()) {
+    if (Mtrl.isOpaque(mtrl)) {
       opaqueMeshes.push(mesh);
-    } else if (mtrl.isOpaqueDecal()) {
+    } else if (Mtrl.isOpaqueDecal(mtrl)) {
       opaqueDecalMeshes.push(mesh);
-    } else if (mtrl.isTransparentDecal()) {
+    } else if (Mtrl.isTransparentDecal(mtrl)) {
       transparentDecalMeshes.push(mesh);
-    } else if (mtrl.isTransparent()) {
+    } else if (Mtrl.isTransparent(mtrl)) {
       transparentMeshes.push(mesh);
-    } else if (mtrl.isReflective()) {
+    } else if (Mtrl.isReflective(mtrl)) {
       reflectiveMeshes.push(mesh);
     }
   }
@@ -80,7 +82,7 @@ function createMeshObjects(gl, mesh) {
 }
 
 function drawMesh(gl, state, mesh) {
-  mesh.mtrl.draw(gl, state);
+  mesh.mtrl._cachedMaterial.draw(gl, state);
 
   if (mesh.vbo) {
     state.enableArray(gl, state.uPositionID);
