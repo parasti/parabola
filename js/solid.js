@@ -59,15 +59,13 @@ Solid.load = function (buffer) {
   var magic = stream.readInt32LE();
 
   if (magic !== Solid.MAGIC) {
-    console.error('Failed to load SOL: not a SOL file');
-    return;
+    throw Error('Failed to load SOL: not a SOL file');
   }
 
   var version = stream.readInt32LE();
 
   if (version !== Solid.VERSION) {
-    console.error('Failed to load SOL: not a version ' + Solid.VERSION + ' SOL file');
-    return;
+    throw Error('Failed to load SOL: not a version ' + Solid.VERSION + ' SOL file');
   }
 
   var ac = stream.readInt32LE();
