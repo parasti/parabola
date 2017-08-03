@@ -4,7 +4,7 @@ var mat4 = require('gl-matrix').mat4;
 var screenfull = require('screenfull');
 var data = require('./data.js');
 
-var Solid = require('./solid.js').Solid;
+var Solid = require('./solid.js');
 var GLState = require('./gl-state.js');
 var View = require('./view.js');
 var BallModel = require('./ball-model.js');
