@@ -124,8 +124,8 @@ function init() {
       return;
     }
 
-    data.loadFile(this.files[0], function(e) {
-      solFile = Solid.load(this.result);
+    data.loadFile(this.files[0]).then(function (arrayBuffer) {
+      solFile = Solid.load(arrayBuffer);
       state.loadLevel(gl, solFile);
     });
   });

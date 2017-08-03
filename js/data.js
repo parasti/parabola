@@ -31,9 +31,11 @@ data.fetchSolid = function (path) {
 }
 
 data.loadFile = function (file, onload) {
-  var reader = new FileReader();
-  reader.addEventListener('load', function (e) {
-    onload.call(this, e);
-  });
-  reader.readAsArrayBuffer(file);
+  return new Promise(function (resolve, reject) {
+    var reader = new FileReader();
+    reader.addEventListener('load', function (e) {
+      resolve(this.result);
+    });
+    reader.readAsArrayBuffer(file);
+  })
 }
