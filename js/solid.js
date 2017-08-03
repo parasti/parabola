@@ -1,5 +1,8 @@
 'use strict';
 
+/*
+ * Buffer with a cursor and array extensions.
+ */
 var SolidCursor = require('cursor').extend({
   readFloatLEArray: function (length) {
     var value = new Float32Array(length);
@@ -48,6 +51,45 @@ function Solid() {
 
 Solid.MAGIC = 0x4c4f53af;
 Solid.VERSION = 7;
+
+/*
+ * Material type flags.
+ */
+Solid.MTRL_PARTICLE = (1 << 10);
+Solid.MTRL_ALPHA_TEST = (1 << 9);
+Solid.MTRL_REFLECTIVE = (1 << 8);
+Solid.MTRL_TRANSPARENT = (1 << 7);
+Solid.MTRL_SHADOWED = (1 << 6);
+Solid.MTRL_DECAL = (1 << 5);
+Solid.MTRL_ENVIRONMENT = (1 << 4);
+Solid.MTRL_TWO_SIDED = (1 << 3);
+Solid.MTRL_ADDITIVE = (1 << 2);
+Solid.MTRL_CLAMP_S = (1 << 1);
+Solid.MTRL_CLAMP_T = (1 << 0);
+
+/*
+ * Billboard flags.
+ */
+Solid.BILL_EDGE = 1;
+Solid.BILL_FLAT = 2;
+Solid.BILL_NOFACE = 4;
+
+/*
+ * Lump flags.
+ */
+Solid.LUMP_DETAIL = 1;
+
+/*
+ * Item types.
+ */
+Solid.ITEM_COIN = 1;
+Solid.ITEM_GROW = 2;
+Solid.ITEM_SHRINK = 3;
+
+/*
+ * Path flags.
+ */
+Solid.PATH_ORIENTED = 1;
 
 /*
  * Load a SOL file from the given ArrayBuffer.
@@ -137,8 +179,6 @@ function loadDicts(stream, count, byteBuffer) {
 };
 
 function loadMtrls(stream, count) {
-  const M_ALPHA_TEST = (1 << 9);
-
   var mtrls = [];
 
   for (var i = 0; i < count; ++i) {
@@ -154,7 +194,7 @@ function loadMtrls(stream, count) {
     var byteBuffer = stream.slice(64).buffer();
     mtrl.f = byteBuffer.toString('utf8', 0, byteBuffer.indexOf(0));
 
-    if (mtrl.fl & M_ALPHA_TEST) {
+    if (mtrl.fl & Solid.MTRL_ALPHA_TEST) {
       mtrl.alpha_func = stream.readInt32LE();
       mtrl.alpha_ref = stream.readFloatLE();
     } else {
@@ -280,8 +320,6 @@ function loadNodes(stream, count) {
 };
 
 function loadPaths(stream, count) {
-  const P_ORIENTED = 0x1;
-
   var paths = [];
 
   for (var i = 0; i < count; ++i) {
@@ -294,7 +332,7 @@ function loadPaths(stream, count) {
       fl: stream.readInt32LE()
     };
 
-    if (path.fl & P_ORIENTED) {
+    if (path.fl & Solid.PATH_ORIENTED) {
       var e = stream.readFloatLEArray(4);
 
       // Convert Neverball's W X Y Z to glMatrix's X Y Z W.
