@@ -30,24 +30,26 @@ function Drawable() {
   this.model = null;
 }
 
-function ModelMatrix() {
-  // Override 'new'.
-  return mat4.create();
-}
-
 function Spatial() {
+  this.matrix = mat4.create();
+
   this.position = vec3.create()
   this.orientation = quat.create();
-  this.scale = vec3.fromValues(1, 1, 1);
+  this.scale = 1;
 }
 
-Spatial.prototype.getTransform = function (M) {
-  var p = this.position;
-  var e = this.orientation;
-  var s = this.scale;
+Spatial.prototype.updateMatrix = (function () {
+  var s = vec3.create();
 
-  mat4.fromRotationTranslationScale(M, e, p, s);
-}
+  return function() {
+    var p = this.position;
+    var e = this.orientation;
+
+    vec3.set(s, this.scale, this.scale, this.scale);
+
+    mat4.fromRotationTranslationScale(this.matrix, e, p, s);
+  }
+})();
 
 function Movers() {
   this.translate = null;
@@ -141,7 +143,6 @@ SolidModel.fromSol = function(sol) {
     var ent = ents.createEntity().addTag('body');
 
     ent.addComponent(Drawable);
-    ent.addComponent(ModelMatrix);
     ent.addComponent(Spatial);
     ent.addComponent(Movers);
 
@@ -181,27 +182,12 @@ SolidModel.fromSol = function(sol) {
 
     ent.addComponent(Item);
     ent.addComponent(Spatial);
-    ent.addComponent(ModelMatrix);
 
     ent.item.value = solItem.n;
 
-    // GLMatrix doesn't have a mat4.fromTranslationScale.
-
-    const r = 0.15; // Neverball default.
-    const x = solItem.p[0];
-    const y = solItem.p[1];
-    const z = solItem.p[2];
-
-    vec3.set(ent.spatial.scale, r, r, r);
-
-    vec3.set(ent.spatial.position, x, y, z);
-
-    mat4.set(ent.modelMatrix,
-      r, 0, 0, 0, // column 0
-      0, r, 0, 0, // column 1
-      0, 0, r, 0, // column 2
-      x, y, z, 1  // column 3
-    );
+    vec3.copy(ent.spatial.position, solItem.p);
+    ent.spatial.scale = 0.15; // Neverball default.
+    ent.spatial.updateMatrix();
   }
 
   // Balls
@@ -211,23 +197,10 @@ SolidModel.fromSol = function(sol) {
     var ent = ents.createEntity().addTag('ball');
 
     ent.addComponent(Spatial);
-    ent.addComponent(ModelMatrix);
 
-    const r = solBall.r;
-    const x = solBall.p[0];
-    const y = solBall.p[1];
-    const z = solBall.p[2];
-
-    ent.spatial.scale = r;
-
-    vec3.set(ent.spatial.position, x, y, z);
-
-    mat4.set(ent.modelMatrix,
-      r, 0, 0, 0, // column 0
-      0, r, 0, 0, // column 1
-      0, 0, r, 0, // column 2
-      x, y, z, 1  // column 3
-    );
+    ent.spatial.scale = solBall.r;
+    vec3.copy(ent.spatial.position, solBall.p);
+    ent.spatial.updateMatrix();
   }
 
   // Billboards
@@ -236,12 +209,12 @@ SolidModel.fromSol = function(sol) {
     var solBill = sol.rv[i];
     var ent = ents.createEntity().addTag('billboard');
 
-    ent.addComponent(ModelMatrix);
     ent.addComponent(Spatial);
     ent.addComponent(Billboard);
 
     vec3.copy(ent.spatial.position, solBill.p);
-    ent.spatial.getTransform(ent.modelMatrix);
+    ent.spatial.updateMatrix();
+
     ent.billboard.fromSolBill(sol, solBill);
   }
 
@@ -249,7 +222,7 @@ SolidModel.fromSol = function(sol) {
 }
 
 SolidModel.prototype.step = function(dt) {
-  var ents = this.entities.queryComponents([Spatial, ModelMatrix, Movers]);
+  var ents = this.entities.queryComponents([Spatial, Movers]);
 
   for (var i = 0; i < ents.length; ++i) {
     var ent = ents[i];
@@ -266,16 +239,13 @@ SolidModel.prototype.step = function(dt) {
       moverRotate.step(dt);
     }
 
-    var p = ent.spatial.position;
-    var e = ent.spatial.orientation;
-
     // Update model matrix.
 
     // TODO do this only on actual update
-    moverTranslate.getPosition(p);
-    moverRotate.getOrientation(e);
+    moverTranslate.getPosition(ent.spatial.position);
+    moverRotate.getOrientation(ent.spatial.orientation);
 
-    mat4.fromRotationTranslation(ent.modelMatrix, e, p);
+    ent.spatial.updateMatrix();
   }
 }
 
@@ -303,7 +273,7 @@ SolidModel.prototype.createObjects = function(gl) {
  * Render entity meshes of the given type. Pass a parentMatrix for hierarchical transform.
  */
 SolidModel.prototype.drawMeshType = function(gl, state, meshType, parentMatrix) {
-  var ents = this.entities.queryComponents([Drawable, ModelMatrix]);
+  var ents = this.entities.queryComponents([Drawable, Spatial]);
 
   for (var i = 0; i < ents.length; ++i) {
     var ent = ents[i];
@@ -312,11 +282,11 @@ SolidModel.prototype.drawMeshType = function(gl, state, meshType, parentMatrix) 
     if (parentMatrix) {
       // TODO move this off the render path.
       var modelMatrix = mat4.create();
-      mat4.multiply(modelMatrix, parentMatrix, ent.modelMatrix);
+      mat4.multiply(modelMatrix, parentMatrix, ent.spatial.matrix);
       // TODO update uniforms on actual change
       gl.uniformMatrix4fv(state.uModelID, false, modelMatrix);
     } else {
-      gl.uniformMatrix4fv(state.uModelID, false, ent.modelMatrix);
+      gl.uniformMatrix4fv(state.uModelID, false, ent.spatial.matrix);;
     }
 
     // TODO tag entities w/ models that have this mesh type?
@@ -374,7 +344,7 @@ SolidModel.prototype.drawItems = function(gl, state) {
       var ents = this.entities.queryTag(tag);
 
       for (var i = 0; i < ents.length; ++i) {
-        model.draw(gl, state, ents[i].modelMatrix);
+        model.draw(gl, state, ents[i].spatial.matrix);
       }
     }
   }
@@ -392,13 +362,13 @@ SolidModel.prototype.drawBalls = function(gl, state) {
     for (var i = 0; i < ents.length; ++i) {
       var ent = ents[i];
 
-      model.draw(gl, state, ent.modelMatrix);
+      model.draw(gl, state, ent.spatial.matrix);
     }
   }
 }
 
 SolidModel.prototype.drawBills = function(gl, state, parentMatrix) {
-  var ents = this.entities.queryComponents([Billboard, Spatial, ModelMatrix]);
+  var ents = this.entities.queryComponents([Billboard, Spatial]);
 
   // TODO
   var viewBasis = state.view.getBasis();
@@ -415,10 +385,9 @@ SolidModel.prototype.drawBills = function(gl, state, parentMatrix) {
   for (var i = 0; i < ents.length; ++i) {
     var ent = ents[i];
 
-    // TODO lots of math for a draw frame
-    ent.spatial.getTransform(modelMatrix);
+    // TODO too much math for a draw frame
     // if (!B_NOFACE)
-    mat4.multiply(modelMatrix, modelMatrix, viewBasis);
+    mat4.multiply(modelMatrix, ent.spatial.matrix, viewBasis);
     ent.billboard.getForegroundTransform(modelMatrix, state.time);
 
     if (parentMatrix) {
