@@ -37,21 +37,16 @@ function ModelMatrix() {
 function Spatial() {
   this.position = vec3.create()
   this.orientation = quat.create();
-  this.scale = 1.0;
+  this.scale = vec3.fromValues(1, 1, 1);
 }
 
-Spatial.prototype.getTransform = (function () {
-  var s = vec3.create();
+Spatial.prototype.getTransform = function (M) {
+  var p = this.position;
+  var e = this.orientation;
+  var s = this.scale;
 
-  return function(M) {
-    var p = this.position;
-    var e = this.orientation;
-    
-    vec3.set(s, this.scale, this.scale, this.scale);
-
-    mat4.fromRotationTranslationScale(M, e, p, s);
-  }
-})();
+  mat4.fromRotationTranslationScale(M, e, p, s);
+}
 
 function Movers() {
   this.translate = null;
@@ -171,7 +166,7 @@ SolidModel.fromSol = function(sol) {
     const y = solItem.p[1];
     const z = solItem.p[2];
 
-    ent.spatial.scale = r;
+    vec3.set(ent.spatial.scale, r, r, r);
 
     vec3.set(ent.spatial.position, x, y, z);
 
