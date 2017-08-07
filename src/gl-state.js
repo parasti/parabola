@@ -12,7 +12,7 @@ function GLState(gl) {
   this.defaultTexture = null;
   this.enableTextures = true;
 
-  this.prog = null;
+  this.defaultProgram = null;
 
   this.uPerspID = null;
   this.uViewID = null;
@@ -31,6 +31,7 @@ function GLState(gl) {
   this.aTexCoordID = 2;
 
   this.enabledArrays = []; // TODO
+  this.usedProgram = null;
 
   this.perspMatrix = mat4.create();
   this.viewMatrix = mat4.create();
@@ -195,7 +196,7 @@ GLState.prototype.createShaders = function(gl) {
   this.uShininess = gl.getUniformLocation(prog, 'uShininess');
   this.uEnvironment = gl.getUniformLocation(prog, 'uEnvironment');
 
-  this.prog = prog;
+  this.defaultProgram = prog;
 }
 
 /*
@@ -225,7 +226,6 @@ GLState.prototype.setModel = function (gl, modelName, model) {
 
 /*
  * Track vertex attribute array enabled/disabled state.
- * TODO is this per-shader or global? Fuck if I know.
  */
 GLState.prototype.enableArray = function(gl, index) {
   if (!this.enabledArrays[index]) {
@@ -242,6 +242,16 @@ GLState.prototype.disableArray = function(gl, index) {
 }
 
 /*
+ * Track used program.
+ */
+GLState.prototype.useProgram = function(gl, program) {
+  if (program !== this.usedProgram) {
+    gl.useProgram(program);
+    this.usedProgram = program;
+  }
+}
+
+/*
  * Render everything.
  */
 GLState.prototype.draw = function(gl) {
@@ -249,9 +259,9 @@ GLState.prototype.draw = function(gl) {
 
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-  if (this.prog) {
-    // TODO
-    gl.useProgram(this.prog);
+  if (this.defaultProgram) {
+    // TODO per material
+    this.useProgram(gl, this.defaultProgram);
 
     gl.uniform1i(this.uTextureID, 0);
 
@@ -267,7 +277,7 @@ GLState.prototype.draw = function(gl) {
       levelModel.drawBills(gl, this);
     }
 
-    gl.useProgram(null);
+    //gl.useProgram(null);
   }
 }
 
