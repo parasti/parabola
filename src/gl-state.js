@@ -37,12 +37,15 @@ function GLState(gl) {
 
   this.view = new View();
 
-  this.levelModel = null;
-  this.coinModel = null; // TODO
-  this.coin5Model = null;
-  this.coin10Model = null;
-  this.growModel = null;
-  this.shrinkModel = null;
+  this.models = { // TODO
+    level: null,
+    ball: null,
+    coin: null,
+    coin5: null,
+    coin10: null,
+    grow: null,
+    shrink: null
+  };
 
   this.billboardMesh = null;
 
@@ -209,39 +212,15 @@ GLState.prototype.calcPerspective = function(w, h) {
   mat4.perspective(this.perspMatrix, fov, a, n, f);
 }
 
-GLState.prototype.loadLevel = function(gl, sol) {
-  this.levelModel = SolidModel.fromSol(sol);
-  this.levelModel.createObjects(gl);
+GLState.prototype.setModelFromSol = function (gl, modelName, sol) {
+  var model = SolidModel.fromSol(sol);
+  model.createObjects(gl);
+  this.models[modelName] = model;
 }
 
-GLState.prototype.loadCoin = function(gl, sol) {
-  this.coinModel = SolidModel.fromSol(sol);
-  this.coinModel.createObjects(gl);
-}
-
-GLState.prototype.loadCoin5 = function(gl, sol) {
-  this.coin5Model = SolidModel.fromSol(sol);
-  this.coin5Model.createObjects(gl);
-}
-
-GLState.prototype.loadCoin10 = function(gl, sol) {
-  this.coin10Model = SolidModel.fromSol(sol);
-  this.coin10Model.createObjects(gl);
-}
-
-GLState.prototype.loadGrow = function(gl, sol) {
-  this.growModel = SolidModel.fromSol(sol);
-  this.growModel.createObjects(gl);
-}
-
-GLState.prototype.loadShrink = function(gl, sol) {
-  this.shrinkModel = SolidModel.fromSol(sol);
-  this.shrinkModel.createObjects(gl);
-}
-
-GLState.prototype.loadBall = function(gl, model) {
-  this.ballModel = model;
-  this.ballModel.createObjects(gl);
+GLState.prototype.setModel = function (gl, modelName, model) {
+  model.createObjects(gl);
+  this.models[modelName] = model;
 }
 
 /*
@@ -279,12 +258,13 @@ GLState.prototype.draw = function(gl) {
     gl.uniformMatrix4fv(this.uPerspID, false, this.perspMatrix);
     gl.uniformMatrix4fv(this.uViewID, false, this.viewMatrix);
 
-    if (this.levelModel) {
-      this.levelModel.drawItems(gl, this);
-      this.levelModel.drawBodies(gl, this);
-      this.levelModel.drawBalls(gl, this);
+    var levelModel = this.models.level;
 
-      this.levelModel.drawBills(gl, this);
+    if (levelModel) {
+      levelModel.drawItems(gl, this);
+      levelModel.drawBodies(gl, this);
+      levelModel.drawBalls(gl, this);
+      levelModel.drawBills(gl, this);
     }
 
     gl.useProgram(null);
@@ -294,26 +274,12 @@ GLState.prototype.draw = function(gl) {
 GLState.prototype.step = function(dt) {
   this.time += dt;
 
-  if (this.levelModel) {
-    this.levelModel.step(dt);
-  }
-  if (this.coinModel) {
-    this.coinModel.step(dt);
-  }
-  if (this.coin5Model) {
-    this.coin5Model.step(dt);
-  }
-  if (this.coin10Model) {
-    this.coin10Model.step(dt);
-  }
-  if (this.growModel) {
-    this.growModel.step(dt);
-  }
-  if (this.shrinkModel) {
-    this.shrinkModel.step(dt);
-  }
-  if (this.ballModel) {
-    this.ballModel.step(dt);
+  for (var name in this.models) {
+    var model = this.models[name];
+
+    if (model) {
+      model.step(dt);
+    }
   }
 }
 

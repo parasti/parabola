@@ -348,21 +348,30 @@ SolidModel.prototype.draw = SolidModel.prototype.drawBodies;
 SolidModel.prototype.drawItems = function(gl, state) {
   var ents = this.entities.queryComponents([Item, ModelMatrix]);
 
+  var growModel = state.models.grow;
+  var shrinkModel = state.models.shrink;
+  var coinModel = state.models.coin;
+  var coin5Model = state.models.coin5;
+  var coin10Model = state.models.coin10;
+
+  // TODO query entities by item type, the "item" selector seems pretty useless.
+
   for (var i = 0; i < ents.length; ++i) {
     var ent = ents[i];
 
     // Pass entity transform as a parent matrix for nested SolidModel rendering.
+    
     if (ent.hasTag('grow')) {
-      state.growModel.draw(gl, state, ent.modelMatrix);
+      growModel.draw(gl, state, ent.modelMatrix);
     } else if (ent.hasTag('shrink')) {
-      state.shrinkModel.draw(gl, state, ent.modelMatrix);
+      shrinkModel.draw(gl, state, ent.modelMatrix);
     } else {
       if (ent.item.value >= 10) {
-        state.coin10Model.draw(gl, state, ent.modelMatrix);
+        coin10Model.draw(gl, state, ent.modelMatrix);
       } else if (ent.item.value >= 5) {
-        state.coin5Model.draw(gl, state, ent.modelMatrix);
+        coin5Model.draw(gl, state, ent.modelMatrix);
       } else {
-        state.coinModel.draw(gl, state, ent.modelMatrix);
+        coinModel.draw(gl, state, ent.modelMatrix);
       }
     }
   }
@@ -377,7 +386,7 @@ SolidModel.prototype.drawBalls = function(gl, state) {
   for (var i = 0; i < ents.length; ++i) {
     var ent = ents[i];
 
-    state.ballModel.draw(gl, state, ent.modelMatrix);
+    state.models.ball.draw(gl, state, ent.modelMatrix);
   }
 }
 

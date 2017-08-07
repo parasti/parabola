@@ -33,7 +33,7 @@ function loadBall(gl, state, name) {
   var basePath = 'ball/' + name + '/' + name;
 
   BallModel.fetch(basePath).then(function(model) {
-    state.loadBall(gl, model);
+    state.setModel(gl, 'ball', model);
   });
 }
 
@@ -45,25 +45,23 @@ function init() {
 
   data.fetchSolid('map-easy/easy.sol').then(function(sol) {
     solFile = sol;
-    state.loadLevel(gl, sol);
+    state.setModelFromSol(gl, 'level', sol);
     state.view.setFromSol(sol, 1.0);
   });
 
-  data.fetchSolid('item/coin/coin.sol').then(function(sol) {
-    state.loadCoin(gl, sol);
-  });
-  data.fetchSolid('item/coin/coin5.sol').then(function(sol) {
-    state.loadCoin5(gl, sol);
-  });
-  data.fetchSolid('item/coin/coin10.sol').then(function(sol) {
-    state.loadCoin10(gl, sol);
-  });
-  data.fetchSolid('item/grow/grow.sol').then(function(sol) {
-    state.loadGrow(gl, sol);
-  });
-  data.fetchSolid('item/shrink/shrink.sol').then(function(sol) {
-    state.loadShrink(gl, sol);
-  });
+  var modelPaths = {
+    coin: 'item/coin/coin.sol',
+    coin5: 'item/coin/coin5.sol',
+    coin10: 'item/coin/coin10.sol',
+    grow: 'item/grow/grow.sol',
+    shrink: 'item/shrink/shrink.sol'
+  }
+
+  for (let modelName in modelPaths) {
+    data.fetchSolid(modelPaths[modelName]).then(function (sol) {
+      state.setModelFromSol(gl, modelName, sol);
+    });
+  }
 
   loadBall(gl, state, 'snowglobe');
 
@@ -130,7 +128,7 @@ function init() {
 
     data.loadFile(this.files[0]).then(function (arrayBuffer) {
       solFile = Solid.load(arrayBuffer);
-      state.loadLevel(gl, solFile);
+      state.setModelFromSol(gl, 'level', solFile);
     });
   });
 
@@ -183,7 +181,6 @@ function init() {
     } else if (code === 'KeyD') {
       state.view.moveRight(false);
     }
-
   }
 
   canvas.addEventListener('wheel', function(e) {
