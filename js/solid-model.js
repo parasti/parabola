@@ -72,6 +72,21 @@ function Billboard() {
   this.flags = 0;
 }
 
+Billboard.prototype.fromSolBill = function (sol, solBill) {
+  this.mtrl = sol.mv[solBill.mi];
+
+  this.t = solBill.t;
+
+  vec3.copy(this.w, solBill.w);
+  vec3.copy(this.h, solBill.h);
+
+  vec3.copy(this.rx, solBill.rx);
+  vec3.copy(this.ry, solBill.ry);
+  vec3.copy(this.rz, solBill.rz);
+
+  this.flags = solBill.fl;
+}
+
 Billboard.prototype.getForegroundTransform = function(M, globalTime) {
   // sol_bill
 
@@ -215,18 +230,8 @@ SolidModel.fromSol = function(sol) {
     ent.addComponent(Billboard);
 
     vec3.copy(ent.spatial.position, solBill.p);
-
-    vec3.copy(ent.billboard.w, solBill.w);
-    vec3.copy(ent.billboard.h, solBill.h);
-    vec3.copy(ent.billboard.rx, solBill.rx);
-    vec3.copy(ent.billboard.ry, solBill.ry);
-    vec3.copy(ent.billboard.rz, solBill.rz);
-
-    ent.billboard.t = solBill.t;
-
     ent.spatial.getTransform(ent.modelMatrix);
-
-    ent.billboard.mtrl = sol.mv[solBill.mi];
+    ent.billboard.fromSolBill(sol, solBill);
   }
 
   return solidModel;
