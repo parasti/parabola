@@ -1,5 +1,7 @@
 'use strict';
 
+module.exports = Solid;
+
 /*
  * Buffer with a cursor and array extensions.
  */
@@ -22,32 +24,9 @@ var SolidCursor = require('cursor').extend({
 /*
  * Neverball SOL file.
  */
-function Solid() {
-  this.magic = 0;
-  this.version = 0;
-
-  this.av = null;
-  this.dv = null;
-  this.mv = null;
-  this.vv = null;
-  this.ev = null;
-  this.sv = null;
-  this.tv = null;
-  this.ov = null;
-  this.gv = null;
-  this.lv = null;
-  this.nv = null;
-  this.pv = null;
-  this.bv = null;
-  this.hv = null;
-  this.zv = null;
-  this.jv = null;
-  this.xv = null;
-  this.rv = null;
-  this.uv = null;
-  this.wv = null;
-  this.iv = null;
-};
+function Solid () {
+  return Object.create(Solid.prototype);
+}
 
 Solid.MAGIC = 0x4c4f53af;
 Solid.VERSION = 7;
@@ -132,7 +111,7 @@ Solid.load = function (buffer) {
   var wc = stream.readInt32LE();
   var ic = stream.readInt32LE();
 
-  var sol = new Solid();
+  var sol = Solid();
 
   sol.magic = magic;
   sol.version = version;
@@ -492,8 +471,9 @@ function loadViews(stream, count) {
 };
 
 /*
- * Index body geoms by SOL material ID. The result is a sparse array.
+ * Body mesh creation.
  */
+
 function indexGeomByMtrl(geoms, geom) {
   var mi = geom.mi;
 
@@ -503,32 +483,29 @@ function indexGeomByMtrl(geoms, geom) {
   geoms[mi].push(geom);
 }
 
-Solid.prototype.getBodyGeomsByMtrl = function (body) {
+function getBodyGeomsByMtrl (sol, body) {
   var geoms = [];
 
   // OBJ geometry.
   for (var gi = 0; gi < body.gc; ++gi) {
-    indexGeomByMtrl(geoms, this.gv[this.iv[body.g0 + gi]]);
+    indexGeomByMtrl(geoms, sol.gv[sol.iv[body.g0 + gi]]);
   }
 
   // Lump geometry.
   for (var li = 0; li < body.lc; ++li) {
-    var lump = this.lv[body.l0 + li];
+    var lump = sol.lv[body.l0 + li];
     for (var gi = 0; gi < lump.gc; ++gi) {
-      indexGeomByMtrl(geoms, this.gv[this.iv[lump.g0 + gi]]);
+      indexGeomByMtrl(geoms, sol.gv[sol.iv[lump.g0 + gi]]);
     }
   }
 
   return geoms;
 };
 
-/*
- * Collect vertex attributes described by a SOL offs into a Float32Array[8] (position+normal+uv).
- */
-Solid.prototype.getVert = function (vert, offs) {
-  var vp = this.vv[offs.vi];
-  var sp = this.sv[offs.si].n;
-  var tp = this.tv[offs.ti];
+function getVertAttribs(sol, vert, offs) {
+  var vp = sol.vv[offs.vi];
+  var sp = sol.sv[offs.si].n;
+  var tp = sol.tv[offs.ti];
 
   vert[0] = vp[0];
   vert[1] = vp[1];
@@ -546,7 +523,7 @@ function addVertToMesh(mesh, sol, offs) {
   var pos = mesh.count * 8;
   var vert = mesh.verts.subarray(pos, pos + 8);
 
-  sol.getVert(vert, offs);
+  getVertAttribs(sol, vert, offs);
 
   mesh.count++;
 };
@@ -558,7 +535,7 @@ Solid.prototype.getBodyMeshes = function (body) {
   var meshes = [];
   var sol = this;
 
-  this.getBodyGeomsByMtrl(body).forEach(function (geoms, mi) {
+  getBodyGeomsByMtrl(sol, body).forEach(function (geoms, mi) {
     var mesh = {
       mtrl: sol.mv[mi],
       // 1 geom = 3 verts = 3 * (3 + 3 + 2) floats
@@ -579,8 +556,3 @@ Solid.prototype.getBodyMeshes = function (body) {
 
   return meshes;
 };
-
-/*
- * Exports.
- */
-module.exports = Solid;
