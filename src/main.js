@@ -1,5 +1,9 @@
 'use strict';
 
+document.addEventListener('DOMContentLoaded', function () {
+  init();
+});
+
 var mat4 = require('gl-matrix').mat4;
 var screenfull = require('screenfull');
 var data = require('./data.js');
@@ -198,8 +202,3 @@ function init() {
     loadBall(gl, state, ballName.value);
   });
 }
-
-/*
- * Exports.
- */
-module.exports = init;

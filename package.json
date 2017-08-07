@@ -2,10 +2,10 @@
   "name": "parabola",
   "version": "0.0.1",
   "description": "A WebGL port of Neverball",
-  "main": "src/parabola.js",
+  "main": "src/main.js",
   "scripts": {
-    "start": "beefy src/parabola.js:parabola.js --live",
-    "check": "browserify src/parabola.js -t eslintify"
+    "start": "beefy src/main.js:parabola.js --live",
+    "check": "browserify src/main.js -t eslintify"
   },
   "browserify": {
     "transform": ["glslify"]
