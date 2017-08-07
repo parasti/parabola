@@ -16,28 +16,14 @@ function SolidModel() {
   this.models = null;
   this.materials = null;
 
-  /*
-   * Transparency defaults. Overridden by ball skins, primarily.
-   */
+  // Transparency defaults. Overridden by ball skins, primarily.
+
   this.transparentDepthTest = true;
   this.transparentDepthMask = false;
 }
 
 /*
- * Notes on nano-ecs:
- *
- * 1) Use of "new" prevents factory functions for components.
- *    Workaround: return object from component to override 'new'.
- *    Can't return null or basic types this way, only objects.
- *
- * 2) Can't namespace components. typedef.getName returns empty for methods.
- *    Workaround (or intended): name your anonymous function.
- *      Components.whatever = function thing() { } // nano-ecs uses 'thing'
- *      e.addComponent(Components.whatever)
- */
-
-/*
- * Entity components
+ * Entity components.
  */
 function Drawable() {
   this.model = null;
@@ -77,7 +63,7 @@ function Item() {
 }
 
 function Billboard() {
-  this.mtrl = null; // TODO
+  this.mtrl = null;
 
   this.t = 1.0;
 
