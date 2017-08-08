@@ -116,7 +116,7 @@ Solid.load = function (buffer) {
   sol.magic = magic;
   sol.version = version;
 
-  sol.av = stream.slice(ac).buffer();
+  sol.av = new Uint8Array(stream.slice(ac).buffer());
   sol.dv = loadDicts(stream, dc, sol.av);
   sol.mv = loadMtrls(stream, mc);
   sol.vv = loadVerts(stream, vc);
