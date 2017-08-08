@@ -1,26 +1,23 @@
 'use strict';
 
 var data = require('./data.js');
-
 var mtrlImages = require('./mtrl-images.json');
 
-var Mtrl = function (solMtrl) {
-  if (solMtrl) {
-    Object.assign(this, solMtrl);
-  } else {
-    this.d = new Float32Array([0.8, 0.8, 0.8, 1.0]);
-    this.a = new Float32Array([0.2, 0.2, 0.2, 1.0]);
-    this.s = new Float32Array([0, 0, 0, 1]);
-    this.e = new Float32Array([0, 0, 0, 1]);
-    this.h = new Float32Array([0]);
-    this.fl = 0;
-    this.f = '';
+var Mtrl = function () {
+  return {
+    d: new Float32Array([0.8, 0.8, 0.8, 1.0]),
+    a: new Float32Array([0.2, 0.2, 0.2, 1.0]),
+    s: new Float32Array([0, 0, 0, 1]),
+    e: new Float32Array([0, 0, 0, 1]),
+    h: new Float32Array([0]),
+    fl: 0,
+    f: '',
 
-    this.alpha_func = 0;
-    this.alpha_ref = 0.0;
+    alpha_func: 0, // TODO
+    alpha_ref: 0.0,
+
+    texture: null,
   }
-
-  this.tex = null;
 };
 
 /*
@@ -37,10 +34,6 @@ Mtrl.TWO_SIDED = (1 << 3);
 Mtrl.ADDITIVE = (1 << 2);
 Mtrl.CLAMP_S = (1 << 1);
 Mtrl.CLAMP_T = (1 << 0);
-
-Mtrl.prototype.toString = function () {
-  return this.f;
-};
 
 /*
  * Material sorting rules.
@@ -78,15 +71,15 @@ Mtrl.isReflective = function (mtrl) {
 /*
  * Create a GL texture from the given image.
  */
-Mtrl.prototype.createTexture = function (gl, img) {
+Mtrl.createTexture = function (gl, mtrl, img) {
   var tex = gl.createTexture();
 
   gl.bindTexture(gl.TEXTURE_2D, tex);
 
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S,
-      this.fl & Mtrl.CLAMP_S ? gl.CLAMP_TO_EDGE : gl.REPEAT);
+      mtrl.fl & Mtrl.CLAMP_S ? gl.CLAMP_TO_EDGE : gl.REPEAT);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T,
-      this.fl & Mtrl.CLAMP_T ? gl.CLAMP_TO_EDGE : gl.REPEAT);
+      mtrl.fl & Mtrl.CLAMP_T ? gl.CLAMP_TO_EDGE : gl.REPEAT);
 
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
@@ -95,48 +88,46 @@ Mtrl.prototype.createTexture = function (gl, img) {
   gl.generateMipmap(gl.TEXTURE_2D);
   gl.bindTexture(gl.TEXTURE_2D, null);
 
-  this.tex = tex;
+  mtrl.texture = tex;
 };
 
 /*
  * Apply material state.
  */
-Mtrl.prototype.draw = function (gl, state) {
-  // TODO shadow state locally?
+Mtrl.draw = function (gl, state, mtrl) {
+  // TODO shadow state locally
 
-  if (state.enableTextures && this.tex) {
-    gl.bindTexture(gl.TEXTURE_2D, this.tex);
+  if (state.enableTextures && mtrl.texture) {
+    gl.bindTexture(gl.TEXTURE_2D, mtrl.texture);
   } else {
     gl.bindTexture(gl.TEXTURE_2D, state.defaultTexture);
   }
 
-  gl.uniform4fv(state.uDiffuse, this.d);
-  gl.uniform4fv(state.uAmbient, this.a);
-  gl.uniform4fv(state.uSpecular, this.s);
-  gl.uniform4fv(state.uEmissive, this.e);
-  gl.uniform1f(state.uShininess, this.h[0]);
+  gl.uniform4fv(state.uDiffuse, mtrl.d);
+  gl.uniform4fv(state.uAmbient, mtrl.a);
+  gl.uniform4fv(state.uSpecular, mtrl.s);
+  gl.uniform4fv(state.uEmissive, mtrl.e);
+  gl.uniform1f(state.uShininess, mtrl.h[0]);
 
-  if (this.fl & Mtrl.ENVIRONMENT) {
+  if (mtrl.fl & Mtrl.ENVIRONMENT) {
     gl.uniform1i(state.uEnvironment, 1);
   } else {
     gl.uniform1i(state.uEnvironment, 0);
   }
 
-  if (this.fl & Mtrl.ADDITIVE) {
+  if (mtrl.fl & Mtrl.ADDITIVE) {
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
-    //gl.uniform1f(state.uAdditivity, 1.0);
   } else {
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-    //gl.uniform1f(state.uAdditivity, 0.0);
   }
 
-  if (this.fl & Mtrl.TWO_SIDED) {
+  if (mtrl.fl & Mtrl.TWO_SIDED) {
     gl.disable(gl.CULL_FACE);
   } else {
     gl.enable(gl.CULL_FACE);
   }
 
-  if (this.fl & Mtrl.DECAL) {
+  if (mtrl.fl & Mtrl.DECAL) {
     gl.enable(gl.POLYGON_OFFSET_FILL);
     gl.polygonOffset(-1.0, -2.0);
   } else {
@@ -148,25 +139,24 @@ Mtrl.prototype.draw = function (gl, state) {
 /*
  * Download material image and create a texture.
  */
-Mtrl.prototype.loadTexture = function (gl) {
-  if (this._loading) {
+Mtrl.loadTexture = function (gl, mtrl) {
+  if (mtrl._loading) {
     return;
   }
-  if (this.tex) {
-    console.log('Material ' + this + ' has already been loaded');
+  if (mtrl.texture) {
+    console.log('Material ' + mtrl.f + ' has already been loaded');
     return;
   }
-  if (!mtrlImages[this]) {
-    console.log('Material ' + this + ' is unknown');
+  if (!mtrlImages[mtrl.f]) {
+    console.log('Material ' + mtrl.f + ' is unknown');
     return;
   }
 
   // Prevent multiple loads. This is probably dumb.
-  this._loading = true;
-  var self = this;
-  data.fetchImage(mtrlImages[self.f]).then(function(image) {
-    self.createTexture(gl, image);
-    delete self._loading;
+  mtrl._loading = true;
+  data.fetchImage(mtrlImages[mtrl.f]).then(function(image) {
+    Mtrl.createTexture(gl, mtrl, image);
+    delete mtrl._loading;
   });
 };
 

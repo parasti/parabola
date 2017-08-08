@@ -12,15 +12,18 @@ var BodyModel = require('./body-model.js');
 var Solid = require('./solid.js');
 
 function SolidModel() {
-  this.entities = null;
+  var model = Object.create(SolidModel.prototype);
 
-  this.models = null;
-  this.materials = null;
+  model.entities = null;
+  model.models = null;
+  model.materials = null;
 
   // Transparency defaults. Overridden by ball skins, primarily.
 
-  this.transparentDepthTest = true;
-  this.transparentDepthMask = false;
+  model.transparentDepthTest = true;
+  model.transparentDepthMask = false;
+
+  return model;
 }
 
 /*
@@ -122,18 +125,17 @@ Billboard.prototype.getForegroundTransform = function(M, globalTime) {
  * Load entities from SOL.
  */
 SolidModel.fromSol = function(sol) {
-  var solidModel = new SolidModel();
+  var solidModel = SolidModel();
 
   var ents = solidModel.entities = nanoECS();
   var models = solidModel.models = [];
-  var materials = solidModel.materials = [];
+  var materials = solidModel.materials = {};
 
   // Materials
 
   for (var i = 0; i < sol.mv.length; ++i) {
-    var mtrl = new Mtrl(sol.mv[i]);
-    materials.push(mtrl);
-    sol.mv[i]._cachedMaterial = mtrl; // TODO FIXME
+    var mtrl = sol.mv[i];
+    materials[mtrl.f] = mtrl;
   }
 
   // Bodies
@@ -263,9 +265,8 @@ SolidModel.prototype.createObjects = function(gl) {
     }
   }
 
-  for (var i = 0; i < materials.length; ++i) {
-    var mtrl = materials[i];
-    mtrl.loadTexture(gl);
+  for (var mtrlName in materials) {
+    Mtrl.loadTexture(gl, materials[mtrlName]);
   }
 }
 
@@ -395,7 +396,7 @@ SolidModel.prototype.drawBills = function(gl, state, parentMatrix) {
     }
     gl.uniformMatrix4fv(state.uModelID, false, modelMatrix);
 
-    ent.billboard.mtrl._cachedMaterial.draw(gl, state);
+    Mtrl.draw(gl, state, ent.billboard.mtrl);
     state.billboardMesh.draw(gl, state);
   }
 

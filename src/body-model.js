@@ -82,7 +82,7 @@ function createMeshObjects(gl, mesh) {
 }
 
 function drawMesh(gl, state, mesh) {
-  mesh.mtrl._cachedMaterial.draw(gl, state);
+  Mtrl.draw(gl, state, mesh.mtrl);
 
   if (mesh.vbo) {
     state.enableArray(gl, state.uPositionID);
