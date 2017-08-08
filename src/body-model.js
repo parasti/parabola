@@ -5,17 +5,13 @@ module.exports = BodyModel;
 var Mtrl = require('./mtrl.js');
 
 function BodyModel() {
-  this.meshes = null;
-
-  this.opaqueMeshes = null;
-  this.opaqueDecalMeshes = null;
-  this.transparentDecalMeshes = null;
-  this.transparentMeshes = null;
-  this.reflectiveMeshes = null;
+  var model = Object.create(BodyModel.prototype);
+  model.meshes = null; // Both array and dictionary
+  return model;
 }
 
 BodyModel.fromSolBody = function(sol, solBody) {
-  var model = new BodyModel();
+  var model = BodyModel();
   model.meshes = sol.getBodyMeshes(solBody);
   model.sortMeshes();
   return model;
@@ -24,18 +20,18 @@ BodyModel.fromSolBody = function(sol, solBody) {
 BodyModel.prototype.createObjects = function(gl) {
   var meshes = this.meshes;
 
-  for (var j = 0; j < meshes.length; ++j) {
-    var mesh = meshes[j];
+  for (var i = 0; i < meshes.length; ++i) {
+    var mesh = meshes[i];
     createMeshObjects(gl, mesh);
   }
 }
 
 BodyModel.prototype.sortMeshes = function() {
-  var opaqueMeshes = [];
-  var opaqueDecalMeshes = [];
-  var transparentDecalMeshes = [];
-  var transparentMeshes = [];
-  var reflectiveMeshes = [];
+  var opaqueMeshes = this.meshes.opaque = [];
+  var opaqueDecalMeshes = this.meshes.opaqueDecal = [];
+  var transparentDecalMeshes = this.meshes.transparentDecal = [];
+  var transparentMeshes = this.meshes.transparent = [];
+  var reflectiveMeshes = this.meshes.reflective = [];
 
   for (var i = 0; i < this.meshes.length; ++i) {
     var mesh = this.meshes[i];
@@ -53,16 +49,10 @@ BodyModel.prototype.sortMeshes = function() {
       reflectiveMeshes.push(mesh);
     }
   }
-
-  this.opaqueMeshes = opaqueMeshes;
-  this.opaqueDecalMeshes = opaqueDecalMeshes;
-  this.transparentDecalMeshes = transparentDecalMeshes;
-  this.transparentMeshes = transparentMeshes;
-  this.reflectiveMeshes = reflectiveMeshes;
 }
 
 BodyModel.prototype.drawMeshType = function(gl, state, meshType) {
-  var meshes = this[meshType + 'Meshes'];
+  var meshes = this.meshes[meshType];
   for (var i = 0; i < meshes.length; ++i) {
     drawMesh(gl, state, meshes[i]);
   }
