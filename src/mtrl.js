@@ -71,7 +71,7 @@ Mtrl.isReflective = function (mtrl) {
 /*
  * Create a GL texture from the given image.
  */
-Mtrl.createTexture = function (gl, mtrl, img) {
+Mtrl.createTexture = function (gl, mtrl) {
   var tex = gl.createTexture();
 
   gl.bindTexture(gl.TEXTURE_2D, tex);
@@ -84,7 +84,7 @@ Mtrl.createTexture = function (gl, mtrl, img) {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
 
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, mtrl.image);
   gl.generateMipmap(gl.TEXTURE_2D);
   gl.bindTexture(gl.TEXTURE_2D, null);
 
@@ -143,19 +143,19 @@ Mtrl.loadTexture = function (gl, mtrl) {
   if (mtrl._loading) {
     return;
   }
-  if (mtrl.texture) {
-    console.log('Material ' + mtrl.f + ' has already been loaded');
-    return;
-  }
-  if (!mtrlImages[mtrl.f]) {
-    console.log('Material ' + mtrl.f + ' is unknown');
-    return;
+  if (mtrl.image) {
+    throw Error('Material image for ' + mtrl.f + ' has already been loaded');
   }
 
-  // Prevent multiple loads. This is probably dumb.
+  var imagePath = mtrlImages[mtrl.f];
+  if (!imagePath) {
+    throw Error('Material image for ' + mtrl.f + ' is unknown');
+  }
+
   mtrl._loading = true;
-  data.fetchImage(mtrlImages[mtrl.f]).then(function(image) {
-    Mtrl.createTexture(gl, mtrl, image);
+  data.fetchImage(imagePath).then(function (image) {
+    mtrl.image = image;
+    Mtrl.createTexture(gl, mtrl);
     delete mtrl._loading;
   });
 };
