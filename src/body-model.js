@@ -69,6 +69,14 @@ function createMeshObjects(gl, mesh) {
   gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
   mesh.vbo = vbo;
+
+  var ebo = gl.createBuffer();
+
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo);
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.elems, gl.STATIC_DRAW);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+
+  mesh.ebo = ebo;
 }
 
 function drawMesh(gl, state, mesh) {
@@ -85,6 +93,8 @@ function drawMesh(gl, state, mesh) {
     gl.vertexAttribPointer(state.aTexCoordID, 2, gl.FLOAT, false, 8 * 4, 24);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-    gl.drawArrays(gl.TRIANGLES, 0, mesh.count);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.ebo);
+    gl.drawElements(gl.TRIANGLES, mesh.elems.length, gl.UNSIGNED_SHORT, 0);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
   }
 }

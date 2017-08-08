@@ -540,15 +540,33 @@ Solid.prototype.getBodyMeshes = function (body) {
       mtrl: sol.mv[mi],
       // 1 geom = 3 verts = 3 * (3 + 3 + 2) floats
       verts: new Float32Array(geoms.length * 3 * 8),
+      elems: new Uint16Array(geoms.length * 3),
       count: 0
     };
+
+    var elemCache = [];
 
     for (var i = 0; i < geoms.length; ++i) {
       var geom = geoms[i];
 
-      addVertToMesh(mesh, sol, sol.ov[geom.oi]);
-      addVertToMesh(mesh, sol, sol.ov[geom.oj]);
-      addVertToMesh(mesh, sol, sol.ov[geom.ok]);
+      if (elemCache[geom.oi] === undefined) {
+        elemCache[geom.oi] = mesh.count;
+        addVertToMesh(mesh, sol, sol.ov[geom.oi]);
+      }
+
+      if (elemCache[geom.oj] === undefined) {
+        elemCache[geom.oj] = mesh.count;
+        addVertToMesh(mesh, sol, sol.ov[geom.oj]);
+      }
+
+      if (elemCache[geom.ok] === undefined) {
+        elemCache[geom.ok] = mesh.count;
+        addVertToMesh(mesh, sol, sol.ov[geom.ok]);
+      }
+
+      mesh.elems[i * 3 + 0] = elemCache[geom.oi];
+      mesh.elems[i * 3 + 1] = elemCache[geom.oj];
+      mesh.elems[i * 3 + 2] = elemCache[geom.ok];
     }
 
     meshes.push(mesh);
