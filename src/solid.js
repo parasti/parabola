@@ -113,30 +113,29 @@ Solid.load = function (buffer) {
 
   var sol = Solid();
 
-  sol.magic = magic;
   sol.version = version;
 
-  sol.av = new Uint8Array(stream.slice(ac).buffer());
-  sol.dv = loadDicts(stream, dc, sol.av);
-  sol.mv = loadMtrls(stream, mc);
-  sol.vv = loadVerts(stream, vc);
-  sol.ev = loadEdges(stream, ec);
-  sol.sv = loadSides(stream, sc);
-  sol.tv = loadTexcs(stream, tc);
-  sol.ov = loadOffs(stream, oc);
-  sol.gv = loadGeoms(stream, gc);
-  sol.lv = loadLumps(stream, lc);
-  sol.nv = loadNodes(stream, nc);
-  sol.pv = loadPaths(stream, pc);
-  sol.bv = loadBodies(stream, bc);
-  sol.hv = loadItems(stream, hc);
-  sol.zv = loadGoals(stream, zc);
-  sol.jv = loadJumps(stream, jc);
-  sol.xv = loadSwitches(stream, xc);
-  sol.rv = loadBills(stream, rc);
-  sol.uv = loadBalls(stream, uc);
-  sol.wv = loadViews(stream, wc);
-  sol.iv = stream.readInt32LEArray(ic);
+  sol.av = sol.bytes = new Uint8Array(stream.slice(ac).buffer());
+  sol.dv = sol.dicts = loadDicts(stream, dc, sol.av);
+  sol.mv = sol.mtrls = loadMtrls(stream, mc);
+  sol.vv = sol.verts = loadVerts(stream, vc);
+  sol.ev = sol.edges = loadEdges(stream, ec);
+  sol.sv = sol.sides = loadSides(stream, sc);
+  sol.tv = sol.texcs = loadTexcs(stream, tc);
+  sol.ov = sol.offs = loadOffs(stream, oc);
+  sol.gv = sol.geoms = loadGeoms(stream, gc);
+  sol.lv = sol.lumps = loadLumps(stream, lc);
+  sol.nv = sol.nodes = loadNodes(stream, nc);
+  sol.pv = sol.paths = loadPaths(stream, pc);
+  sol.bv = sol.bodies = loadBodies(stream, bc);
+  sol.hv = sol.items = loadItems(stream, hc);
+  sol.zv = sol.goals = loadGoals(stream, zc);
+  sol.jv = sol.jumps = loadJumps(stream, jc);
+  sol.xv = sol.switches = loadSwitches(stream, xc);
+  sol.rv = sol.bills = loadBills(stream, rc);
+  sol.uv = sol.balls = loadBalls(stream, uc);
+  sol.wv = sol.views = loadViews(stream, wc);
+  sol.iv = sol.indices = stream.readInt32LEArray(ic);
 
   return sol;
 };
