@@ -23,6 +23,7 @@ var Mtrl = function () {
 /*
  * Material type flags.
  */
+Mtrl.LIT = (1 << 11);
 Mtrl.PARTICLE = (1 << 10);
 Mtrl.ALPHA_TEST = (1 << 9);
 Mtrl.REFLECTIVE = (1 << 8);

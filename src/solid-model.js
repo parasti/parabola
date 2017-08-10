@@ -167,13 +167,13 @@ SolidModel.fromSol = function(sol) {
 
   var ents = solidModel.entities = nanoECS();
   var models = solidModel.models = [];
-  var materials = solidModel.materials = {};
+  var materials = solidModel.materials = [];
 
   // Materials
 
   for (var i = 0; i < sol.mv.length; ++i) {
     var mtrl = sol.mv[i];
-    materials[mtrl.f] = mtrl;
+    materials.push(mtrl);
   }
 
   // Bodies
@@ -303,8 +303,8 @@ SolidModel.prototype.createObjects = function(gl) {
     }
   }
 
-  for (var mtrlName in materials) {
-    Mtrl.loadTexture(gl, materials[mtrlName]);
+  for (var i = 0; i < materials.length; ++i) {
+    Mtrl.loadTexture(gl, materials[i]);
   }
 }
 

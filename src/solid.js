@@ -34,6 +34,7 @@ Solid.VERSION = 7;
 /*
  * Material type flags.
  */
+Solid.MTRL_LIT = (1 << 11);
 Solid.MTRL_PARTICLE = (1 << 10);
 Solid.MTRL_ALPHA_TEST = (1 << 9);
 Solid.MTRL_REFLECTIVE = (1 << 8);
