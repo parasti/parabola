@@ -115,7 +115,7 @@ Solid.load = function (buffer) {
 
   sol.version = version;
 
-  sol.av = sol.bytes = new Uint8Array(stream.slice(ac).buffer());
+  sol.av = sol.bytes = Buffer.from(stream.slice(ac).buffer()); // Realloc.
   sol.dv = sol.dicts = loadDicts(stream, dc, sol.av);
   sol.mv = sol.mtrls = loadMtrls(stream, mc);
   sol.vv = sol.verts = loadVerts(stream, vc);
