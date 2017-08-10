@@ -4,6 +4,7 @@ var vec3 = require('gl-matrix').vec3;
 var quat = require('gl-matrix').quat;
 var mat4 = require('gl-matrix').mat4;
 
+var toRadian = require('gl-matrix').glMatrix.toRadian;
 var nanoECS = require('nano-ecs');
 
 var Mtrl = require('./mtrl.js');
@@ -66,7 +67,8 @@ function Item() {
 function Billboard() {
   this.mtrl = null;
 
-  this.t = 1.0;
+  this.time = 1.0;
+  this.dist = 0.0;
 
   this.w = vec3.create();
   this.h = vec3.create();
@@ -81,14 +83,15 @@ function Billboard() {
 Billboard.prototype.fromSolBill = function (sol, solBill) {
   this.mtrl = sol.mv[solBill.mi];
 
-  this.t = solBill.t;
+  this.time = solBill.t;
+  this.dist = solBill.d;
 
-  vec3.copy(this.w, solBill.w);
-  vec3.copy(this.h, solBill.h);
+  this.w = solBill.w;
+  this.h = solBill.h;
 
-  vec3.copy(this.rx, solBill.rx);
-  vec3.copy(this.ry, solBill.ry);
-  vec3.copy(this.rz, solBill.rz);
+  this.rx = solBill.rx;
+  this.ry = solBill.ry;
+  this.rz = solBill.rz;
 
   this.flags = solBill.fl;
 }
@@ -96,7 +99,7 @@ Billboard.prototype.fromSolBill = function (sol, solBill) {
 Billboard.prototype.getForegroundTransform = function(M, globalTime) {
   // sol_bill
 
-  var T = this.t * globalTime;
+  var T = this.time * globalTime;
   var S = Math.sin(T);
 
   var w = this.w[0] + this.w[1] * T + this.w[2] * S;
@@ -116,7 +119,42 @@ Billboard.prototype.getForegroundTransform = function(M, globalTime) {
   if (ry) mat4.rotateY(M, M, ry / 180.0 * Math.PI);
   if (rz) mat4.rotateZ(M, M, rz / 180.0 * Math.PI);
 
-  mat4.scale(M, M, [w, h, 0.0]);
+  mat4.scale(M, M, [w, h, 1.0]);
+
+  return M;
+}
+
+Billboard.prototype.getBackgroundTransform = function (M, globalTime) {
+  var T = this.time > 0 ? globalTime % this.time - this.time / 2 : 0;
+
+  var w = this.w[0] + this.w[1] * T + this.w[2] * T * T;
+  var h = this.h[0] + this.h[1] * T + this.h[2] * T * T;
+
+  // TODO Render only billboards facing the viewer.
+
+  if (w > 0 && h > 0) {
+    var rx = this.rx[0] + this.rx[1] * T + this.rx[2] * T * T;
+    var ry = this.ry[0] + this.ry[1] * T + this.ry[2] * T * T;
+    var rz = this.rz[0] + this.rz[1] * T + this.rz[2] * T * T;
+
+    if (ry) mat4.rotateY(M, M, toRadian(ry));
+    if (rx) mat4.rotateX(M, M, toRadian(rx));
+
+    mat4.translate(M, M, [0, 0, -this.dist]);
+
+    if (this.flags & Solid.BILL_FLAT) {
+      mat4.rotateX(M, M, toRadian(-rx - 90));
+      mat4.rotateZ(M, M, toRadian(-ry));
+    }
+
+    if (this.flags & Solid.BILL_EDGE) {
+      mat4.rotateX(M, M, toRadian(-rx));
+    }
+
+    if (rz) mat4.rotateZ(M, M, toRadian(rz))
+
+    mat4.scale(M, M, [w, h, 1.0]);
+  }
 
   return M;
 }
