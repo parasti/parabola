@@ -15,6 +15,7 @@
   "author": "Jānis Rūcis",
   "license": "GPL-3.0",
   "dependencies": {
+    "@parasti/shadergraph": "^2.0.8-0",
     "cursor": "^0.1.5",
     "gl-matrix": "^2.4.0",
     "glslify": "^6.1.0",
