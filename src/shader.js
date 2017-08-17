@@ -12,6 +12,10 @@ module.exports = function (mtrl) {
   var frag = material.fragment;
   var vert = material.vertex;
 
+  // Material flags that uniquely identify this shader.
+
+  var shaderFlags = 0;
+
   /*
    * Build a fragment shader.
    */
@@ -19,6 +23,8 @@ module.exports = function (mtrl) {
   // T&L
 
   if (mtrl.fl & Mtrl.LIT) {
+    shaderFlags |= Mtrl.LIT;
+
     frag
       .fan()
         .pipe('frag.getTexCoord')
@@ -36,7 +42,46 @@ module.exports = function (mtrl) {
   // Alpha test
 
   if (mtrl.fl & Mtrl.ALPHA_TEST) {
-    frag.pipe('frag.alphaTest');
+    var alphaFunc;
+
+    // share/solid_base.c
+    switch (mtrl.alphaFunc) {
+      // 0 is always = no alpha test.
+      case 1:
+        shaderFlags |= Mtrl.ALPHA_TEST_EQUAL;
+        alphaFunc = 'frag.alphaTestEqual';
+        break;
+      case 2:
+        shaderFlags |= Mtrl.ALPHA_TEST_GEQUAL;
+        alphaFunc = 'frag.alphaTestGequal';
+        break;
+      case 3:
+        shaderFlags |= Mtrl.ALPHA_TEST_GREATER;
+        alphaFunc = 'frag.alphaTestGreater';
+        break;
+      case 4:
+        shaderFlags |= Mtrl.ALPHA_TEST_LEQUAL;
+        alphaFunc = 'frag.alphaTestLequal';
+        break;
+      case 5:
+        shaderFlags |= Mtrl.ALPHA_TEST_LESS;
+        alphaFunc = 'frag.alphaTestLess';
+        break;
+      case 6:
+        shaderFlags |= Mtrl.ALPHA_TEST_NEVER;
+        alphaFunc = 'frag.alphaTestNever';
+        break;
+      case 7:
+        shaderFlags |= Mtrl.ALPHA_TEST_NOTEQUAL;
+        alphaFunc = 'frag.alphaTestNotEqual';
+        break;
+    }
+
+    if (alphaFunc) {
+      frag
+        .require(alphaFunc)
+        .pipe('frag.alphaTest');
+    }
   }
 
   frag.pipe('frag.setFragColor');
@@ -58,6 +103,8 @@ module.exports = function (mtrl) {
   vert.isolate();
 
   if (mtrl.fl & Mtrl.ENVIRONMENT) {
+    shaderFlags |= Mtrl.ENVIRONMENT;
+
     vert
       .fan()
         .pipe('vert.getPosition')
@@ -75,6 +122,15 @@ module.exports = function (mtrl) {
   }
 
   vert.end();
+
+  var program = material.link();
+
+  return {
+    shaderFlags: shaderFlags,
+    vertexSource: program.vertexShader,
+    fragmentSource: program.fragmentShader,
+    uniforms: program.uniforms
+  }
 }
 
 /*
@@ -99,14 +155,17 @@ var fragSnippets = {
   varying vec4 vLightColor;
   vec4 getLightColor() { return vLightColor; }`,
   
+  alphaTestGequal: `
+  bool alphaTestGequal(float alpha, float ref) { return alpha >= ref; }`,
+  // TODO alpha test funcs.
+
   alphaTest: `
-  uniform int AlphaFunc;
   uniform float AlphaRef;
 
+  bool alphaFunc(float alpha, float ref);
   vec4 alphaTest(vec4 color) {
-    if (AlphaFunc == 2 && color.a < AlphaRef)
+    if (!alphaFunc(color.a, ref))
       discard;
-    // TODO
     return color;
   }`,
   
