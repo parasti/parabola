@@ -11,6 +11,7 @@ var Mtrl = require('./mtrl.js');
 var Mover = require('./mover.js');
 var BodyModel = require('./body-model.js');
 var Solid = require('./solid.js');
+var Shader = require('./shader.js');
 
 function SolidModel() {
   var model = Object.create(SolidModel.prototype);
@@ -174,6 +175,8 @@ SolidModel.fromSol = function(sol) {
   for (var i = 0; i < sol.mv.length; ++i) {
     var mtrl = sol.mv[i];
     materials.push(mtrl);
+
+    Shader(mtrl);
   }
 
   // Bodies
