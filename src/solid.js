@@ -174,11 +174,11 @@ function loadMtrls(stream, count) {
     mtrl.f = byteBuffer.toString('utf8', 0, byteBuffer.indexOf(0));
 
     if (mtrl.fl & Solid.MTRL_ALPHA_TEST) {
-      mtrl.alpha_func = stream.readInt32LE();
-      mtrl.alpha_ref = stream.readFloatLE();
+      mtrl.alphaFunc = stream.readInt32LE();
+      mtrl.alphaRef = stream.readFloatLE();
     } else {
-      mtrl.alpha_func = 0;
-      mtrl.alpha_ref = 0.0;
+      mtrl.alphaFunc = 0;
+      mtrl.alphaRef = 0.0;
     }
 
     mtrls.push(mtrl);

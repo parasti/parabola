@@ -3,22 +3,7 @@
 var data = require('./data.js');
 var mtrlImages = require('./mtrl-images.json');
 
-var Mtrl = function () {
-  return {
-    d: new Float32Array([0.8, 0.8, 0.8, 1.0]),
-    a: new Float32Array([0.2, 0.2, 0.2, 1.0]),
-    s: new Float32Array([0, 0, 0, 1]),
-    e: new Float32Array([0, 0, 0, 1]),
-    h: new Float32Array([0]),
-    fl: 0,
-    f: '',
-
-    alpha_func: 0, // TODO
-    alpha_ref: 0.0,
-
-    texture: null,
-  }
-};
+var Mtrl = {};
 
 /*
  * Material type flags.
