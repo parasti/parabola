@@ -42,44 +42,13 @@ module.exports = function (mtrl) {
   // Alpha test
 
   if (mtrl.fl & Mtrl.ALPHA_TEST) {
-    var alphaFunc;
-
-    // share/solid_base.c
-    switch (mtrl.alphaFunc) {
-      // 0 is always = no alpha test.
-      case 1:
-        shaderFlags |= Mtrl.ALPHA_TEST_EQUAL;
-        alphaFunc = 'frag.alphaTestEqual';
-        break;
-      case 2:
-        shaderFlags |= Mtrl.ALPHA_TEST_GEQUAL;
-        alphaFunc = 'frag.alphaTestGequal';
-        break;
-      case 3:
-        shaderFlags |= Mtrl.ALPHA_TEST_GREATER;
-        alphaFunc = 'frag.alphaTestGreater';
-        break;
-      case 4:
-        shaderFlags |= Mtrl.ALPHA_TEST_LEQUAL;
-        alphaFunc = 'frag.alphaTestLequal';
-        break;
-      case 5:
-        shaderFlags |= Mtrl.ALPHA_TEST_LESS;
-        alphaFunc = 'frag.alphaTestLess';
-        break;
-      case 6:
-        shaderFlags |= Mtrl.ALPHA_TEST_NEVER;
-        alphaFunc = 'frag.alphaTestNever';
-        break;
-      case 7:
-        shaderFlags |= Mtrl.ALPHA_TEST_NOTEQUAL;
-        alphaFunc = 'frag.alphaTestNotEqual';
-        break;
-    }
+    var alphaFunc = alphaFuncs[mtrl.alphaFunc];
 
     if (alphaFunc) {
+      shaderFlags |= alphaFunc.flag;
+
       frag
-        .require(alphaFunc)
+        .require(alphaFunc.name)
         .pipe('frag.alphaTest');
     }
   }
@@ -127,11 +96,25 @@ module.exports = function (mtrl) {
 
   return {
     shaderFlags: shaderFlags,
-    vertexSource: program.vertexShader,
-    fragmentSource: program.fragmentShader,
+    vertexShader: program.vertexShader,
+    fragmentShader: program.fragmentShader,
     uniforms: program.uniforms
   }
 }
+
+/*
+ * Alpha funcs (share/solid_base.c)
+ */
+var alphaFuncs = [
+  null, // "funcAlways"
+  { name: "funcEqual",    flag: Mtrl.ALPHA_TEST_EQUAL },
+  { name: "funcGequal",   flag: Mtrl.ALPHA_TEST_GEQUAL },
+  { name: "funcGreater",  flag: Mtrl.ALPHA_TEST_GREATER },
+  { name: "funcLequal",   flag: Mtrl.ALPHA_TEST_LEQUAL },
+  { name: "funcLess",     flag: Mtrl.ALPHA_TEST_LESS },
+  { name: "funcNever",    flag: Mtrl.ALPHA_TEST_NEVER },
+  { name: "funcNotEqual", flag: Mtrl.ALPHA_TEST_NOTEQUAL },
+];
 
 /*
  * Snippet library.
@@ -154,10 +137,6 @@ var fragSnippets = {
   getLightColor: `
   varying vec4 vLightColor;
   vec4 getLightColor() { return vLightColor; }`,
-  
-  alphaTestGequal: `
-  bool alphaTestGequal(float alpha, float ref) { return alpha >= ref; }`,
-  // TODO alpha test funcs.
 
   alphaTest: `
   uniform float AlphaRef;
@@ -229,4 +208,8 @@ var glslSnippets = {
   perspVertex: `
   uniform mat4 PerspMatrix;
   vec4 perspVertex(vec4 v) { return PerspMatrix * v; }`,
+
+  funcGequal: `
+  bool funcGequal(float val, float ref) { return val >= ref; }`,
+  // TODO alpha test funcs.
 };
