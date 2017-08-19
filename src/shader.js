@@ -4,27 +4,21 @@ var ShaderGraph = require('@parasti/shadergraph')(fetchSnippet, { globalUniforms
 var Mtrl = require('./mtrl.js');
 
 /*
- * Build shaders and uniforms for the given material flags.
+ * Build shaders and uniforms for the given material.
  */
-module.exports = function (mtrl) {
+var Shader = module.exports = function (mtrl) {
+  var shaderFlags = shaderFlagsFromMtrl(mtrl);
+
   var material = ShaderGraph.material();
 
   var frag = material.fragment;
   var vert = material.vertex;
 
-  // Material flags that uniquely identify this shader.
-
-  var shaderFlags = 0;
-
   /*
    * Build a fragment shader.
    */
 
-  // T&L
-
-  if (mtrl.fl & Mtrl.LIT) {
-    shaderFlags |= Mtrl.LIT;
-
+  if (shaderFlags & Shader.LIT) {
     frag
       .fan()
         .pipe('frag.getTexCoord')
@@ -39,16 +33,12 @@ module.exports = function (mtrl) {
       .pipe('sampleTexture');
   }
 
-  // Alpha test
-
-  if (mtrl.fl & Mtrl.ALPHA_TEST) {
-    var alphaFunc = alphaFuncs[mtrl.alphaFunc];
+  if (shaderFlags & Shader.ALPHA_TEST) {
+    var alphaFunc = alphaFuncSnippets[alphaFuncFromShaderFlags(shaderFlags)];
 
     if (alphaFunc) {
-      shaderFlags |= alphaFunc.flag;
-
       frag
-        .require(alphaFunc.name)
+        .require(alphaFunc)
         .pipe('frag.alphaTest');
     }
   }
@@ -59,21 +49,15 @@ module.exports = function (mtrl) {
    * Build a vertex shader.
    */
 
-  // Position.
-
   vert
     .pipe('vert.getPosition')
     .pipe('eyeVertex')
     .pipe('perspVertex')
     .pipe('vert.setPosition');
 
-  // Texture coords. Pass thru or generate sphere map coords.
-
   vert.isolate();
 
-  if (mtrl.fl & Mtrl.ENVIRONMENT) {
-    shaderFlags |= Mtrl.ENVIRONMENT;
-
+  if (shaderFlags & Shader.ENVIRONMENT) {
     vert
       .fan()
         .pipe('vert.getPosition')
@@ -103,17 +87,58 @@ module.exports = function (mtrl) {
 }
 
 /*
+ * Gather shader flags from a SOL material.
+ */
+function shaderFlagsFromMtrl (mtrl) {
+  var flags = 0;
+
+  if (mtrl.fl & Mtrl.LIT) {
+    flags |= Shader.LIT;
+  }
+
+  if (mtrl.fl & Mtrl.ALPHA_TEST) {
+    flags |= shaderFlagsFromAlphaFunc(mtrl.alphaFunc);
+  }
+
+  if (mtrl.fl & Mtrl.ENVIRONMENT) {
+    flags |= Shader.ENVIRONMENT;
+  }
+
+  return flags;
+}
+
+/*
+ * Features that a shader implements.
+ */
+Shader.LIT           = (1 << 0);
+Shader.ENVIRONMENT   = (1 << 1);
+Shader.ALPHA_TEST    = (7 << 2); // 3 bits
+
+/*
+ * There are 7 alpha test functions. Function index is encoded in shader flags.
+ * This is done to reduce hassle, but the act of doing so increases the hassle. FML.
+ */
+
+function alphaFuncFromShaderFlags (flags) {
+  return (flags >> 2) & 0x7;
+}
+
+function shaderFlagsFromAlphaFunc (index) {
+  return (index & 0x7) << 2;
+}
+
+/*
  * Alpha funcs (share/solid_base.c)
  */
-var alphaFuncs = [
-  null, // "funcAlways"
-  { name: "funcEqual",    flag: Mtrl.ALPHA_TEST_EQUAL },
-  { name: "funcGequal",   flag: Mtrl.ALPHA_TEST_GEQUAL },
-  { name: "funcGreater",  flag: Mtrl.ALPHA_TEST_GREATER },
-  { name: "funcLequal",   flag: Mtrl.ALPHA_TEST_LEQUAL },
-  { name: "funcLess",     flag: Mtrl.ALPHA_TEST_LESS },
-  { name: "funcNever",    flag: Mtrl.ALPHA_TEST_NEVER },
-  { name: "funcNotEqual", flag: Mtrl.ALPHA_TEST_NOTEQUAL },
+var alphaFuncSnippets = [
+  undefined, // 'testAlways' = no alpha test
+  'testEqual',
+  'testGequal',
+  'testGreater',
+  'testLequal',
+  'testLess',
+  'testNever',
+  'testNotEqual',
 ];
 
 /*
@@ -179,8 +204,7 @@ var vertSnippets = {
 };
 
 var glslSnippets = {
-  multiply: `
-  vec4 multiply(vec4 a, vec4 b) { return a * b; }`,
+  multiply: binaryOp('a * b', 'vec4'),
 
   sampleTexture: `
   uniform sampler2D Texture;
@@ -209,7 +233,19 @@ var glslSnippets = {
   uniform mat4 PerspMatrix;
   vec4 perspVertex(vec4 v) { return PerspMatrix * v; }`,
 
-  funcGequal: `
-  bool funcGequal(float val, float ref) { return val >= ref; }`,
-  // TODO alpha test funcs.
+  testEqual:    binaryOp('a == b', 'float', 'bool'),
+  testGequal:   binaryOp('a >= b', 'float', 'bool'),
+  testGreater:  binaryOp('a > b',  'float', 'bool'),
+  testLequal:   binaryOp('a <= b', 'float', 'bool'),
+  testLess:     binaryOp('a < b',  'float', 'bool'),
+  testNever:    binaryOp('false',  'float', 'bool'),
+  testNotEqual: binaryOp('a != b', 'float', 'bool'),
 };
+
+/*
+ * Make a snippet for a binary operation. MathBox-inspired.
+ */
+function binaryOp (expr, valType, retType) {
+  retType = retType || valType;
+  return `${retType} binaryOp(${valType} a, ${valType} b) { return ${expr}; }`;
+}
