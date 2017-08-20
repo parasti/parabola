@@ -1,7 +1,8 @@
 'use strict';
 
-var ShaderGraph = require('@parasti/shadergraph')(fetchSnippet, { globalUniforms: true });
+var ShaderGraph = require('@parasti/shadergraph')(fetchSnippet);
 var Mtrl = require('./mtrl.js');
+var Uniform = require('./uniform.js');
 
 /*
  * Build shaders and uniforms for the given material.
@@ -14,15 +15,19 @@ var Shader = module.exports = function (mtrl) {
   var frag = material.fragment;
   var vert = material.vertex;
 
+  var uniforms = {};
+
   /*
    * Build a fragment shader.
    */
+
+  uniforms.texture = { Texture: Uniform('i') };
 
   if (shaderFlags & Shader.LIT) {
     frag
       .fan()
         .pipe('frag.getTexCoord')
-        .pipe('sampleTexture')
+        .pipe('sampleTexture', uniforms.texture)
       .next()
         .pipe('frag.getLightColor')
       .end()
@@ -30,16 +35,18 @@ var Shader = module.exports = function (mtrl) {
   } else {
     frag
       .pipe('frag.getTexCoord')
-      .pipe('sampleTexture');
+      .pipe('sampleTexture', uniforms.texture);
   }
 
   if (shaderFlags & Shader.ALPHA_TEST) {
     var alphaFunc = alphaFuncSnippets[alphaFuncFromShaderFlags(shaderFlags)];
 
     if (alphaFunc) {
+      uniforms.alphaTest = { AlphaRef: Uniform('f') };
+
       frag
         .require(alphaFunc)
-        .pipe('frag.alphaTest');
+        .pipe('frag.alphaTest', uniforms.alphaTest);
     }
   }
 
@@ -49,32 +56,35 @@ var Shader = module.exports = function (mtrl) {
    * Build a vertex shader.
    */
 
-  vert
-    .pipe('vert.getPosition')
-    .pipe('eyeVertex')
-    .pipe('perspVertex')
-    .pipe('vert.setPosition');
+  uniforms.transform = {
+    ModelViewMatrix: Uniform('mat4'),
+    ProjMatrix: Uniform('mat4'),
+    NormalMatrix: Uniform('mat3')
+  };
 
-  vert.isolate();
+  var texCoordSub;
 
   if (shaderFlags & Shader.ENVIRONMENT) {
-    vert
-      .fan()
-        .pipe('vert.getPosition')
-        .pipe('eyeVertex')
-      .next()
-        .pipe('vert.getNormal')
-        .pipe('eyeNormal')
-      .end()
-      .pipe('genSphereMap')
+    texCoordSub = ShaderGraph.shader()
+      .pipe('vert.getNormal')
+      .pipe('viewNormal', uniforms.transform)
+      .pipe('genSphereMapCoords') // 1 leftover input serves as subgraph input
       .pipe('vert.setTexCoord');
   } else {
-    vert
+    texCoordSub = ShaderGraph.shader()
       .pipe('vert.getTexCoord')
-      .pipe('vert.setTexCoord');
+      .pipe('vert.setTexCoord')
   }
 
-  vert.end();
+  vert
+    .pipe('vert.getPosition')
+    .pipe('viewVertex', uniforms.transform)
+    .fan()
+      .pipe('projVertex', uniforms.transform)
+      .pipe('vert.setPosition')
+    .next()
+      .pipe(texCoordSub)
+    .end();
 
   var program = material.link();
 
@@ -82,7 +92,8 @@ var Shader = module.exports = function (mtrl) {
     shaderFlags: shaderFlags,
     vertexShader: program.vertexShader,
     fragmentShader: program.fragmentShader,
-    uniforms: program.uniforms
+    uniforms: uniforms,
+    mangledUniforms: program.uniforms
   }
 }
 
@@ -210,28 +221,28 @@ var glslSnippets = {
   uniform sampler2D Texture;
   vec4 sampleTexture(vec2 uv) { return texture2D(Texture, uv); }`,
 
-  genSphereMap: `
-  vec2 genSphereMap(vec3 u, vec3 n) {
+  genSphereMapCoords: `
+  vec2 genSphereMapCoords(vec3 u, vec3 n) {
     vec3 r = u - 2.0 * n * (n * u);
     r.z += 1.0;
     float m = 2.0 * length(r);
     return vec2(r.x / m + 0.5, r.y / m + 0.5);
   }
-  vec2 genSphereMap(vec4 u, vec3 n) {
-    return genSphereMap(vec3(u), n);
+  vec2 genSphereMapCoords(vec4 u, vec3 n) {
+    return genSphereMapCoords(vec3(u), n);
   }`,
 
-  eyeVertex: `
+  viewVertex: `
   uniform mat4 ModelViewMatrix;
-  vec4 eyeVertex(vec4 v) { return ModelViewMatrix * v; }`,
+  vec4 viewVertex(vec4 v) { return ModelViewMatrix * v; }`,
 
-  eyeNormal: `
+  viewNormal: `
   uniform mat3 NormalMatrix;
-  vec3 eyeNormal(vec3 n) { return NormalMatrix * n; }`,
+  vec3 viewNormal(vec3 n) { return NormalMatrix * n; }`,
 
-  perspVertex: `
-  uniform mat4 PerspMatrix;
-  vec4 perspVertex(vec4 v) { return PerspMatrix * v; }`,
+  projVertex: `
+  uniform mat4 ProjMatrix;
+  vec4 projVertex(vec4 v) { return ProjMatrix * v; }`,
 
   testEqual:    binaryOp('a == b', 'float', 'bool'),
   testGequal:   binaryOp('a >= b', 'float', 'bool'),

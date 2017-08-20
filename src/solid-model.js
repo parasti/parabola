@@ -176,7 +176,8 @@ SolidModel.fromSol = function(sol) {
     var mtrl = sol.mv[i];
     materials.push(mtrl);
 
-    console.log(Shader(mtrl));
+    // TODO
+    Shader(mtrl);
   }
 
   // Bodies
