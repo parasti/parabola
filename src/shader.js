@@ -8,7 +8,7 @@ var Uniform = require('./uniform.js');
  * Build shaders and uniforms for the given material.
  */
 var Shader = module.exports = function (mtrl) {
-  var shaderFlags = shaderFlagsFromMtrl(mtrl);
+  var shaderFlags = shaderFlagsFromMtrl(mtrl) & ~Shader.LIT; // TODO
 
   var material = ShaderGraph.material();
 
@@ -102,9 +102,10 @@ var Shader = module.exports = function (mtrl) {
   var program = material.link();
 
   return {
+    program: null,
     shaderFlags: shaderFlags,
     vertexShader: program.vertexShader,
-    fragmentShader: program.fragmentShader,
+    fragmentShader: 'precision highp float;\n' + program.fragmentShader,
     uniforms: namedUniforms,
     mangledUniforms: program.uniforms
   }
@@ -124,6 +125,42 @@ Shader.uploadUniforms = function (gl, shader) {
       Uniform.upload(gl, location, uniform);
     }
   }
+}
+
+Shader.createObjects = function (gl, shader) {
+  var vs = compileShaderSource(gl, gl.VERTEX_SHADER, shader.vertexShader);
+  var fs = compileShaderSource(gl, gl.FRAGMENT_SHADER, shader.fragmentShader);
+
+  var prog = gl.createProgram();
+
+  gl.attachShader(prog, vs);
+  gl.attachShader(prog, fs);
+
+  // TODO unhardcode or something.
+
+  gl.bindAttribLocation(prog, 0, 'aPosition');
+  gl.bindAttribLocation(prog, 1, 'aNormal');
+  gl.bindAttribLocation(prog, 2, 'aTexCoord');
+
+  gl.linkProgram(prog);
+
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+    throw gl.getProgramInfoLog(prog);
+  }
+
+  shader.program = prog;
+}
+
+function compileShaderSource (gl, type, source) {
+  var shader = gl.createShader(type);
+
+  gl.shaderSource(shader, source);
+  gl.compileShader(shader);
+
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    throw gl.getShaderInfoLog(shader);
+  }
+  return shader;
 }
 
 /*
