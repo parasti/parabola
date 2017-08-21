@@ -128,6 +128,10 @@ Shader.uploadUniforms = function (gl, shader) {
 }
 
 Shader.createObjects = function (gl, shader) {
+  if (shader.program) {
+    throw 'Shader program already exists'
+  }
+
   var vs = compileShaderSource(gl, gl.VERTEX_SHADER, shader.vertexShader);
   var fs = compileShaderSource(gl, gl.FRAGMENT_SHADER, shader.fragmentShader);
 
@@ -164,8 +168,10 @@ function compileShaderSource (gl, type, source) {
 }
 
 /*
- * Gather shader flags from a SOL material.
+ * Features that a shader implements. Together these form the signature of a shader.
  */
+
+// Gather shader flags from a SOL material.
 function shaderFlagsFromMtrl (mtrl) {
   var flags = 0;
 
@@ -183,10 +189,6 @@ function shaderFlagsFromMtrl (mtrl) {
 
   return flags;
 }
-
-/*
- * Features that a shader implements. Together these form the signature of a shader.
- */
 
 Shader.LIT           = (1 << 0);
 Shader.ENVIRONMENT   = (1 << 1);
@@ -301,17 +303,13 @@ var glslSnippets = {
   testNotEqual: binaryOp('a != b', 'float', 'bool'),
 };
 
-/*
- * Make a snippet for a binary operation. MathBox-inspired.
- */
+// Make a snippet for a binary operation. MathBox-inspired.
 function binaryOp (expr, valType, retType) {
   retType = retType || valType;
   return `${retType} binaryOp(${valType} a, ${valType} b) { return ${expr}; }`;
 }
 
-/*
- * Make a snippet for vector transform by uniform matrix.
- */
+// Make a snippet for vector transform by a matrix uniform.
 function transformVec (n) {
   return `uniform mat${n} Matrix;
   vec${n} transformVec(vec${n} v) { return Matrix * v; }`
