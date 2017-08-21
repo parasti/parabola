@@ -133,28 +133,20 @@ function shaderFlagsFromMtrl (mtrl) {
 }
 
 /*
- * Features that a shader implements.
- */
-Shader.LIT           = (1 << 0);
-Shader.ENVIRONMENT   = (1 << 1);
-Shader.ALPHA_TEST    = (7 << 2); // 3 bits
-
-/*
+ * Features that a shader implements. Together these form the signature of a shader.
+ *
  * There are 7 alpha test functions. Function index is encoded in shader flags.
  * This is done to reduce hassle, but the act of doing so increases the hassle. FML.
  */
 
-function alphaFuncFromShaderFlags (flags) {
-  return (flags >> 2) & 0x7;
-}
+Shader.LIT           = (1 << 0);
+Shader.ENVIRONMENT   = (1 << 1);
+Shader.ALPHA_TEST    = (7 << 2); // 3 bits
 
-function shaderFlagsFromAlphaFunc (index) {
-  return (index & 0x7) << 2;
-}
+var alphaFuncFromShaderFlags = (flags) => (flags >> 2) & 0x7;
+var shaderFlagsFromAlphaFunc = (index) => (index & 0x7) << 2;
 
-/*
- * Alpha funcs (share/solid_base.c)
- */
+// Alpha function snippets by index (indices from share/solid_base.c)
 var alphaFuncSnippets = [
   undefined, // 'testAlways' = no alpha test
   'testEqual',
@@ -169,6 +161,7 @@ var alphaFuncSnippets = [
 /*
  * Snippet library.
  */
+
 function fetchSnippet (key) {
   if (/^vert\./.test(key)) {
     return vertSnippets[key.slice(5)];
