@@ -97,6 +97,20 @@ var Shader = module.exports = function (mtrl) {
   }
 }
 
+Shader.uploadUniforms = function (gl, shader) {
+  if (shader.program) {
+    var uniforms = shader.mangledUniforms;
+
+    for (var name in uniforms) {
+      // TODO cache this
+      var location = gl.getUniformLocation(program, name);
+      var uniform = uniforms[name];
+
+      uniform.upload(gl, location);
+    }
+  }
+}
+
 /*
  * Gather shader flags from a SOL material.
  */

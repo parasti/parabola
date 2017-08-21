@@ -1,15 +1,16 @@
 'use strict';
 
 var Uniform = module.exports = function (type) {
-  return {
+  var uniform = Object.create(Uniform.prototype);
+
+  return Object.assign(uniform, {
     type: type,
     value: allocValue(type)
-  }
+  });
 }
 
-Uniform.upload = function (gl, program, name, uniform) {
-  // TODO cache this
-  var location = gl.getUniformLocation(program, name);
+Uniform.prototype.upload = function (gl, location) {
+  var uniform = this;
 
   // TODO this does a string match during a draw frame.
   switch (uniform.type) {
