@@ -15,13 +15,21 @@ var Shader = module.exports = function (mtrl) {
   var frag = material.fragment;
   var vert = material.vertex;
 
-  var uniforms = {};
+  // Each snippet instance can have their own uniforms. That's what this is for.
+
+  var uniforms = {
+    mainTexture: { Texture: Uniform('i') },
+    transform: {
+      ModelViewMatrix: Uniform('mat4'),
+      ProjMatrix: Uniform('mat4'),
+      NormalMatrix: Uniform('mat3')
+    },
+    alphaTest: { AlphaRef: Uniform('f') }
+  };
 
   /*
    * Build a fragment shader.
    */
-
-  uniforms.texture = { Texture: Uniform('i') };
 
   if (shaderFlags & Shader.LIT) {
     frag
@@ -42,8 +50,6 @@ var Shader = module.exports = function (mtrl) {
     var alphaFunc = alphaFuncSnippets[alphaFuncFromShaderFlags(shaderFlags)];
 
     if (alphaFunc) {
-      uniforms.alphaTest = { AlphaRef: Uniform('f') };
-
       frag
         .require(alphaFunc)
         .pipe('frag.alphaTest', uniforms.alphaTest);
@@ -56,25 +62,23 @@ var Shader = module.exports = function (mtrl) {
    * Build a vertex shader.
    */
 
-  uniforms.transform = {
-    ModelViewMatrix: Uniform('mat4'),
-    ProjMatrix: Uniform('mat4'),
-    NormalMatrix: Uniform('mat3')
-  };
+  // First, build the texcoord subgraph.
 
-  var texCoordSub;
+  var texCoordGraph = ShaderGraph.shader();
 
   if (shaderFlags & Shader.ENVIRONMENT) {
-    texCoordSub = ShaderGraph.shader()
+    texCoordGraph
       .pipe('vert.getNormal')
       .pipe('viewNormal', uniforms.transform)
       .pipe('genSphereMapCoords') // 1 leftover input serves as subgraph input
       .pipe('vert.setTexCoord');
   } else {
-    texCoordSub = ShaderGraph.shader()
+    texCoordGraph
       .pipe('vert.getTexCoord')
       .pipe('vert.setTexCoord')
   }
+
+  // Then, build the main graph.
 
   vert
     .pipe('vert.getPosition')
@@ -83,7 +87,7 @@ var Shader = module.exports = function (mtrl) {
       .pipe('projVertex', uniforms.transform)
       .pipe('vert.setPosition')
     .next()
-      .pipe(texCoordSub)
+      .pipe(texCoordGraph)
     .end();
 
   var program = material.link();
@@ -134,21 +138,18 @@ function shaderFlagsFromMtrl (mtrl) {
 
 /*
  * Features that a shader implements. Together these form the signature of a shader.
- *
- * There are 7 alpha test functions. Function index is encoded in shader flags.
- * This is done to reduce hassle, but the act of doing so increases the hassle. FML.
  */
 
 Shader.LIT           = (1 << 0);
 Shader.ENVIRONMENT   = (1 << 1);
-Shader.ALPHA_TEST    = (7 << 2); // 3 bits
+Shader.ALPHA_TEST    = (7 << 2); // 3 bits = space for a number in range [1, 7]
 
 var alphaFuncFromShaderFlags = (flags) => (flags >> 2) & 0x7;
 var shaderFlagsFromAlphaFunc = (index) => (index & 0x7) << 2;
 
 // Alpha function snippets by index (indices from share/solid_base.c)
 var alphaFuncSnippets = [
-  undefined, // 'testAlways' = no alpha test
+  undefined, // 0 = always = no alpha test
   'testEqual',
   'testGequal',
   'testGreater',
