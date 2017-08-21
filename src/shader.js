@@ -15,16 +15,25 @@ var Shader = module.exports = function (mtrl) {
   var frag = material.fragment;
   var vert = material.vertex;
 
-  // Each snippet instance can have their own uniforms. That's what this is for.
+  // Each snippet instance has its own uniforms. That's what this is for.
 
   var uniforms = {
-    mainTexture: { Texture: Uniform('i') },
-    transform: {
-      ModelViewMatrix: Uniform('mat4'),
-      ProjMatrix: Uniform('mat4'),
-      NormalMatrix: Uniform('mat3')
-    },
+    // snippet instance: { UniformName: valueHolder }
+    sampleTexture: { Texture: Uniform('i') },
+    viewVertex: { Matrix: Uniform('mat4') },
+    projVertex: { Matrix: Uniform('mat4') },
+    viewNormal: { Matrix: Uniform('mat3') },
     alphaTest: { AlphaRef: Uniform('f') }
+  };
+
+  // Give our value holders some better names. This is what the caller gets.
+
+  var namedUniforms = {
+    mainTexture: uniforms.sampleTexture.Texture,
+    viewModelMatrix: uniforms.viewVertex.Matrix,
+    projectionMatrix: uniforms.projVertex.Matrix,
+    normalMatrix: uniforms.viewNormal.Matrix,
+    alphaRef: uniforms.alphaTest.AlphaRef,
   };
 
   /*
@@ -35,7 +44,7 @@ var Shader = module.exports = function (mtrl) {
     frag
       .fan()
         .pipe('frag.getTexCoord')
-        .pipe('sampleTexture', uniforms.texture)
+        .pipe('sampleTexture', uniforms.sampleTexture)
       .next()
         .pipe('frag.getLightColor')
       .end()
@@ -43,7 +52,7 @@ var Shader = module.exports = function (mtrl) {
   } else {
     frag
       .pipe('frag.getTexCoord')
-      .pipe('sampleTexture', uniforms.texture);
+      .pipe('sampleTexture', uniforms.sampleTexture);
   }
 
   if (shaderFlags & Shader.ALPHA_TEST) {
@@ -69,7 +78,7 @@ var Shader = module.exports = function (mtrl) {
   if (shaderFlags & Shader.ENVIRONMENT) {
     texCoordGraph
       .pipe('vert.getNormal')
-      .pipe('viewNormal', uniforms.transform)
+      .pipe('viewNormal', uniforms.viewNormal)
       .pipe('genSphereMapCoords') // 1 leftover input serves as subgraph input
       .pipe('vert.setTexCoord');
   } else {
@@ -82,9 +91,9 @@ var Shader = module.exports = function (mtrl) {
 
   vert
     .pipe('vert.getPosition')
-    .pipe('viewVertex', uniforms.transform)
+    .pipe('viewVertex', uniforms.viewVertex)
     .fan()
-      .pipe('projVertex', uniforms.transform)
+      .pipe('projVertex', uniforms.projVertex)
       .pipe('vert.setPosition')
     .next()
       .pipe(texCoordGraph)
@@ -96,7 +105,7 @@ var Shader = module.exports = function (mtrl) {
     shaderFlags: shaderFlags,
     vertexShader: program.vertexShader,
     fragmentShader: program.fragmentShader,
-    uniforms: uniforms,
+    uniforms: namedUniforms,
     mangledUniforms: program.uniforms
   }
 }
@@ -242,17 +251,9 @@ var glslSnippets = {
     return genSphereMapCoords(vec3(u), n);
   }`,
 
-  viewVertex: `
-  uniform mat4 ModelViewMatrix;
-  vec4 viewVertex(vec4 v) { return ModelViewMatrix * v; }`,
-
-  viewNormal: `
-  uniform mat3 NormalMatrix;
-  vec3 viewNormal(vec3 n) { return NormalMatrix * n; }`,
-
-  projVertex: `
-  uniform mat4 ProjMatrix;
-  vec4 projVertex(vec4 v) { return ProjMatrix * v; }`,
+  viewVertex: transformVec(4),
+  viewNormal: transformVec(3),
+  projVertex: transformVec(4),
 
   testEqual:    binaryOp('a == b', 'float', 'bool'),
   testGequal:   binaryOp('a >= b', 'float', 'bool'),
@@ -269,4 +270,12 @@ var glslSnippets = {
 function binaryOp (expr, valType, retType) {
   retType = retType || valType;
   return `${retType} binaryOp(${valType} a, ${valType} b) { return ${expr}; }`;
+}
+
+/*
+ * Make a snippet for vector transform by uniform matrix.
+ */
+function transformVec (n) {
+  return `uniform mat${n} Matrix;
+  vec${n} transformVec(vec${n} v) { return Matrix * v; }`
 }
