@@ -1,17 +1,15 @@
 'use strict';
 
 var Uniform = module.exports = function (type) {
-  var uniform = Object.create(Uniform.prototype);
-
-  return Object.assign(uniform, {
+  return {
     type: type,
-    value: allocValue(type)
-  });
+    value: allocValue(type),
+    location: null,
+    dirty: true
+  }
 }
 
-Uniform.prototype.upload = function (gl, location) {
-  var uniform = this;
-
+Uniform.upload = function (gl, location, uniform) {
   // TODO this does a string match during a draw frame.
   switch (uniform.type) {
     case 'i': gl.uniform1i(location, uniform.value); break;
@@ -21,6 +19,7 @@ Uniform.prototype.upload = function (gl, location) {
     case 'vec4': gl.uniform4fv(location, uniform.value); break;
     case 'mat3': gl.uniformMatrix3fv(location, false, uniform.value); break;
     case 'mat4': gl.uniformMatrix4fv(location, false, uniform.value); break;
+    default: throw 'Unknown uniform type ' + uniform.type;
   }
 }
 
@@ -35,8 +34,7 @@ function allocValue (type) {
     case 'vec4': value = new Float32Array(4); break;
     case 'mat3': value = new Float32Array(9); break;
     case 'mat4': value = new Float32Array(16); break;
-
-    default: throw Error('Unknown uniform type ' + type);
+    default: throw 'Unknown uniform type ' + type;
   }
 
   return value;

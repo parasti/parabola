@@ -102,7 +102,9 @@ var Shader = module.exports = function (mtrl) {
 }
 
 Shader.uploadUniforms = function (gl, shader) {
-  if (shader.program) {
+  var program = shader.program;
+
+  if (program) {
     var uniforms = shader.mangledUniforms;
 
     for (var name in uniforms) {
@@ -110,7 +112,7 @@ Shader.uploadUniforms = function (gl, shader) {
       var location = gl.getUniformLocation(program, name);
       var uniform = uniforms[name];
 
-      uniform.upload(gl, location);
+      Uniform.upload(gl, location, uniform);
     }
   }
 }
