@@ -111,19 +111,13 @@ var Shader = module.exports = function (mtrl) {
   }
 }
 
-Shader.uploadUniforms = function (gl, shader) {
+Shader.draw = function (gl, state, shader) {
   var program = shader.program;
 
   if (program) {
-    var uniforms = shader.mangledUniforms;
+    state.useProgram(gl, program);
 
-    for (var name in uniforms) {
-      // TODO cache this
-      var location = gl.getUniformLocation(program, name);
-      var uniform = uniforms[name];
-
-      Uniform.upload(gl, location, uniform);
-    }
+    uploadUniforms(gl, shader);
   }
 }
 
@@ -153,6 +147,22 @@ Shader.createObjects = function (gl, shader) {
   }
 
   shader.program = prog;
+}
+
+function uploadUniforms (gl, shader) {
+  var program = shader.program;
+
+  if (program) {
+    var uniforms = shader.mangledUniforms;
+
+    for (var name in uniforms) {
+      // TODO cache this
+      var location = gl.getUniformLocation(program, name);
+      var uniform = uniforms[name];
+
+      Uniform.upload(gl, location, uniform);
+    }
+  }
 }
 
 function compileShaderSource (gl, type, source) {
