@@ -83,7 +83,7 @@ function drawMesh(gl, state, mesh) {
   Mtrl.draw(gl, state, mesh.mtrl);
 
   if (mesh.vbo) {
-    state.enableArray(gl, state.uPositionID);
+    state.enableArray(gl, state.aPositionID);
     state.enableArray(gl, state.aNormalID);
     state.enableArray(gl, state.aTexCoordID);
 
