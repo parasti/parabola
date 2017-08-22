@@ -93,7 +93,7 @@ Mtrl.draw = function (gl, state, mtrl) {
   gl.uniform4fv(state.uAmbient, mtrl.a);
   gl.uniform4fv(state.uSpecular, mtrl.s);
   gl.uniform4fv(state.uEmissive, mtrl.e);
-  gl.uniform1f(state.uShininess, mtrl.h[0]);
+  gl.uniform1f(state.uShininess, mtrl.h);
 
   if (mtrl.fl & Mtrl.ENVIRONMENT) {
     gl.uniform1i(state.uEnvironment, 1);

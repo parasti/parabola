@@ -166,7 +166,7 @@ function loadMtrls(stream, count) {
       a: stream.readFloatLEArray(4),
       s: stream.readFloatLEArray(4),
       e: stream.readFloatLEArray(4),
-      h: stream.readFloatLEArray(1),
+      h: stream.readFloatLE(),
       fl: stream.readInt32LE()
     }
 
