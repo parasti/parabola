@@ -8,20 +8,6 @@ var Mtrl = {};
 /*
  * Material type flags.
  */
-
-// In Neverball, alpha test state is bitflag + function index.
-// It's a little excessive. With these, we need only a bitflag.
-
-Mtrl.ALPHA_TEST_EQUAL = (1 << 18)
-Mtrl.ALPHA_TEST_GEQUAL = (1 << 17)
-Mtrl.ALPHA_TEST_GREATER = (1 << 16)
-Mtrl.ALPHA_TEST_LEQUAL = (1 << 15)
-Mtrl.ALPHA_TEST_LESS = (1 << 14)
-Mtrl.ALPHA_TEST_NEVER = (1 << 13)
-Mtrl.ALPHA_TEST_NOTEQUAL = (1 << 12)
-
-// Neverball flags.
-
 Mtrl.LIT = (1 << 11);
 Mtrl.PARTICLE = (1 << 10);
 Mtrl.ALPHA_TEST = (1 << 9);
