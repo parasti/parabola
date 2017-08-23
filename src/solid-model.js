@@ -1,10 +1,8 @@
 'use strict';
 
 var vec3 = require('gl-matrix').vec3;
-var quat = require('gl-matrix').quat;
 var mat4 = require('gl-matrix').mat4;
 
-var toRadian = require('gl-matrix').glMatrix.toRadian;
 var nanoECS = require('nano-ecs');
 
 var Mtrl = require('./mtrl.js');
@@ -12,6 +10,7 @@ var Mover = require('./mover.js');
 var BodyModel = require('./body-model.js');
 var Solid = require('./solid.js');
 var Shader = require('./shader.js');
+var EC = require('./entity-components.js')
 
 function SolidModel() {
   var model = Object.create(SolidModel.prototype);
@@ -26,138 +25,6 @@ function SolidModel() {
   model.transparentDepthMask = false;
 
   return model;
-}
-
-/*
- * Entity components.
- */
-function Drawable() {
-  this.model = null;
-}
-
-function Spatial() {
-  this.matrix = mat4.create();
-
-  this.position = vec3.create()
-  this.orientation = quat.create();
-  this.scale = 1;
-}
-
-Spatial.prototype.updateMatrix = (function () {
-  var s = vec3.create();
-
-  return function() {
-    var p = this.position;
-    var e = this.orientation;
-
-    vec3.set(s, this.scale, this.scale, this.scale);
-
-    mat4.fromRotationTranslationScale(this.matrix, e, p, s);
-  }
-})();
-
-function Movers() {
-  this.translate = null;
-  this.rotate = null;
-}
-
-function Item() {
-  this.value = 0;
-}
-
-function Billboard() {
-  this.mtrl = null;
-
-  this.time = 1.0;
-  this.dist = 0.0;
-
-  this.w = vec3.create();
-  this.h = vec3.create();
-
-  this.rx = vec3.create();
-  this.ry = vec3.create();
-  this.rz = vec3.create();
-
-  this.flags = 0;
-}
-
-Billboard.prototype.fromSolBill = function (sol, solBill) {
-  this.mtrl = sol.mv[solBill.mi];
-
-  this.time = solBill.t;
-  this.dist = solBill.d;
-
-  this.w = solBill.w;
-  this.h = solBill.h;
-
-  this.rx = solBill.rx;
-  this.ry = solBill.ry;
-  this.rz = solBill.rz;
-
-  this.flags = solBill.fl;
-}
-
-Billboard.prototype.getForegroundTransform = function(M, globalTime) {
-  // sol_bill
-
-  var T = this.time * globalTime;
-  var S = Math.sin(T);
-
-  var w = this.w[0] + this.w[1] * T + this.w[2] * S;
-  var h = this.h[0] + this.h[1] * T + this.h[2] * S;
-
-  var rx = this.rx[0] + this.rx[1] * T + this.rx[2] * S;
-  var ry = this.ry[0] + this.ry[1] * T + this.ry[2] * S;
-  var rz = this.rz[0] + this.rz[1] * T + this.rz[2] * S;
-
-  // Preserve passed transform.
-  //mat4.identity(M);
-
-  // TODO multiply by view basis.
-  // or... can be done by the caller.
-
-  if (rx) mat4.rotateX(M, M, rx / 180.0 * Math.PI);
-  if (ry) mat4.rotateY(M, M, ry / 180.0 * Math.PI);
-  if (rz) mat4.rotateZ(M, M, rz / 180.0 * Math.PI);
-
-  mat4.scale(M, M, [w, h, 1.0]);
-
-  return M;
-}
-
-Billboard.prototype.getBackgroundTransform = function (M, globalTime) {
-  var T = this.time > 0 ? globalTime % this.time - this.time / 2 : 0;
-
-  var w = this.w[0] + this.w[1] * T + this.w[2] * T * T;
-  var h = this.h[0] + this.h[1] * T + this.h[2] * T * T;
-
-  // TODO Render only billboards facing the viewer.
-
-  if (w > 0 && h > 0) {
-    var rx = this.rx[0] + this.rx[1] * T + this.rx[2] * T * T;
-    var ry = this.ry[0] + this.ry[1] * T + this.ry[2] * T * T;
-    var rz = this.rz[0] + this.rz[1] * T + this.rz[2] * T * T;
-
-    if (ry) mat4.rotateY(M, M, toRadian(ry));
-    if (rx) mat4.rotateX(M, M, toRadian(rx));
-
-    mat4.translate(M, M, [0, 0, -this.dist]);
-
-    if (this.flags & Solid.BILL_FLAT) {
-      mat4.rotateX(M, M, toRadian(-rx - 90));
-      mat4.rotateZ(M, M, toRadian(-ry));
-    }
-
-    if (this.flags & Solid.BILL_EDGE) {
-      mat4.rotateX(M, M, toRadian(-rx));
-    }
-
-    if (rz) mat4.rotateZ(M, M, toRadian(rz))
-
-    mat4.scale(M, M, [w, h, 1.0]);
-  }
-
-  return M;
 }
 
 /*
@@ -186,9 +53,9 @@ SolidModel.fromSol = function(sol) {
     var solBody = sol.bv[i];
     var ent = ents.createEntity().addTag('body');
 
-    ent.addComponent(Drawable);
-    ent.addComponent(Spatial);
-    ent.addComponent(Movers);
+    ent.addComponent(EC.Drawable);
+    ent.addComponent(EC.Spatial);
+    ent.addComponent(EC.Movers);
 
     var model = BodyModel.fromSolBody(sol, solBody);
     ent.drawable.model = model;
@@ -224,8 +91,8 @@ SolidModel.fromSol = function(sol) {
       continue;
     }
 
-    ent.addComponent(Item);
-    ent.addComponent(Spatial);
+    ent.addComponent(EC.Item);
+    ent.addComponent(EC.Spatial);
 
     ent.item.value = solItem.n;
 
@@ -240,7 +107,7 @@ SolidModel.fromSol = function(sol) {
     var solBall = sol.uv[i];
     var ent = ents.createEntity().addTag('ball');
 
-    ent.addComponent(Spatial);
+    ent.addComponent(EC.Spatial);
 
     ent.spatial.scale = solBall.r;
     vec3.copy(ent.spatial.position, solBall.p);
@@ -253,8 +120,8 @@ SolidModel.fromSol = function(sol) {
     var solBill = sol.rv[i];
     var ent = ents.createEntity().addTag('billboard');
 
-    ent.addComponent(Spatial);
-    ent.addComponent(Billboard);
+    ent.addComponent(EC.Spatial);
+    ent.addComponent(EC.Billboard);
 
     vec3.copy(ent.spatial.position, solBill.p);
     ent.spatial.updateMatrix();
@@ -266,7 +133,7 @@ SolidModel.fromSol = function(sol) {
 }
 
 SolidModel.prototype.step = function(dt) {
-  var ents = this.entities.queryComponents([Spatial, Movers]);
+  var ents = this.entities.queryComponents([EC.Spatial, EC.Movers]);
 
   for (var i = 0; i < ents.length; ++i) {
     var ent = ents[i];
@@ -316,7 +183,7 @@ SolidModel.prototype.createObjects = function(gl) {
  * Render entity meshes of the given type. Pass a parentMatrix for hierarchical transform.
  */
 SolidModel.prototype.drawMeshType = function(gl, state, meshType, parentMatrix) {
-  var ents = this.entities.queryComponents([Drawable, Spatial]);
+  var ents = this.entities.queryComponents([EC.Drawable, EC.Spatial]);
 
   for (var i = 0; i < ents.length; ++i) {
     var ent = ents[i];
@@ -411,7 +278,7 @@ SolidModel.prototype.drawBalls = function(gl, state) {
 }
 
 SolidModel.prototype.drawBills = function(gl, state, parentMatrix) {
-  var ents = this.entities.queryComponents([Billboard, Spatial]);
+  var ents = this.entities.queryComponents([EC.Billboard, EC.Spatial]);
 
   // TODO
   var viewBasis = state.view.getBasis();
