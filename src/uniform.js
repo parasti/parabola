@@ -1,17 +1,32 @@
 'use strict';
 
-var Uniform = module.exports = function (type) {
+var Uniform = module.exports = {}
+
+function makeUniform (type) {
   return {
-    type: type,
+    _type: type,
     value: allocValue(type),
-    location: null,
     dirty: true
   }
 }
 
+Uniform.i = () => makeUniform('i')
+Uniform.f = () => makeUniform('f')
+Uniform.vec2 = () => makeUniform('vec2')
+Uniform.vec3 = () => makeUniform('vec3')
+Uniform.vec4 = () => makeUniform('vec4')
+Uniform.mat3 = () => makeUniform('mat3')
+Uniform.mat4 = () => makeUniform('mat4')
+
+Uniform.copyValue = function (output, input) {
+  if (output._type !== input._type) {
+    throw 'Uniform input is ' + input._type + ', but expected ' + output._type;
+  }
+  output.value = input.value;
+}
+
 Uniform.upload = function (gl, location, uniform) {
-  // TODO this does a string match during a draw frame.
-  switch (uniform.type) {
+  switch (uniform._type) {
     case 'i': gl.uniform1i(location, uniform.value); break;
     case 'f': gl.uniform1f(location, uniform.value); break;
     case 'vec2': gl.uniform2fv(location, uniform.value); break;
@@ -19,7 +34,7 @@ Uniform.upload = function (gl, location, uniform) {
     case 'vec4': gl.uniform4fv(location, uniform.value); break;
     case 'mat3': gl.uniformMatrix3fv(location, false, uniform.value); break;
     case 'mat4': gl.uniformMatrix4fv(location, false, uniform.value); break;
-    default: throw 'Unknown uniform type ' + uniform.type;
+    default: throw 'Unknown uniform type ' + uniform._type;
   }
 }
 

@@ -281,6 +281,24 @@ GLState.prototype.draw = function(gl) {
   }
 }
 
+// WIP
+GLState.prototype.draw_WIP = function (gl) {
+  var meshes = this.meshes;
+
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+  for (var i = 0; i < meshes.length; ++i) {
+    var mesh = meshes[i];
+    var material = mesh.material;
+    var shader = material.shader;
+
+    Shader.use(gl, state, shader);
+    Mtrl.apply(gl, state, material);
+    Shader.uploadUniforms(gl, shader, mesh.uniforms);
+    drawGeometry(gl, state, mesh.geometry);
+  }
+}
+
 GLState.prototype.step = function(dt) {
   this.time += dt;
 

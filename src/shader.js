@@ -19,11 +19,11 @@ var Shader = module.exports = function (mtrl) {
 
   var uniforms = {
     // snippet instance: { UniformName: valueHolder }
-    sampleTexture: { Texture: Uniform('i') },
-    viewVertex: { Matrix: Uniform('mat4') },
-    projVertex: { Matrix: Uniform('mat4') },
-    viewNormal: { Matrix: Uniform('mat3') },
-    alphaTest: { AlphaRef: Uniform('f') }
+    sampleTexture: { Texture: Uniform.i() },
+    viewVertex: { Matrix: Uniform.mat4() },
+    projVertex: { Matrix: Uniform.mat4() },
+    viewNormal: { Matrix: Uniform.mat3() },
+    alphaTest: { AlphaRef: Uniform.f() }
   };
 
   // Give our value holders some better names. This is what the caller gets.
@@ -111,13 +111,11 @@ var Shader = module.exports = function (mtrl) {
   }
 }
 
-Shader.draw = function (gl, state, shader) {
+Shader.use = function (gl, state, shader) {
   var program = shader.program;
 
   if (program) {
     state.useProgram(gl, program);
-
-    uploadUniforms(gl, shader);
   }
 }
 
@@ -149,14 +147,29 @@ Shader.createObjects = function (gl, shader) {
   shader.program = prog;
 }
 
-function uploadUniforms (gl, shader) {
+/*
+ * Copy values of uniforms to matching shader uniforms.
+ */
+function setUniformsFromList (shader, uniformList) {
+  for (var name in uniformList) {
+    var output = shader.uniforms[name];
+
+    if (output !== undefined) {
+      Uniform.copyValue(output, uniformList[name]);
+    }
+  }
+}
+
+Shader.uploadUniforms = function (gl, shader, uniformList) {
   var program = shader.program;
+
+  setUniformsFromList(shader, uniformList);
 
   if (program) {
     var uniforms = shader.mangledUniforms;
 
     for (var name in uniforms) {
-      // TODO cache this
+      // TODO cache this (not on the value holder)
       var location = gl.getUniformLocation(program, name);
       var uniform = uniforms[name];
 
