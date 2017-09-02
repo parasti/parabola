@@ -5,7 +5,7 @@
   "main": "src/main.js",
   "scripts": {
     "start": "beefy src/main.js:parabola.js --live",
-    "check": "browserify src/main.js -t eslintify"
+    "test": "semistandard src/*.js"
   },
   "browserify": {
     "transform": [
@@ -27,6 +27,6 @@
     "babelify": "^7.3.0",
     "beefy": "^2.1.8",
     "browserify": "^14.4.0",
-    "eslintify": "^3.1.0"
+    "semistandard": "^11.0.0"
   }
 }
