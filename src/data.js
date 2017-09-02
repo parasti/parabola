@@ -2,7 +2,7 @@ var data = module.exports;
 
 data.fetchBinaryFile = function (path) {
   return new Promise(function (resolve, reject) {
-    var req = new XMLHttpRequest();
+    var req = new window.XMLHttpRequest();
     req.responseType = 'arraybuffer';
     req.onload = function () {
       if (this.status === 200) {
@@ -16,7 +16,7 @@ data.fetchBinaryFile = function (path) {
 
 data.fetchImage = function (path) {
   return new Promise(function (resolve, reject) {
-    var img = new Image();
+    var img = new window.Image();
     img.onload = function () {
       resolve(this);
     };
@@ -32,7 +32,7 @@ data.fetchSolid = function (path) {
 
 data.loadFile = function (file, onload) {
   return new Promise(function (resolve, reject) {
-    var reader = new FileReader();
+    var reader = new window.FileReader();
     reader.addEventListener('load', function (e) {
       resolve(this.result);
     });

@@ -3,6 +3,9 @@
 var vec3 = require('gl-matrix').vec3;
 var quat = require('gl-matrix').quat;
 var mat4 = require('gl-matrix').mat4;
+var toRadian = require('gl-matrix').glMatrix.toRadian;
+
+var Solid = require('./solid.js');
 
 var EC = module.exports = {};
 

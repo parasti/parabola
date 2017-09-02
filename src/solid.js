@@ -303,8 +303,10 @@ function loadNodes (stream, count) {
 function loadPaths (stream, count) {
   var paths = [];
 
-  for (var i = 0; i < count; ++i) {
-    var path = {
+  var i, path;
+
+  for (i = 0, path; i < count; ++i) {
+    path = {
       p: stream.readFloatLEArray(3),
       t: stream.readFloatLE(),
       pi: stream.readInt32LE(),
@@ -336,8 +338,8 @@ function loadPaths (stream, count) {
 
   // Translate.
 
-  for (var i = 0; i < paths.length; ++i) {
-    var path = paths[i];
+  for (i = 0, path; i < paths.length; ++i) {
+    path = paths[i];
     // May link to itself.
     path.next = paths[path.pi] || null;
   }
@@ -490,15 +492,17 @@ function indexGeomByMtrl (geoms, geom) {
 function getBodyGeomsByMtrl (sol, body) {
   var geoms = [];
 
+  var li, gi;
+
   // OBJ geometry.
-  for (var gi = 0; gi < body.gc; ++gi) {
+  for (gi = 0; gi < body.gc; ++gi) {
     indexGeomByMtrl(geoms, sol.gv[sol.iv[body.g0 + gi]]);
   }
 
   // Lump geometry.
-  for (var li = 0; li < body.lc; ++li) {
+  for (li = 0; li < body.lc; ++li) {
     var lump = sol.lv[body.l0 + li];
-    for (var gi = 0; gi < lump.gc; ++gi) {
+    for (gi = 0; gi < lump.gc; ++gi) {
       indexGeomByMtrl(geoms, sol.gv[sol.iv[lump.g0 + gi]]);
     }
   }

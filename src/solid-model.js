@@ -37,9 +37,11 @@ SolidModel.fromSol = function (sol) {
   var models = solidModel.models = [];
   var materials = solidModel.materials = [];
 
+  var i, ent;
+
   // Materials
 
-  for (var i = 0; i < sol.mv.length; ++i) {
+  for (i = 0; i < sol.mv.length; ++i) {
     var mtrl = sol.mv[i];
     materials.push(mtrl);
 
@@ -49,9 +51,10 @@ SolidModel.fromSol = function (sol) {
 
   // Bodies
 
-  for (var i = 0; i < sol.bv.length; ++i) {
+  for (i = 0; i < sol.bv.length; ++i) {
     var solBody = sol.bv[i];
-    var ent = ents.createEntity().addTag('body');
+
+    ent = ents.createEntity().addTag('body');
 
     ent.addComponent(EC.Drawable);
     ent.addComponent(EC.Spatial);
@@ -69,10 +72,10 @@ SolidModel.fromSol = function (sol) {
 
   // Items
 
-  for (var i = 0; i < sol.hv.length; ++i) {
+  for (i = 0; i < sol.hv.length; ++i) {
     var solItem = sol.hv[i];
 
-    var ent = ents.createEntity().addTag('item');
+    ent = ents.createEntity().addTag('item');
 
     if (solItem.t === Solid.ITEM_GROW) {
       ent.addTag('grow');
@@ -103,9 +106,10 @@ SolidModel.fromSol = function (sol) {
 
   // Balls
 
-  for (var i = 0; i < sol.uv.length; ++i) {
+  for (i = 0; i < sol.uv.length; ++i) {
     var solBall = sol.uv[i];
-    var ent = ents.createEntity().addTag('ball');
+
+    ent = ents.createEntity().addTag('ball');
 
     ent.addComponent(EC.Spatial);
 
@@ -116,9 +120,10 @@ SolidModel.fromSol = function (sol) {
 
   // Billboards
 
-  for (var i = 0; i < sol.rv.length; ++i) {
+  for (i = 0; i < sol.rv.length; ++i) {
     var solBill = sol.rv[i];
-    var ent = ents.createEntity().addTag('billboard');
+
+    ent = ents.createEntity().addTag('billboard');
 
     ent.addComponent(EC.Spatial);
     ent.addComponent(EC.Billboard);
@@ -166,15 +171,16 @@ SolidModel.prototype.step = function (dt) {
 SolidModel.prototype.createObjects = function (gl) {
   var models = this.models;
   var materials = this.materials;
+  var i;
 
-  for (var i = 0; i < models.length; ++i) {
+  for (i = 0; i < models.length; ++i) {
     var model = models[i];
     if (model) {
       model.createObjects(gl);
     }
   }
 
-  for (var i = 0; i < materials.length; ++i) {
+  for (i = 0; i < materials.length; ++i) {
     Mtrl.loadTexture(gl, materials[i]);
   }
 };
@@ -222,10 +228,10 @@ SolidModel.prototype.drawBodies = function (gl, state, parentMatrix) {
 
   if (!test) gl.disable(gl.DEPTH_TEST);
   if (!mask) gl.depthMask(false);
-  {
-    this.drawMeshType(gl, state, 'transparentDecal', parentMatrix);
-    this.drawMeshType(gl, state, 'transparent', parentMatrix);
-  }
+
+  this.drawMeshType(gl, state, 'transparentDecal', parentMatrix);
+  this.drawMeshType(gl, state, 'transparent', parentMatrix);
+
   if (!mask) gl.depthMask(true);
   if (!test) gl.enable(gl.DEPTH_TEST);
 };

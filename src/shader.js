@@ -121,7 +121,7 @@ Shader.use = function (gl, state, shader) {
 
 Shader.createObjects = function (gl, shader) {
   if (shader.program) {
-    throw 'Shader program already exists';
+    throw Error('Shader program already exists');
   }
 
   var vs = compileShaderSource(gl, gl.VERTEX_SHADER, shader.vertexShader);
@@ -213,9 +213,9 @@ function shaderFlagsFromMtrl (mtrl) {
   return flags;
 }
 
-Shader.LIT           = (1 << 0);
-Shader.ENVIRONMENT   = (1 << 1);
-Shader.ALPHA_TEST    = (7 << 2); // 3 bits = space for a number in range [1, 7]
+Shader.LIT = (1 << 0);
+Shader.ENVIRONMENT = (1 << 1);
+Shader.ALPHA_TEST = (7 << 2); // 3 bits = space for a number in range [1, 7]
 
 var alphaFuncFromShaderFlags = (flags) => (flags >> 2) & 0x7;
 var shaderFlagsFromAlphaFunc = (index) => (index & 0x7) << 2;
@@ -317,13 +317,17 @@ var glslSnippets = {
   viewNormal: transformVec(3),
   projVertex: transformVec(4),
 
+  /* eslint-disable no-multi-spaces, key-spacing */
+
   testEqual:    binaryOp('a == b', 'float', 'bool'),
   testGequal:   binaryOp('a >= b', 'float', 'bool'),
   testGreater:  binaryOp('a > b',  'float', 'bool'),
   testLequal:   binaryOp('a <= b', 'float', 'bool'),
   testLess:     binaryOp('a < b',  'float', 'bool'),
   testNever:    binaryOp('false',  'float', 'bool'),
-  testNotEqual: binaryOp('a != b', 'float', 'bool'),
+  testNotEqual: binaryOp('a != b', 'float', 'bool')
+
+  /* eslint-enable no-multi-spaces, key-spacing */
 };
 
 // Make a snippet for a binary operation. MathBox-inspired.

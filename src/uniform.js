@@ -20,7 +20,7 @@ Uniform.mat4 = () => makeUniform('mat4');
 
 Uniform.copyValue = function (output, input) {
   if (output._type !== input._type) {
-    throw 'Uniform input is ' + input._type + ', but expected ' + output._type;
+    throw Error('Uniform input is ' + input._type + ', but expected ' + output._type);
   }
   output.value = input.value;
 };
@@ -34,7 +34,7 @@ Uniform.upload = function (gl, location, uniform) {
     case 'vec4': gl.uniform4fv(location, uniform.value); break;
     case 'mat3': gl.uniformMatrix3fv(location, false, uniform.value); break;
     case 'mat4': gl.uniformMatrix4fv(location, false, uniform.value); break;
-    default: throw 'Unknown uniform type ' + uniform._type;
+    default: throw Error('Unknown uniform type ' + uniform._type);
   }
 };
 
@@ -49,7 +49,7 @@ function allocValue (type) {
     case 'vec4': value = new Float32Array(4); break;
     case 'mat3': value = new Float32Array(9); break;
     case 'mat4': value = new Float32Array(16); break;
-    default: throw 'Unknown uniform type ' + type;
+    default: throw Error('Unknown uniform type ' + type);
   }
 
   return value;

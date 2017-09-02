@@ -10,7 +10,6 @@ var data = require('./data.js');
 
 var Solid = require('./solid.js');
 var GLState = require('./gl-state.js');
-var View = require('./view.js');
 var BallModel = require('./ball-model.js');
 
 var getDeltaTime = (function () {
@@ -28,8 +27,7 @@ var getDeltaTime = (function () {
   };
 })();
 
-function loadBall (gl, state, name) {
-  var name = name || 'basic-ball';
+function loadBall (gl, state, name = 'basic-ball') {
   var basePath = 'ball/' + name + '/' + name;
 
   BallModel.fetch(basePath).then(function (model) {
@@ -194,6 +192,6 @@ function init () {
   var ballNameElem = document.getElementById('ballName');
   var ballButton = document.getElementById('loadBall');
   ballButton.addEventListener('click', function (e) {
-    loadBall(gl, state, ballName.value);
+    loadBall(gl, state, ballNameElem.value);
   });
 }

@@ -74,8 +74,8 @@ View.prototype.getBasis = (function () {
     M[5] = y[1];
     M[6] = y[2];
 
-    M[8]  = z[0];
-    M[9]  = z[1];
+    M[8] = z[0];
+    M[9] = z[1];
     M[10] = z[2];
 
     return this._basis;
@@ -197,19 +197,19 @@ View.prototype.mouseLook = function (dx, dy) {
   // TODO this does nothing a lot of the time.
 
   var a = (dx || dy) ? 0.005 : 0.1;
-  var filtered_dx = (dx * a) + (this._dx * (1.0 - a));
-  var filtered_dy = (dy * a) + (this._dy * (1.0 - a));
-  this._dx = filtered_dx;
-  this._dy = filtered_dy;
+  var filteredDx = (dx * a) + (this._dx * (1.0 - a));
+  var filteredDy = (dy * a) + (this._dy * (1.0 - a));
+  this._dx = filteredDx;
+  this._dy = filteredDy;
 
   var z = vec3.fromValues(0, 0, 1);
   var o = vec3.fromValues(0, 0, 0);
 
-  if (filtered_dx) {
-    vec3.rotateY(z, z, o, toRadian(-filtered_dx));
+  if (filteredDx) {
+    vec3.rotateY(z, z, o, toRadian(-filteredDx));
   }
-  if (filtered_dy) {
-    vec3.rotateX(z, z, o, toRadian(-filtered_dy));
+  if (filteredDy) {
+    vec3.rotateX(z, z, o, toRadian(-filteredDy));
   }
 
   vec3.transformMat4(z, z, this.getBasis());

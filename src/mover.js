@@ -36,21 +36,20 @@ Mover.erp = function (t) {
 /*
  * Calculate position (optionally after DT seconds).
  */
-Mover.prototype.getPosition = function (p, dt) {
+Mover.prototype.getPosition = function (p, dt = 0.0) {
   // sol_body_p
-
-  var dt = dt || 0.0;
 
   vec3.set(p, 0, 0, 0);
 
   if (this.path) {
     var thisPath = this.path;
     var nextPath = this.path.next;
+    var s;
 
     if (thisPath.f) {
-      var s = (this.time + dt) / thisPath.t;
+      s = (this.time + dt) / thisPath.t;
     } else {
-      var s = this.time / thisPath.t;
+      s = this.time / thisPath.t;
     }
 
     vec3.lerp(p, thisPath.p, nextPath.p, thisPath.s ? Mover.erp(s) : s);
@@ -62,12 +61,10 @@ Mover.prototype.getPosition = function (p, dt) {
 /*
  * Calculate orientation (optionally after DT seconds) as a quaternion.
  */
-Mover.prototype.getOrientation = function (e, dt) {
+Mover.prototype.getOrientation = function (e, dt = 0.0) {
   // sol_body_e
 
   const P_ORIENTED = 0x1;
-
-  var dt = dt || 0.0;
 
   quat.identity(e);
 
@@ -76,10 +73,12 @@ Mover.prototype.getOrientation = function (e, dt) {
     var nextPath = this.path.next;
 
     if (thisPath.fl & P_ORIENTED || nextPath.fl & P_ORIENTED) {
+      var s;
+
       if (thisPath.f) {
-        var s = (this.time + dt) / thisPath.t;
+        s = (this.time + dt) / thisPath.t;
       } else {
-        var s = this.time / thisPath.t;
+        s = this.time / thisPath.t;
       }
 
       quat.slerp(e, thisPath.e, nextPath.e, thisPath.s ? Mover.erp(s) : s);
