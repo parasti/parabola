@@ -7,13 +7,13 @@ var fs = require('fs');
 var path = require('path');
 
 if (process.argv.length < 3) {
-  console.log("Usage: make-mtrl-images <data> [output.json]");
+  console.log('Usage: make-mtrl-images <data> [output.json]');
   process.exit();
 }
 
 var dataDir = process.argv[2];
 
-function findImages(dir) {
+function findImages (dir) {
   var images = [];
 
   var fileList = fs.readdirSync(dir);

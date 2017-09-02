@@ -33,7 +33,7 @@ var Shader = module.exports = function (mtrl) {
     viewModelMatrix: uniforms.viewVertex.Matrix,
     projectionMatrix: uniforms.projVertex.Matrix,
     normalMatrix: uniforms.viewNormal.Matrix,
-    alphaRef: uniforms.alphaTest.AlphaRef,
+    alphaRef: uniforms.alphaTest.AlphaRef
   };
 
   /*
@@ -84,7 +84,7 @@ var Shader = module.exports = function (mtrl) {
   } else {
     texCoordGraph
       .pipe('vert.getTexCoord')
-      .pipe('vert.setTexCoord')
+      .pipe('vert.setTexCoord');
   }
 
   // Then, build the main graph.
@@ -108,8 +108,8 @@ var Shader = module.exports = function (mtrl) {
     fragmentShader: 'precision highp float;\n' + program.fragmentShader,
     uniforms: namedUniforms,
     mangledUniforms: program.uniforms
-  }
-}
+  };
+};
 
 Shader.use = function (gl, state, shader) {
   var program = shader.program;
@@ -117,11 +117,11 @@ Shader.use = function (gl, state, shader) {
   if (program) {
     state.useProgram(gl, program);
   }
-}
+};
 
 Shader.createObjects = function (gl, shader) {
   if (shader.program) {
-    throw 'Shader program already exists'
+    throw 'Shader program already exists';
   }
 
   var vs = compileShaderSource(gl, gl.VERTEX_SHADER, shader.vertexShader);
@@ -145,7 +145,7 @@ Shader.createObjects = function (gl, shader) {
   }
 
   shader.program = prog;
-}
+};
 
 /*
  * Copy values of uniforms to matching shader uniforms.
@@ -176,7 +176,7 @@ Shader.uploadUniforms = function (gl, shader, uniformList) {
       Uniform.upload(gl, location, uniform);
     }
   }
-}
+};
 
 function compileShaderSource (gl, type, source) {
   var shader = gl.createShader(type);
@@ -229,7 +229,7 @@ var alphaFuncSnippets = [
   'testLequal',
   'testLess',
   'testNever',
-  'testNotEqual',
+  'testNotEqual'
 ];
 
 /*
@@ -250,7 +250,7 @@ var fragSnippets = {
   getTexCoord: `
   varying vec2 vTexCoord;
   vec2 getTexCoord() { return vTexCoord; }`,
-  
+
   getLightColor: `
   varying vec4 vLightColor;
   vec4 getLightColor() { return vLightColor; }`,
@@ -264,9 +264,9 @@ var fragSnippets = {
       discard;
     return color;
   }`,
-  
+
   setFragColor: `
-  void setFragColor(vec4 color) { gl_FragColor = color; }`,
+  void setFragColor(vec4 color) { gl_FragColor = color; }`
 };
 
 var vertSnippets = {
@@ -277,7 +277,7 @@ var vertSnippets = {
   getNormal: `
   attribute vec3 aNormal;
   vec3 getNormal() { return aNormal; }`,
-  
+
   getTexCoord: `
   attribute vec2 aTexCoord;
   vec2 getTexCoord() { return aTexCoord; }`,
@@ -285,14 +285,14 @@ var vertSnippets = {
   setPosition: `
   void setPosition(vec4 v) { gl_Position = v; }
   `,
-  
+
   setTexCoord: `
   varying vec2 vTexCoord;
   void setTexCoord(vec2 uv) { vTexCoord = uv; }`,
-  
+
   setLightColor: `
   varying vec4 vLightColor;
-  void setLightColor(vec4 color) { vLightColor = color; }`,
+  void setLightColor(vec4 color) { vLightColor = color; }`
 };
 
 var glslSnippets = {
@@ -335,5 +335,5 @@ function binaryOp (expr, valType, retType) {
 // Make a snippet for vector transform by a matrix uniform.
 function transformVec (n) {
   return `uniform mat${n} Matrix;
-  vec${n} transformVec(vec${n} v) { return Matrix * v; }`
+  vec${n} transformVec(vec${n} v) { return Matrix * v; }`;
 }

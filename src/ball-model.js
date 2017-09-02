@@ -3,7 +3,7 @@
 var data = require('./data.js');
 var SolidModel = require('./solid-model.js');
 
-function BallModel() {
+function BallModel () {
   this.solidModel = null;
   this.innerModel = null;
   this.outerModel = null;
@@ -17,7 +17,7 @@ function BallModel() {
   this._outerProm = null;
 }
 
-function ballFlags(sol) {
+function ballFlags (sol) {
   var flags = {};
 
   flags.pendulum = sol.dv.pendulum === '1';
@@ -29,7 +29,7 @@ function ballFlags(sol) {
   return flags;
 }
 
-function loadLayerFromSol(sol) {
+function loadLayerFromSol (sol) {
   var model = SolidModel.fromSol(sol);
   var flags = ballFlags(sol);
 
@@ -42,7 +42,7 @@ function loadLayerFromSol(sol) {
 /*
  * Fetch the ball model layers. Return a promise.
  */
-BallModel.fetch = function(basePath) {
+BallModel.fetch = function (basePath) {
   // TODO json this
   const solidPath = basePath + '-solid.sol';
   const innerPath = basePath + '-inner.sol';
@@ -50,21 +50,21 @@ BallModel.fetch = function(basePath) {
 
   var model = new BallModel();
 
-  model._solidProm = data.fetchSolid(solidPath).then(function(sol) {
+  model._solidProm = data.fetchSolid(solidPath).then(function (sol) {
     var layer = loadLayerFromSol(sol);
     model.solidModel = layer.model;
     model.solidFlags = layer.flags;
     return model.solidModel;
   });
-  
-  model._innerProm = data.fetchSolid(innerPath).then(function(sol) {
+
+  model._innerProm = data.fetchSolid(innerPath).then(function (sol) {
     var layer = loadLayerFromSol(sol);
     model.innerModel = layer.model;
     model.innerFlags = layer.flags;
     return model.innerModel;
   });
 
-  model._outerProm = data.fetchSolid(outerPath).then(function(sol) {
+  model._outerProm = data.fetchSolid(outerPath).then(function (sol) {
     var layer = loadLayerFromSol(sol);
     model.outerModel = layer.model;
     model.outerFlags = layer.flags;
@@ -72,48 +72,48 @@ BallModel.fetch = function(basePath) {
   });
 
   return Promise.resolve(model); // TODO Yup.
-}
+};
 
 /*
  * Asynchronously create GL resources for any fetched SOLs.
  */
-BallModel.prototype.createObjects = function(gl) {
-  function createModelObjects(model) {
+BallModel.prototype.createObjects = function (gl) {
+  function createModelObjects (model) {
     model.createObjects(gl);
   }
 
   this._solidProm.then(createModelObjects);
   this._innerProm.then(createModelObjects);
   this._outerProm.then(createModelObjects);
-}
+};
 
-BallModel.prototype.drawInner = function(gl, state, parentMatrix) {
+BallModel.prototype.drawInner = function (gl, state, parentMatrix) {
   // TODO billboards
   if (this.innerModel) {
     this.innerModel.drawBills(gl, state, parentMatrix);
 
     this.innerModel.drawBodies(gl, state, parentMatrix);
   }
-}
+};
 
-BallModel.prototype.drawSolid = function(gl, state, parentMatrix) {
+BallModel.prototype.drawSolid = function (gl, state, parentMatrix) {
   if (this.solidModel) {
     // TODO disable lighting
     this.solidModel.drawBills(gl, state, parentMatrix);
 
     this.solidModel.drawBodies(gl, state, parentMatrix);
   }
-}
+};
 
-BallModel.prototype.drawOuter = function(gl, state, parentMatrix) {
+BallModel.prototype.drawOuter = function (gl, state, parentMatrix) {
   if (this.outerModel) {
     this.outerModel.drawBills(gl, state, parentMatrix);
 
     this.outerModel.drawBodies(gl, state, parentMatrix);
   }
-}
+};
 
-BallModel.prototype.passInner = function(gl, state, parentMatrix) {
+BallModel.prototype.passInner = function (gl, state, parentMatrix) {
   if (this.innerFlags.drawclip) {
     // TODO
     this.drawInner(gl, state, parentMatrix);
@@ -125,9 +125,9 @@ BallModel.prototype.passInner = function(gl, state, parentMatrix) {
   } else {
     this.drawInner(gl, state, parentMatrix);
   }
-}
+};
 
-BallModel.prototype.passSolid = function(gl, state, parentMatrix) {
+BallModel.prototype.passSolid = function (gl, state, parentMatrix) {
   if (this.solidFlags.drawclip) {
     // TODO
     this.passInner(gl, state, parentMatrix);
@@ -143,9 +143,9 @@ BallModel.prototype.passSolid = function(gl, state, parentMatrix) {
     this.passInner(gl, state, parentMatrix);
     this.drawSolid(gl, state, parentMatrix);
   }
-}
+};
 
-BallModel.prototype.passOuter = function(gl, state, parentMatrix) {
+BallModel.prototype.passOuter = function (gl, state, parentMatrix) {
   if (this.outerFlags.drawclip) {
     // Sort the outer ball with the solid ball using clip planes.
 
@@ -168,13 +168,13 @@ BallModel.prototype.passOuter = function(gl, state, parentMatrix) {
     this.passSolid(gl, state, parentMatrix);
     this.drawOuter(gl, state, parentMatrix);
   }
-}
+};
 
-BallModel.prototype.draw = function(gl, state, parentMatrix) {
+BallModel.prototype.draw = function (gl, state, parentMatrix) {
   this.passOuter(gl, state, parentMatrix);
-}
+};
 
-BallModel.prototype.step = function(dt) {
+BallModel.prototype.step = function (dt) {
   if (this.solidModel) {
     this.solidModel.step(dt);
   }
@@ -184,6 +184,6 @@ BallModel.prototype.step = function(dt) {
   if (this.outerModel) {
     this.outerModel.step(dt);
   }
-}
+};
 
 module.exports = BallModel;

@@ -16,7 +16,7 @@ var BallModel = require('./ball-model.js');
 var getDeltaTime = (function () {
   var lastTime = 0.0;
 
-  return function(currTime) {
+  return function (currTime) {
     var dt = (currTime - lastTime) / 1000.0;
 
     if (dt > 1.0) {
@@ -25,25 +25,25 @@ var getDeltaTime = (function () {
 
     lastTime = currTime;
     return dt;
-  }
+  };
 })();
 
-function loadBall(gl, state, name) {
+function loadBall (gl, state, name) {
   var name = name || 'basic-ball';
   var basePath = 'ball/' + name + '/' + name;
 
-  BallModel.fetch(basePath).then(function(model) {
+  BallModel.fetch(basePath).then(function (model) {
     state.setModel(gl, 'ball', model);
   });
 }
 
-function init() {
+function init () {
   var canvas = document.getElementById('canvas');
   var gl = GLState.initGL(canvas);
   var state = new GLState(gl);
   var solFile = null;
 
-  data.fetchSolid('map-easy/easy.sol').then(function(sol) {
+  data.fetchSolid('map-easy/easy.sol').then(function (sol) {
     solFile = sol;
     state.setModelFromSol(gl, 'level', sol);
     state.view.setFromSol(sol, 1.0);
@@ -55,7 +55,7 @@ function init() {
     coin10: 'item/coin/coin10.sol',
     grow: 'item/grow/grow.sol',
     shrink: 'item/shrink/shrink.sol'
-  }
+  };
 
   for (let modelName in modelPaths) {
     data.fetchSolid(modelPaths[modelName]).then(function (sol) {
@@ -65,7 +65,7 @@ function init() {
 
   loadBall(gl, state, 'snowglobe');
 
-  function step(currTime) {
+  function step (currTime) {
     var dt = getDeltaTime(currTime);
 
     // TODO
@@ -82,18 +82,16 @@ function init() {
   }
   window.requestAnimationFrame(step);
 
-  function mouseMove(e) {
+  function mouseMove (e) {
     state.view.mouseLook(e.movementX, e.movementY);
   }
 
-  function pointerLockChange(e) {
+  function pointerLockChange (e) {
     if (document.pointerLockElement === canvas) {
       document.addEventListener('mousemove', mouseMove);
 
       window.addEventListener('keydown', keyDown);
       window.addEventListener('keyup', keyUp);
-
-
     } else {
       document.removeEventListener('mousemove', mouseMove);
 
@@ -102,26 +100,26 @@ function init() {
     }
   }
 
-  function togglePointerLock(e) {
+  function togglePointerLock (e) {
     if (document.pointerLockElement) {
       document.exitPointerLock();
     } else {
       canvas.requestPointerLock();
-    }    
+    }
   }
 
   canvas.addEventListener('click', togglePointerLock);
   document.addEventListener('pointerlockchange', pointerLockChange);
 
   var viewPosition = document.getElementById('viewPosition');
-  viewPosition.addEventListener('input', function() {
+  viewPosition.addEventListener('input', function () {
     if (solFile) {
       state.view.setFromSol(solFile, this.value);
     }
   });
 
   var fileInput = document.getElementById('fileInput');
-  fileInput.addEventListener('change', function() {
+  fileInput.addEventListener('change', function () {
     if (!this.files.length) {
       return;
     }
@@ -133,7 +131,7 @@ function init() {
   });
 
   var fullscreen = document.getElementById('fullscreen');
-  fullscreen.addEventListener('click', function() {
+  fullscreen.addEventListener('click', function () {
     if (screenfull.enabled) {
       screenfull.request(canvas);
     }
@@ -156,7 +154,7 @@ function init() {
     });
   }
 
-  function keyDown(e) {
+  function keyDown (e) {
     var code = e.code; // Not very portable.
 
     if (code === 'KeyW') {
@@ -169,7 +167,7 @@ function init() {
       state.view.moveRight(true);
     }
   }
-  function keyUp(e) {
+  function keyUp (e) {
     var code = e.code;
 
     if (code === 'KeyW') {
@@ -183,19 +181,19 @@ function init() {
     }
   }
 
-  canvas.addEventListener('wheel', function(e) {
+  canvas.addEventListener('wheel', function (e) {
     state.view.setMoveSpeed(-Math.sign(e.deltaY));
     e.preventDefault();
   });
 
   var textureInput = document.getElementById('textures');
-  textureInput.addEventListener('change', function(e) {
+  textureInput.addEventListener('change', function (e) {
     state.enableTextures = this.checked;
   });
 
   var ballNameElem = document.getElementById('ballName');
   var ballButton = document.getElementById('loadBall');
-  ballButton.addEventListener('click', function(e) {
+  ballButton.addEventListener('click', function (e) {
     loadBall(gl, state, ballName.value);
   });
 }

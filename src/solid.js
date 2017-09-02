@@ -8,16 +8,18 @@ module.exports = Solid;
 var SolidCursor = require('cursor').extend({
   readFloatLEArray: function (length) {
     var value = new Float32Array(length);
-    for (var i = 0; i < length; ++i)
+    for (var i = 0; i < length; ++i) {
       value[i] = this.readFloatLE();
+    }
     return value;
   },
 
   readInt32LEArray: function (length) {
-   var value = new Int32Array(length);
-   for (var i = 0; i < length; ++i)
-     value[i] = this.readInt32LE();
-   return value;
+    var value = new Int32Array(length);
+    for (var i = 0; i < length; ++i) {
+      value[i] = this.readInt32LE();
+    }
+    return value;
   }
 });
 
@@ -141,7 +143,7 @@ Solid.load = function (buffer) {
   return sol;
 };
 
-function loadDicts(stream, count, byteBuffer) {
+function loadDicts (stream, count, byteBuffer) {
   var dicts = {};
 
   for (var i = 0; i < count; ++i) {
@@ -155,9 +157,9 @@ function loadDicts(stream, count, byteBuffer) {
   }
 
   return dicts;
-};
+}
 
-function loadMtrls(stream, count) {
+function loadMtrls (stream, count) {
   var mtrls = [];
 
   for (var i = 0; i < count; ++i) {
@@ -168,7 +170,7 @@ function loadMtrls(stream, count) {
       e: stream.readFloatLEArray(4),
       h: stream.readFloatLE(),
       fl: stream.readInt32LE()
-    }
+    };
 
     var byteBuffer = stream.slice(64).buffer();
     mtrl.f = byteBuffer.toString('utf8', 0, byteBuffer.indexOf(0));
@@ -185,9 +187,9 @@ function loadMtrls(stream, count) {
   }
 
   return mtrls;
-};
+}
 
-function loadVerts(stream, count) {
+function loadVerts (stream, count) {
   var verts = [];
 
   for (var i = 0; i < count; ++i) {
@@ -195,9 +197,9 @@ function loadVerts(stream, count) {
   }
 
   return verts;
-};
+}
 
-function loadEdges(stream, count) {
+function loadEdges (stream, count) {
   var edges = [];
 
   for (var i = 0; i < count; ++i) {
@@ -208,9 +210,9 @@ function loadEdges(stream, count) {
   }
 
   return edges;
-};
+}
 
-function loadSides(stream, count) {
+function loadSides (stream, count) {
   var sides = [];
 
   for (var i = 0; i < count; ++i) {
@@ -221,9 +223,9 @@ function loadSides(stream, count) {
   }
 
   return sides;
-};
+}
 
-function loadTexcs(stream, count) {
+function loadTexcs (stream, count) {
   var texcs = [];
 
   for (var i = 0; i < count; ++i) {
@@ -231,9 +233,9 @@ function loadTexcs(stream, count) {
   }
 
   return texcs;
-};
+}
 
-function loadOffs(stream, count) {
+function loadOffs (stream, count) {
   var offs = [];
 
   for (var i = 0; i < count; ++i) {
@@ -245,9 +247,9 @@ function loadOffs(stream, count) {
   }
 
   return offs;
-};
+}
 
-function loadGeoms(stream, count) {
+function loadGeoms (stream, count) {
   var geoms = [];
 
   for (var i = 0; i < count; ++i) {
@@ -260,9 +262,9 @@ function loadGeoms(stream, count) {
   }
 
   return geoms;
-};
+}
 
-function loadLumps(stream, count) {
+function loadLumps (stream, count) {
   var lumps = [];
 
   for (var i = 0; i < count; ++i) {
@@ -280,9 +282,9 @@ function loadLumps(stream, count) {
   }
 
   return lumps;
-};
+}
 
-function loadNodes(stream, count) {
+function loadNodes (stream, count) {
   var nodes = [];
 
   for (var i = 0; i < count; ++i) {
@@ -296,9 +298,9 @@ function loadNodes(stream, count) {
   }
 
   return nodes;
-};
+}
 
-function loadPaths(stream, count) {
+function loadPaths (stream, count) {
   var paths = [];
 
   for (var i = 0; i < count; ++i) {
@@ -341,9 +343,9 @@ function loadPaths(stream, count) {
   }
 
   return paths;
-};
+}
 
-function loadBodies(stream, count) {
+function loadBodies (stream, count) {
   var bodies = [];
 
   for (var i = 0; i < count; ++i) {
@@ -357,14 +359,15 @@ function loadBodies(stream, count) {
       gc: stream.readInt32LE()
     });
 
-    if (bodies[i].pj < 0)
+    if (bodies[i].pj < 0) {
       bodies[i].pj = bodies[i].pi;
+    }
   }
 
   return bodies;
-};
+}
 
-function loadItems(stream, count) {
+function loadItems (stream, count) {
   var items = [];
 
   for (var i = 0; i < count; ++i) {
@@ -376,9 +379,9 @@ function loadItems(stream, count) {
   }
 
   return items;
-};
+}
 
-function loadGoals(stream, count) {
+function loadGoals (stream, count) {
   var goals = [];
 
   for (var i = 0; i < count; ++i) {
@@ -389,9 +392,9 @@ function loadGoals(stream, count) {
   }
 
   return goals;
-};
+}
 
-function loadJumps(stream, count) {
+function loadJumps (stream, count) {
   var jumps = [];
 
   for (var i = 0; i < count; ++i) {
@@ -403,9 +406,9 @@ function loadJumps(stream, count) {
   }
 
   return jumps;
-};
+}
 
-function loadSwitches(stream, count) {
+function loadSwitches (stream, count) {
   var switches = [];
 
   for (var i = 0; i < count; ++i) {
@@ -420,9 +423,9 @@ function loadSwitches(stream, count) {
   }
 
   return switches;
-};
+}
 
-function loadBills(stream, count) {
+function loadBills (stream, count) {
   var bills = [];
 
   for (var i = 0; i < count; ++i) {
@@ -442,9 +445,9 @@ function loadBills(stream, count) {
   }
 
   return bills;
-};
+}
 
-function loadBalls(stream, count) {
+function loadBalls (stream, count) {
   var balls = [];
 
   for (var i = 0; i < count; ++i) {
@@ -455,9 +458,9 @@ function loadBalls(stream, count) {
   }
 
   return balls;
-};
+}
 
-function loadViews(stream, count) {
+function loadViews (stream, count) {
   var views = [];
 
   for (var i = 0; i < count; ++i) {
@@ -468,17 +471,18 @@ function loadViews(stream, count) {
   }
 
   return views;
-};
+}
 
 /*
  * Body mesh creation.
  */
 
-function indexGeomByMtrl(geoms, geom) {
+function indexGeomByMtrl (geoms, geom) {
   var mi = geom.mi;
 
-  if (!geoms[mi])
+  if (!geoms[mi]) {
     geoms[mi] = [];
+  }
 
   geoms[mi].push(geom);
 }
@@ -500,9 +504,9 @@ function getBodyGeomsByMtrl (sol, body) {
   }
 
   return geoms;
-};
+}
 
-function getVertAttribs(sol, vert, offs) {
+function getVertAttribs (sol, vert, offs) {
   var vp = sol.vv[offs.vi];
   var sp = sol.sv[offs.si].n;
   var tp = sol.tv[offs.ti];
@@ -517,16 +521,16 @@ function getVertAttribs(sol, vert, offs) {
 
   vert[6] = tp[0];
   vert[7] = tp[1];
-};
+}
 
-function addVertToMesh(mesh, sol, offs) {
+function addVertToMesh (mesh, sol, offs) {
   var pos = mesh.count * 8;
   var vert = mesh.verts.subarray(pos, pos + 8);
 
   getVertAttribs(sol, vert, offs);
 
   mesh.count++;
-};
+}
 
 /*
  * Create a list of meshes from a SOL body, mesh per each used material.

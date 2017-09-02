@@ -16,7 +16,7 @@ var EC = module.exports = {};
  */
 EC.Drawable = function drawable () {
   this.model = null;
-}
+};
 
 /*
  * Spatial transform
@@ -24,22 +24,22 @@ EC.Drawable = function drawable () {
 EC.Spatial = function spatial () {
   this.matrix = mat4.create();
 
-  this.position = vec3.create()
+  this.position = vec3.create();
   this.orientation = quat.create();
   this.scale = 1;
-}
+};
 
 EC.Spatial.prototype.updateMatrix = (function () {
   var s = vec3.create();
 
-  return function() {
+  return function () {
     var p = this.position;
     var e = this.orientation;
 
     vec3.set(s, this.scale, this.scale, this.scale);
 
     mat4.fromRotationTranslationScale(this.matrix, e, p, s);
-  }
+  };
 })();
 
 /*
@@ -48,14 +48,14 @@ EC.Spatial.prototype.updateMatrix = (function () {
 EC.Movers = function movers () {
   this.translate = null;
   this.rotate = null;
-}
+};
 
 /*
  * Item
  */
 EC.Item = function item () {
   this.value = 0;
-}
+};
 
 /*
  * Billboard
@@ -74,7 +74,7 @@ EC.Billboard = function billboard () {
   this.rz = vec3.create();
 
   this.flags = 0;
-}
+};
 
 EC.Billboard.prototype.fromSolBill = function (sol, solBill) {
   this.mtrl = sol.mv[solBill.mi];
@@ -90,9 +90,9 @@ EC.Billboard.prototype.fromSolBill = function (sol, solBill) {
   this.rz = solBill.rz;
 
   this.flags = solBill.fl;
-}
+};
 
-EC.Billboard.prototype.getForegroundTransform = function(M, globalTime) {
+EC.Billboard.prototype.getForegroundTransform = function (M, globalTime) {
   // sol_bill
 
   var T = this.time * globalTime;
@@ -106,7 +106,7 @@ EC.Billboard.prototype.getForegroundTransform = function(M, globalTime) {
   var rz = this.rz[0] + this.rz[1] * T + this.rz[2] * S;
 
   // Preserve passed transform.
-  //mat4.identity(M);
+  // mat4.identity(M);
 
   // TODO multiply by view basis.
   // or... can be done by the caller.
@@ -118,7 +118,7 @@ EC.Billboard.prototype.getForegroundTransform = function(M, globalTime) {
   mat4.scale(M, M, [w, h, 1.0]);
 
   return M;
-}
+};
 
 EC.Billboard.prototype.getBackgroundTransform = function (M, globalTime) {
   var T = this.time > 0 ? globalTime % this.time - this.time / 2 : 0;
@@ -147,10 +147,10 @@ EC.Billboard.prototype.getBackgroundTransform = function (M, globalTime) {
       mat4.rotateX(M, M, toRadian(-rx));
     }
 
-    if (rz) mat4.rotateZ(M, M, toRadian(rz))
+    if (rz) mat4.rotateZ(M, M, toRadian(rz));
 
     mat4.scale(M, M, [w, h, 1.0]);
   }
 
   return M;
-}
+};

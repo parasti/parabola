@@ -4,29 +4,29 @@ module.exports = BodyModel;
 
 var Mtrl = require('./mtrl.js');
 
-function BodyModel() {
+function BodyModel () {
   var model = Object.create(BodyModel.prototype);
   model.meshes = null; // Both array and dictionary
   return model;
 }
 
-BodyModel.fromSolBody = function(sol, solBody) {
+BodyModel.fromSolBody = function (sol, solBody) {
   var model = BodyModel();
   model.meshes = sol.getBodyMeshes(solBody);
   model.sortMeshes();
   return model;
-}
+};
 
-BodyModel.prototype.createObjects = function(gl) {
+BodyModel.prototype.createObjects = function (gl) {
   var meshes = this.meshes;
 
   for (var i = 0; i < meshes.length; ++i) {
     var mesh = meshes[i];
     createMeshObjects(gl, mesh);
   }
-}
+};
 
-BodyModel.prototype.sortMeshes = function() {
+BodyModel.prototype.sortMeshes = function () {
   var opaqueMeshes = this.meshes.opaque = [];
   var opaqueDecalMeshes = this.meshes.opaqueDecal = [];
   var transparentDecalMeshes = this.meshes.transparentDecal = [];
@@ -49,19 +49,19 @@ BodyModel.prototype.sortMeshes = function() {
       reflectiveMeshes.push(mesh);
     }
   }
-}
+};
 
-BodyModel.prototype.drawMeshType = function(gl, state, meshType) {
+BodyModel.prototype.drawMeshType = function (gl, state, meshType) {
   var meshes = this.meshes[meshType];
   for (var i = 0; i < meshes.length; ++i) {
     drawMesh(gl, state, meshes[i]);
   }
-}
+};
 
 /*
  * Mesh rendering.
  */
-function createMeshObjects(gl, mesh) {
+function createMeshObjects (gl, mesh) {
   var vbo = gl.createBuffer();
 
   gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
@@ -79,7 +79,7 @@ function createMeshObjects(gl, mesh) {
   mesh.ebo = ebo;
 }
 
-function drawMesh(gl, state, mesh) {
+function drawMesh (gl, state, mesh) {
   Mtrl.draw(gl, state, mesh.mtrl);
 
   if (mesh.vbo) {

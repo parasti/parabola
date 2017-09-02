@@ -32,27 +32,27 @@ Mtrl.reflectiveRules = { in: Mtrl.REFLECTIVE, ex: 0 };
 
 Mtrl.test = function (mtrl, rules) {
   return ((mtrl.fl & rules.in) === rules.in && (mtrl.fl & rules.ex) === 0);
-}
+};
 
 Mtrl.isOpaque = function (mtrl) {
   return Mtrl.test(mtrl, Mtrl.opaqueRules);
-}
+};
 
 Mtrl.isOpaqueDecal = function (mtrl) {
   return Mtrl.test(mtrl, Mtrl.opaqueDecalRules);
-}
+};
 
 Mtrl.isTransparentDecal = function (mtrl) {
   return Mtrl.test(mtrl, Mtrl.transparentDecalRules);
-}
+};
 
 Mtrl.isTransparent = function (mtrl) {
   return Mtrl.test(mtrl, Mtrl.transparentRules);
-}
+};
 
 Mtrl.isReflective = function (mtrl) {
   return Mtrl.test(mtrl, Mtrl.reflectiveRules);
-}
+};
 
 /*
  * Create a GL texture from the given image.

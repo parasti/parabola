@@ -1,29 +1,29 @@
 'use strict';
 
-var Uniform = module.exports = {}
+var Uniform = module.exports = {};
 
 function makeUniform (type) {
   return {
     _type: type,
     value: allocValue(type),
     dirty: true
-  }
+  };
 }
 
-Uniform.i = () => makeUniform('i')
-Uniform.f = () => makeUniform('f')
-Uniform.vec2 = () => makeUniform('vec2')
-Uniform.vec3 = () => makeUniform('vec3')
-Uniform.vec4 = () => makeUniform('vec4')
-Uniform.mat3 = () => makeUniform('mat3')
-Uniform.mat4 = () => makeUniform('mat4')
+Uniform.i = () => makeUniform('i');
+Uniform.f = () => makeUniform('f');
+Uniform.vec2 = () => makeUniform('vec2');
+Uniform.vec3 = () => makeUniform('vec3');
+Uniform.vec4 = () => makeUniform('vec4');
+Uniform.mat3 = () => makeUniform('mat3');
+Uniform.mat4 = () => makeUniform('mat4');
 
 Uniform.copyValue = function (output, input) {
   if (output._type !== input._type) {
     throw 'Uniform input is ' + input._type + ', but expected ' + output._type;
   }
   output.value = input.value;
-}
+};
 
 Uniform.upload = function (gl, location, uniform) {
   switch (uniform._type) {
@@ -36,7 +36,7 @@ Uniform.upload = function (gl, location, uniform) {
     case 'mat4': gl.uniformMatrix4fv(location, false, uniform.value); break;
     default: throw 'Unknown uniform type ' + uniform._type;
   }
-}
+};
 
 function allocValue (type) {
   var value = 0;

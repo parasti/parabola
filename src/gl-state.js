@@ -8,7 +8,7 @@ var BallModel = require('./ball-model.js');
 var View = require('./view.js');
 var BillboardMesh = require('./billboard-mesh.js');
 
-function GLState(gl) {
+function GLState (gl) {
   this.defaultTexture = null;
   this.enableTextures = true;
 
@@ -71,16 +71,16 @@ GLState.fragShader = glsl.file('../glsl/default.frag');
 /*
  * Obtain a WebGL context. Now IE compatible, whoo.
  */
-GLState.getContext = function(canvas) {
+GLState.getContext = function (canvas) {
   var opts = { depth: true, alpha: GLState.composite };
   var gl = canvas.getContext('webgl', opts) || canvas.getContext('experimental-webgl', opts);
   return gl;
-}
+};
 
 /*
  * Obtain a WebGL context and set some defaults.
  */
-GLState.initGL = function(canvas) {
+GLState.initGL = function (canvas) {
   var gl = GLState.getContext(canvas);
 
   gl.enable(gl.CULL_FACE);
@@ -90,9 +90,9 @@ GLState.initGL = function(canvas) {
   // Straight alpha vs premultiplied alpha:
   // https://limnu.com/webgl-blending-youre-probably-wrong/
   // https://developer.nvidia.com/content/alpha-blending-pre-or-not-pre
-  //gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
-  //gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-  //gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+  // gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+  // gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+  // gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
   gl.depthFunc(gl.LEQUAL);
@@ -106,9 +106,9 @@ GLState.initGL = function(canvas) {
   gl.hint(gl.GENERATE_MIPMAP_HINT, gl.NICEST);
 
   return gl;
-}
+};
 
-GLState.loadShader = function(gl, type, source) {
+GLState.loadShader = function (gl, type, source) {
   var shader = gl.createShader(type);
 
   gl.shaderSource(shader, source);
@@ -119,12 +119,12 @@ GLState.loadShader = function(gl, type, source) {
     return null;
   }
   return shader;
-}
+};
 
 /*
  * Initialize some state.
  */
-GLState.prototype.init = function(gl) {
+GLState.prototype.init = function (gl) {
   this.createDefaultTexture(gl);
   this.createShaders(gl);
 
@@ -134,12 +134,12 @@ GLState.prototype.init = function(gl) {
   this.billboardMesh.createVBO(gl);
 
   this.calcPerspective(gl.canvas.width, gl.canvas.height);
-}
+};
 
 /*
  * WebGL spams console when sampling an unbound texture, so we bind this.
  */
-GLState.prototype.createDefaultTexture = function(gl) {
+GLState.prototype.createDefaultTexture = function (gl) {
   if (this.defaultTexture) {
     console.warn('Attempted to remake default texture');
     return;
@@ -149,9 +149,9 @@ GLState.prototype.createDefaultTexture = function(gl) {
     0xff, 0x00, 0xff, 0xff,
     0xff, 0xff, 0x00, 0xff,
     0x00, 0xff, 0xff, 0xff,
-    0xff, 0x00, 0xff, 0xff,
+    0xff, 0x00, 0xff, 0xff
   ];
-  
+
   var tex = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, tex);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
@@ -159,12 +159,12 @@ GLState.prototype.createDefaultTexture = function(gl) {
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 2, 2, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(data));
   gl.bindTexture(gl.TEXTURE_2D, null);
   this.defaultTexture = tex;
-}
+};
 
 /*
  * Make the default shader program.
  */
-GLState.prototype.createShaders = function(gl) {
+GLState.prototype.createShaders = function (gl) {
   var vs = GLState.loadShader(gl, gl.VERTEX_SHADER, GLState.vertShader);
   var fs = GLState.loadShader(gl, gl.FRAGMENT_SHADER, GLState.fragShader);
 
@@ -197,12 +197,12 @@ GLState.prototype.createShaders = function(gl) {
   this.uEnvironment = gl.getUniformLocation(prog, 'uEnvironment');
 
   this.defaultProgram = prog;
-}
+};
 
 /*
  * Compute a Neverball perspective matrix.
  */
-GLState.prototype.calcPerspective = function(w, h) {
+GLState.prototype.calcPerspective = function (w, h) {
   var fov = 50 * Math.PI / 180; // TODO pass as a param?
   var a = w / h;
 
@@ -211,50 +211,50 @@ GLState.prototype.calcPerspective = function(w, h) {
   var f = 512.0;
 
   mat4.perspective(this.perspMatrix, fov, a, n, f);
-}
+};
 
 GLState.prototype.setModelFromSol = function (gl, modelName, sol) {
   var model = SolidModel.fromSol(sol);
   model.createObjects(gl);
   this.models[modelName] = model;
-}
+};
 
 GLState.prototype.setModel = function (gl, modelName, model) {
   model.createObjects(gl);
   this.models[modelName] = model;
-}
+};
 
 /*
  * Track vertex attribute array enabled/disabled state.
  */
-GLState.prototype.enableArray = function(gl, index) {
+GLState.prototype.enableArray = function (gl, index) {
   if (!this.enabledArrays[index]) {
     gl.enableVertexAttribArray(index);
     this.enabledArrays[index] = true;
   }
-}
+};
 
-GLState.prototype.disableArray = function(gl, index) {
+GLState.prototype.disableArray = function (gl, index) {
   if (this.enabledArrays[index]) {
     gl.disableVertexAttribArray(index);
     this.enabledArrays[index] = false;
   }
-}
+};
 
 /*
  * Track used program.
  */
-GLState.prototype.useProgram = function(gl, program) {
+GLState.prototype.useProgram = function (gl, program) {
   if (program !== this.usedProgram) {
     gl.useProgram(program);
     this.usedProgram = program;
   }
-}
+};
 
 /*
  * Render everything.
  */
-GLState.prototype.draw = function(gl) {
+GLState.prototype.draw = function (gl) {
   // game_draw
 
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -277,9 +277,9 @@ GLState.prototype.draw = function(gl) {
       levelModel.drawBills(gl, this);
     }
 
-    //gl.useProgram(null);
+    // gl.useProgram(null);
   }
-}
+};
 
 // WIP
 GLState.prototype.draw_WIP = function (gl) {
@@ -297,9 +297,9 @@ GLState.prototype.draw_WIP = function (gl) {
     Shader.uploadUniforms(gl, shader, mesh.uniforms);
     drawGeometry(gl, state, mesh.geometry);
   }
-}
+};
 
-GLState.prototype.step = function(dt) {
+GLState.prototype.step = function (dt) {
   this.time += dt;
 
   for (var name in this.models) {
@@ -309,6 +309,6 @@ GLState.prototype.step = function(dt) {
       model.step(dt);
     }
   }
-}
+};
 
 module.exports = GLState;

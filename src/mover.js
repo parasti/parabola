@@ -6,12 +6,12 @@ var quat = require('gl-matrix').quat;
 /*
  * Walk the path entities in life. Don't we all.
  */
-function Mover(path) {
+function Mover (path) {
   this.path = path || null;
   this.time = 0;
 }
 
-Mover.fromSolBody = function(sol, body) {
+Mover.fromSolBody = function (sol, body) {
   // sol_load_vary
 
   var moverTranslate;
@@ -26,17 +26,17 @@ Mover.fromSolBody = function(sol, body) {
   }
 
   return { translate: moverTranslate, rotate: moverRotate };
-}
+};
 
-Mover.erp = function(t) {
+Mover.erp = function (t) {
   // float erp(float t)
   return 3.0 * t * t - 2.0 * t * t * t;
-}
+};
 
 /*
  * Calculate position (optionally after DT seconds).
  */
-Mover.prototype.getPosition = function(p, dt) {
+Mover.prototype.getPosition = function (p, dt) {
   // sol_body_p
 
   var dt = dt || 0.0;
@@ -57,12 +57,12 @@ Mover.prototype.getPosition = function(p, dt) {
   }
 
   return p;
-}
+};
 
 /*
  * Calculate orientation (optionally after DT seconds) as a quaternion.
  */
-Mover.prototype.getOrientation = function(e, dt) {
+Mover.prototype.getOrientation = function (e, dt) {
   // sol_body_e
 
   const P_ORIENTED = 0x1;
@@ -87,12 +87,12 @@ Mover.prototype.getOrientation = function(e, dt) {
   }
 
   return e;
-}
+};
 
 /*
  * Walk forward DT seconds.
  */
-Mover.prototype.step = function(dt) {
+Mover.prototype.step = function (dt) {
   // TODO Count milliseconds to keep time-aware entities in sync.
 
   if (this.path) {
@@ -107,7 +107,7 @@ Mover.prototype.step = function(dt) {
       }
     }
   }
-}
+};
 
 /*
  * Exports.

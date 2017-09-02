@@ -10,9 +10,9 @@ var Mover = require('./mover.js');
 var BodyModel = require('./body-model.js');
 var Solid = require('./solid.js');
 var Shader = require('./shader.js');
-var EC = require('./entity-components.js')
+var EC = require('./entity-components.js');
 
-function SolidModel() {
+function SolidModel () {
   var model = Object.create(SolidModel.prototype);
 
   model.entities = null;
@@ -30,7 +30,7 @@ function SolidModel() {
 /*
  * Load entities from SOL.
  */
-SolidModel.fromSol = function(sol) {
+SolidModel.fromSol = function (sol) {
   var solidModel = SolidModel();
 
   var ents = solidModel.entities = nanoECS();
@@ -130,9 +130,9 @@ SolidModel.fromSol = function(sol) {
   }
 
   return solidModel;
-}
+};
 
-SolidModel.prototype.step = function(dt) {
+SolidModel.prototype.step = function (dt) {
   var ents = this.entities.queryComponents([EC.Spatial, EC.Movers]);
 
   for (var i = 0; i < ents.length; ++i) {
@@ -158,12 +158,12 @@ SolidModel.prototype.step = function(dt) {
 
     ent.spatial.updateMatrix();
   }
-}
+};
 
 /*
  * Create body mesh VBOs and textures.
  */
-SolidModel.prototype.createObjects = function(gl) {
+SolidModel.prototype.createObjects = function (gl) {
   var models = this.models;
   var materials = this.materials;
 
@@ -177,12 +177,12 @@ SolidModel.prototype.createObjects = function(gl) {
   for (var i = 0; i < materials.length; ++i) {
     Mtrl.loadTexture(gl, materials[i]);
   }
-}
+};
 
 /*
  * Render entity meshes of the given type. Pass a parentMatrix for hierarchical transform.
  */
-SolidModel.prototype.drawMeshType = function(gl, state, meshType, parentMatrix) {
+SolidModel.prototype.drawMeshType = function (gl, state, meshType, parentMatrix) {
   var ents = this.entities.queryComponents([EC.Drawable, EC.Spatial]);
 
   for (var i = 0; i < ents.length; ++i) {
@@ -196,19 +196,19 @@ SolidModel.prototype.drawMeshType = function(gl, state, meshType, parentMatrix) 
       // TODO update uniforms on actual change
       gl.uniformMatrix4fv(state.uModelID, false, modelMatrix);
     } else {
-      gl.uniformMatrix4fv(state.uModelID, false, ent.spatial.matrix);;
+      gl.uniformMatrix4fv(state.uModelID, false, ent.spatial.matrix);
     }
 
     // TODO tag entities w/ models that have this mesh type?
     // Iterate over tagged lists?
     model.drawMeshType(gl, state, meshType);
   }
-}
+};
 
 /*
  * Render model meshes. Pass a parentMatrix for hierarchical transform.
  */
-SolidModel.prototype.drawBodies = function(gl, state, parentMatrix) {
+SolidModel.prototype.drawBodies = function (gl, state, parentMatrix) {
   // sol_draw()
 
   const mask = this.transparentDepthMask;
@@ -228,7 +228,7 @@ SolidModel.prototype.drawBodies = function(gl, state, parentMatrix) {
   }
   if (!mask) gl.depthMask(true);
   if (!test) gl.enable(gl.DEPTH_TEST);
-}
+};
 
 /*
  * Alias.
@@ -238,7 +238,7 @@ SolidModel.prototype.draw = SolidModel.prototype.drawBodies;
 /*
  * Render item entities with a pre-loaded model.
  */
-SolidModel.prototype.drawItems = function(gl, state) {
+SolidModel.prototype.drawItems = function (gl, state) {
   var modelsByTag = {
     coin: state.models.coin,
     coin5: state.models.coin5,
@@ -258,12 +258,12 @@ SolidModel.prototype.drawItems = function(gl, state) {
       }
     }
   }
-}
+};
 
 /*
  * Render ball entities with a pre-loaded model.
  */
-SolidModel.prototype.drawBalls = function(gl, state) {
+SolidModel.prototype.drawBalls = function (gl, state) {
   var model = state.models.ball;
 
   if (model) {
@@ -275,9 +275,9 @@ SolidModel.prototype.drawBalls = function(gl, state) {
       model.draw(gl, state, ent.spatial.matrix);
     }
   }
-}
+};
 
-SolidModel.prototype.drawBills = function(gl, state, parentMatrix) {
+SolidModel.prototype.drawBills = function (gl, state, parentMatrix) {
   var ents = this.entities.queryComponents([EC.Billboard, EC.Spatial]);
 
   // TODO
@@ -313,6 +313,6 @@ SolidModel.prototype.drawBills = function(gl, state, parentMatrix) {
   if (!test) gl.enable(gl.DEPTH_TEST);
 
   state.billboardMesh.disableDraw(gl, state);
-}
+};
 
 module.exports = SolidModel;

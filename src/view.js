@@ -43,10 +43,10 @@ View.SPEED = 2.0;
 /*
  * Overhead at position.
  */
-View.prototype.overhead = function(p) {
+View.prototype.overhead = function (p) {
   vec3.set(this.p, p[0], p[1] + View.DP, p[2] + View.DZ);
   vec3.set(this.c, p[0], p[1] + View.DC, p[2]);
-}
+};
 
 /*
  * Calculate a basis matrix.
@@ -79,7 +79,7 @@ View.prototype.getBasis = (function () {
     M[10] = z[2];
 
     return this._basis;
-  }
+  };
 })();
 
 /*
@@ -90,7 +90,7 @@ View.prototype.getMatrix = (function () {
   var M = mat4.create();
   var v = vec3.create();
 
-  return function() {
+  return function () {
     var viewMat = this._viewMatrix;
 
     vec3.sub(v, this.c, this.p);
@@ -99,13 +99,13 @@ View.prototype.getMatrix = (function () {
     mat4.translate(viewMat, viewMat, vec3.negate(v, this.c));
 
     return this._viewMatrix;
-  }
+  };
 })();
 
 /*
  * Calculate a fly-in view from the available SOL entities.
  */
-View.prototype.setFromSol = (function() {
+View.prototype.setFromSol = (function () {
   // game_view_fly
 
   var ball = new View();
@@ -131,41 +131,40 @@ View.prototype.setFromSol = (function() {
 
     vec3.lerp(this.p, ball.p, view.p, k * k);
     vec3.lerp(this.c, ball.c, view.c, k * k);
-  }
+  };
 })();
-
 
 /*
  * Rudimentary controls.
  */
-View.prototype.moveForward = function(b) {
+View.prototype.moveForward = function (b) {
   this.forward = b;
-}
+};
 
-View.prototype.moveBackward = function(b) {
+View.prototype.moveBackward = function (b) {
   this.backward = b;
-}
+};
 
-View.prototype.moveLeft = function(b) {
+View.prototype.moveLeft = function (b) {
   this.left = b;
-}
+};
 
-View.prototype.moveRight = function(b) {
+View.prototype.moveRight = function (b) {
   this.right = b;
-}
+};
 
-View.prototype.setMoveSpeed = function(dir) {
+View.prototype.setMoveSpeed = function (dir) {
   if (dir > 0) {
     this.speed = Math.max(View.SPEED, this.speed + View.SPEED);
   } else if (dir < 0) {
     this.speed = Math.max(View.SPEED, this.speed - View.SPEED);
   }
-}
+};
 
-View.prototype.step = (function() {
+View.prototype.step = (function () {
   var v = vec3.create();
 
-  return function(dt) {
+  return function (dt) {
     vec3.set(v, 0, 0, 0);
 
     if (this.forward) {
@@ -188,10 +187,10 @@ View.prototype.step = (function() {
       vec3.add(this.p, this.p, v);
       vec3.add(this.c, this.c, v);
     }
-  }
+  };
 })();
 
-View.prototype.mouseLook = function(dx, dy) {
+View.prototype.mouseLook = function (dx, dy) {
   // dx = rotate around Y
   // dy = rotate around X
 
@@ -215,7 +214,7 @@ View.prototype.mouseLook = function(dx, dy) {
 
   vec3.transformMat4(z, z, this.getBasis());
   vec3.add(this.c, this.p, vec3.negate(z, z));
-}
+};
 
 /*
  * Exports.
