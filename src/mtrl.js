@@ -77,16 +77,18 @@ Mtrl.draw = function (gl, state, mtrl) {
     gl.bindTexture(gl.TEXTURE_2D, state.defaultTexture);
   }
 
-  gl.uniform4fv(state.uDiffuse, mtrl.d);
-  gl.uniform4fv(state.uAmbient, mtrl.a);
-  gl.uniform4fv(state.uSpecular, mtrl.s);
-  gl.uniform4fv(state.uEmissive, mtrl.e);
-  gl.uniform1f(state.uShininess, mtrl.h);
+  var uniforms = state.defaultShader.uniforms;
+
+  uniforms.uDiffuse.value = mtrl.d;
+  uniforms.uAmbient.value = mtrl.a;
+  uniforms.uSpecular.value = mtrl.s;
+  uniforms.uEmissive.value = mtrl.e;
+  uniforms.uShininess.value = mtrl.h;
 
   if (mtrl.fl & Mtrl.ENVIRONMENT) {
-    gl.uniform1i(state.uEnvironment, 1);
+    uniforms.uEnvironment.value = 1;
   } else {
-    gl.uniform1i(state.uEnvironment, 0);
+    uniforms.uEnvironment.value = 0;
   }
 
   if (mtrl.fl & Mtrl.ADDITIVE) {

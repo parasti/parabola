@@ -200,9 +200,9 @@ SolidModel.prototype.drawMeshType = function (gl, state, meshType, parentMatrix)
       var modelMatrix = mat4.create();
       mat4.multiply(modelMatrix, parentMatrix, ent.spatial.matrix);
       // TODO update uniforms on actual change
-      gl.uniformMatrix4fv(state.uModelID, false, modelMatrix);
+      state.defaultShader.uniforms.uModel.value = modelMatrix;
     } else {
-      gl.uniformMatrix4fv(state.uModelID, false, ent.spatial.matrix);
+      state.defaultShader.uniforms.uModel.value = ent.spatial.matrix;
     }
 
     // TODO tag entities w/ models that have this mesh type?

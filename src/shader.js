@@ -1,8 +1,15 @@
 'use strict';
 
+var glsl = require('glslify');
+
 var ShaderGraph = require('@parasti/shadergraph')(fetchSnippet);
 var Mtrl = require('./mtrl.js');
 var Uniform = require('./uniform.js');
+
+function createShader (properties) {
+  var shader = Object.create(Shader.prototype);
+  return Object.assign(shader, properties);
+}
 
 /*
  * Build shaders and uniforms for the given material.
@@ -101,25 +108,58 @@ var Shader = module.exports = function (mtrl) {
 
   var program = material.link();
 
-  return {
+  return createShader({
     program: null,
     shaderFlags: shaderFlags,
     vertexShader: program.vertexShader,
     fragmentShader: 'precision highp float;\n' + program.fragmentShader,
     uniforms: namedUniforms,
     mangledUniforms: program.uniforms
-  };
+  });
 };
 
-Shader.use = function (gl, state, shader) {
+/*
+ * Wrap the old shader with the new API.
+ */
+Shader.origShader = function () {
+  var uniforms = {
+    uTexture: Uniform.i(),
+    uPersp: Uniform.mat4(),
+    uView: Uniform.mat4(),
+    uModel: Uniform.mat4(),
+    uDiffuse: Uniform.vec4(),
+    uAmbient: Uniform.vec4(),
+    uSpecular: Uniform.vec4(),
+    uEmissive: Uniform.vec4(),
+    uShininess: Uniform.f(),
+    uEnvironment: Uniform.i()
+  };
+
+  return createShader({
+    program: null,
+    shaderFlags: 0,
+    vertexShader: glsl.file('../glsl/default.vert'),
+    fragmentShader: glsl.file('../glsl/default.frag'),
+    uniforms: uniforms,
+    mangledUniforms: uniforms
+  });
+};
+
+Shader.prototype.use = function (gl, state) {
+  var shader = this;
   var program = shader.program;
 
   if (program) {
     state.useProgram(gl, program);
+    return true;
   }
+
+  return false;
 };
 
-Shader.createObjects = function (gl, shader) {
+Shader.prototype.createObjects = function (gl) {
+  var shader = this;
+
   if (shader.program) {
     throw Error('Shader program already exists');
   }
@@ -147,23 +187,9 @@ Shader.createObjects = function (gl, shader) {
   shader.program = prog;
 };
 
-/*
- * Copy values of uniforms to matching shader uniforms.
- */
-function setUniformsFromList (shader, uniformList) {
-  for (var name in uniformList) {
-    var output = shader.uniforms[name];
-
-    if (output !== undefined) {
-      Uniform.copyValue(output, uniformList[name]);
-    }
-  }
-}
-
-Shader.uploadUniforms = function (gl, shader, uniformList) {
+Shader.prototype.uploadUniforms = function (gl) {
+  var shader = this;
   var program = shader.program;
-
-  setUniformsFromList(shader, uniformList);
 
   if (program) {
     var uniforms = shader.mangledUniforms;
@@ -173,7 +199,7 @@ Shader.uploadUniforms = function (gl, shader, uniformList) {
       var location = gl.getUniformLocation(program, name);
       var uniform = uniforms[name];
 
-      Uniform.upload(gl, location, uniform);
+      uniform.upload(gl, location);
     }
   }
 };

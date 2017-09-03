@@ -82,6 +82,8 @@ function createMeshObjects (gl, mesh) {
 function drawMesh (gl, state, mesh) {
   Mtrl.draw(gl, state, mesh.mtrl);
 
+  state.defaultShader.uploadUniforms(gl);
+
   if (mesh.vbo) {
     state.enableArray(gl, state.aPositionID);
     state.enableArray(gl, state.aNormalID);

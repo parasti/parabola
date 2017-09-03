@@ -1,29 +1,17 @@
 'use strict';
 
-var glsl = require('glslify');
 var mat4 = require('gl-matrix').mat4;
 
 var SolidModel = require('./solid-model.js');
 var View = require('./view.js');
 var BillboardMesh = require('./billboard-mesh.js');
+var Shader = require('./shader.js');
 
 function GLState (gl) {
   this.defaultTexture = null;
   this.enableTextures = true;
 
-  this.defaultProgram = null;
-
-  this.uPerspID = null;
-  this.uViewID = null;
-  this.uModelID = null;
-  this.uTextureID = null;
-
-  this.uDiffuse = null;
-  this.uAmbient = null;
-  this.uSpecular = null;
-  this.uEmissive = null;
-  this.uShininess = null;
-  this.uEnvironment = null;
+  this.defaultShader = Shader.origShader();
 
   this.aPositionID = 0;
   this.aNormalID = 1;
@@ -63,9 +51,6 @@ function GLState (gl) {
 // 3) Clear draw buffer to zero alpha.
 // 4) Composite GL with HTML content.
 GLState.composite = false;
-
-GLState.vertShader = glsl.file('../glsl/default.vert');
-GLState.fragShader = glsl.file('../glsl/default.frag');
 
 /*
  * Obtain a WebGL context. Now IE compatible, whoo.
@@ -107,25 +92,13 @@ GLState.initGL = function (canvas) {
   return gl;
 };
 
-GLState.loadShader = function (gl, type, source) {
-  var shader = gl.createShader(type);
-
-  gl.shaderSource(shader, source);
-  gl.compileShader(shader);
-
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    console.error(gl.getShaderInfoLog(shader));
-    return null;
-  }
-  return shader;
-};
-
 /*
  * Initialize some state.
  */
 GLState.prototype.init = function (gl) {
   this.createDefaultTexture(gl);
-  this.createShaders(gl);
+
+  this.defaultShader.createObjects(gl);
 
   // Create billboard mesh.
   // TODO mesh/model/what?
@@ -158,44 +131,6 @@ GLState.prototype.createDefaultTexture = function (gl) {
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 2, 2, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(data));
   gl.bindTexture(gl.TEXTURE_2D, null);
   this.defaultTexture = tex;
-};
-
-/*
- * Make the default shader program.
- */
-GLState.prototype.createShaders = function (gl) {
-  var vs = GLState.loadShader(gl, gl.VERTEX_SHADER, GLState.vertShader);
-  var fs = GLState.loadShader(gl, gl.FRAGMENT_SHADER, GLState.fragShader);
-
-  var prog = gl.createProgram();
-
-  gl.attachShader(prog, vs);
-  gl.attachShader(prog, fs);
-
-  gl.bindAttribLocation(prog, this.aPositionID, 'aPosition');
-  gl.bindAttribLocation(prog, this.aNormalID, 'aNormal');
-  gl.bindAttribLocation(prog, this.aTexCoordID, 'aTexCoord');
-
-  gl.linkProgram(prog);
-
-  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
-    console.log(gl.getProgramInfoLog(prog));
-    return;
-  }
-
-  this.uPerspID = gl.getUniformLocation(prog, 'uPersp');
-  this.uViewID = gl.getUniformLocation(prog, 'uView');
-  this.uModelID = gl.getUniformLocation(prog, 'uModel');
-  this.uTextureID = gl.getUniformLocation(prog, 'uTexture');
-
-  this.uDiffuse = gl.getUniformLocation(prog, 'uDiffuse');
-  this.uAmbient = gl.getUniformLocation(prog, 'uAmbient');
-  this.uSpecular = gl.getUniformLocation(prog, 'uSpecular');
-  this.uEmissive = gl.getUniformLocation(prog, 'uEmissive');
-  this.uShininess = gl.getUniformLocation(prog, 'uShininess');
-  this.uEnvironment = gl.getUniformLocation(prog, 'uEnvironment');
-
-  this.defaultProgram = prog;
 };
 
 /*
@@ -256,16 +191,14 @@ GLState.prototype.useProgram = function (gl, program) {
 GLState.prototype.draw = function (gl) {
   // game_draw
 
+  var shader = this.defaultShader;
+
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-  if (this.defaultProgram) {
-    // TODO per material
-    this.useProgram(gl, this.defaultProgram);
-
-    gl.uniform1i(this.uTextureID, 0);
-
-    gl.uniformMatrix4fv(this.uPerspID, false, this.perspMatrix);
-    gl.uniformMatrix4fv(this.uViewID, false, this.viewMatrix);
+  if (shader.use(gl, this)) {
+    shader.uniforms.uTexture.value = 0;
+    shader.uniforms.uPersp.value = this.perspMatrix;
+    shader.uniforms.uView.value = this.viewMatrix;
 
     var levelModel = this.models.level;
 
@@ -275,8 +208,6 @@ GLState.prototype.draw = function (gl) {
       levelModel.drawBalls(gl, this);
       levelModel.drawBills(gl, this);
     }
-
-    // gl.useProgram(null);
   }
 };
 
