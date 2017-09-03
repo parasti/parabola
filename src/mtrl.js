@@ -24,35 +24,23 @@ Mtrl.CLAMP_T = (1 << 0);
 /*
  * Material sorting rules.
  */
-Mtrl.opaqueRules = { in: 0, ex: Mtrl.REFLECTIVE | Mtrl.TRANSPARENT | Mtrl.DECAL };
-Mtrl.opaqueDecalRules = { in: Mtrl.DECAL, ex: Mtrl.REFLECTIVE | Mtrl.TRANSPARENT };
-Mtrl.transparentDecalRules = { in: Mtrl.DECAL | Mtrl.TRANSPARENT, ex: Mtrl.REFLECTIVE };
-Mtrl.transparentRules = { in: Mtrl.TRANSPARENT, ex: Mtrl.REFLECTIVE | Mtrl.DECAL };
-Mtrl.reflectiveRules = { in: Mtrl.REFLECTIVE, ex: 0 };
+var opaqueRules = { in: 0, ex: Mtrl.REFLECTIVE | Mtrl.TRANSPARENT | Mtrl.DECAL };
+var opaqueDecalRules = { in: Mtrl.DECAL, ex: Mtrl.REFLECTIVE | Mtrl.TRANSPARENT };
+var transparentDecalRules = { in: Mtrl.DECAL | Mtrl.TRANSPARENT, ex: Mtrl.REFLECTIVE };
+var transparentRules = { in: Mtrl.TRANSPARENT, ex: Mtrl.REFLECTIVE | Mtrl.DECAL };
+var reflectiveRules = { in: Mtrl.REFLECTIVE, ex: 0 };
 
-Mtrl.test = function (mtrl, rules) {
-  return ((mtrl.fl & rules.in) === rules.in && (mtrl.fl & rules.ex) === 0);
-};
+function testMtrl (rules) {
+  return function (mtrl) {
+    return ((mtrl.fl & rules.in) === rules.in && (mtrl.fl & rules.ex) === 0);
+  };
+}
 
-Mtrl.isOpaque = function (mtrl) {
-  return Mtrl.test(mtrl, Mtrl.opaqueRules);
-};
-
-Mtrl.isOpaqueDecal = function (mtrl) {
-  return Mtrl.test(mtrl, Mtrl.opaqueDecalRules);
-};
-
-Mtrl.isTransparentDecal = function (mtrl) {
-  return Mtrl.test(mtrl, Mtrl.transparentDecalRules);
-};
-
-Mtrl.isTransparent = function (mtrl) {
-  return Mtrl.test(mtrl, Mtrl.transparentRules);
-};
-
-Mtrl.isReflective = function (mtrl) {
-  return Mtrl.test(mtrl, Mtrl.reflectiveRules);
-};
+Mtrl.isOpaque = testMtrl(opaqueRules);
+Mtrl.isOpaqueDecal = testMtrl(opaqueDecalRules);
+Mtrl.isTransparentDecal = testMtrl(transparentDecalRules);
+Mtrl.isTransparent = testMtrl(transparentRules);
+Mtrl.isReflective = testMtrl(reflectiveRules);
 
 /*
  * Create a GL texture from the given image.
