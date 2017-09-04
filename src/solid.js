@@ -31,7 +31,7 @@ function Solid () {
 }
 
 Solid.MAGIC = 0x4c4f53af;
-Solid.VERSION = 7;
+Solid.VERSIONS = [7, 8];
 
 /*
  * Material type flags.
@@ -88,8 +88,8 @@ Solid.load = function (buffer) {
 
   var version = stream.readInt32LE();
 
-  if (version !== Solid.VERSION) {
-    throw Error('Failed to load SOL: not a version ' + Solid.VERSION + ' SOL file');
+  if (!Solid.VERSIONS.includes(version)) {
+    throw Error('Failed to load SOL: version ' + version + ' is not supported');
   }
 
   var ac = stream.readInt32LE();
@@ -139,6 +139,12 @@ Solid.load = function (buffer) {
   sol.uv = sol.balls = loadBalls(stream, uc);
   sol.wv = sol.views = loadViews(stream, wc);
   sol.iv = sol.indices = stream.readInt32LEArray(ic);
+
+  if (sol.version <= 7) {
+    var i;
+    for (i = 0; i < sol.mv.length; ++i) sol.mv[i].fl |= Solid.MTRL_LIT;
+    for (i = 0; i < sol.rv.length; ++i) sol.mv[sol.rv[i].mi].fl &= ~Solid.MTRL_LIT;
+  }
 
   return sol;
 };
