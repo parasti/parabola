@@ -199,7 +199,7 @@ Shader.prototype.uploadUniforms = function (gl) {
       var location = gl.getUniformLocation(program, name);
       var uniform = uniforms[name];
 
-      uniform.upload(gl, location);
+      Uniform.upload(gl, location, uniform);
     }
   }
 };

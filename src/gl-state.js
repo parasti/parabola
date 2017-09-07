@@ -11,7 +11,7 @@ function GLState (gl) {
   this.defaultTexture = null;
   this.enableTextures = true;
 
-  this.defaultShader = Shader.origShader();
+  this.defaultShader = null;
 
   this.aPositionID = 0;
   this.aNormalID = 1;
@@ -45,27 +45,17 @@ function GLState (gl) {
   }
 }
 
-// Some WebGL fun:
-// 1) Enable premultiplied alpha and appropriate blending.
-// 2) Don't ask for an "alpha: false" context.
-// 3) Clear draw buffer to zero alpha.
-// 4) Composite GL with HTML content.
-GLState.composite = false;
-
 /*
  * Obtain a WebGL context. Now IE compatible, whoo.
  */
-GLState.getContext = function (canvas) {
-  var opts = { depth: true, alpha: GLState.composite };
+function getContext (canvas) {
+  var opts = { depth: true, alpha: false };
   var gl = canvas.getContext('webgl', opts) || canvas.getContext('experimental-webgl', opts);
   return gl;
-};
+}
 
-/*
- * Obtain a WebGL context and set some defaults.
- */
 GLState.initGL = function (canvas) {
-  var gl = GLState.getContext(canvas);
+  var gl = getContext(canvas);
 
   gl.enable(gl.CULL_FACE);
   gl.enable(gl.DEPTH_TEST);
@@ -76,18 +66,13 @@ GLState.initGL = function (canvas) {
   // https://developer.nvidia.com/content/alpha-blending-pre-or-not-pre
   // gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
   // gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-  // gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-
   gl.depthFunc(gl.LEQUAL);
-
-  gl.clearColor(0, 0, 0, GLState.composite ? 0.0 : 1.0);
+  gl.clearColor(0, 0, 0, 1.0);
 
   // Fix upside down images.
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-
-  // This does nothing.
-  gl.hint(gl.GENERATE_MIPMAP_HINT, gl.NICEST);
 
   return gl;
 };
@@ -98,6 +83,7 @@ GLState.initGL = function (canvas) {
 GLState.prototype.init = function (gl) {
   this.createDefaultTexture(gl);
 
+  this.defaultShader = Shader.origShader();
   this.defaultShader.createObjects(gl);
 
   // Create billboard mesh.

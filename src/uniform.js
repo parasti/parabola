@@ -5,12 +5,10 @@ var Uniform = module.exports = function () {
 };
 
 function makeUniform (type) {
-  var uniform = Object.create(Uniform.prototype);
-
-  return Object.assign(uniform, {
+  return {
     type: type,
     value: allocValue(type)
-  });
+  };
 }
 
 Uniform.i = () => makeUniform('i');
@@ -28,9 +26,7 @@ Uniform.copyValue = function (output, input) {
   output.value = input.value;
 };
 
-Uniform.prototype.upload = function (gl, location) {
-  var uniform = this;
-
+Uniform.upload = function (gl, location, uniform) {
   switch (uniform.type) {
     case 'i': gl.uniform1i(location, uniform.value); break;
     case 'f': gl.uniform1f(location, uniform.value); break;

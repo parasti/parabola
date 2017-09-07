@@ -309,9 +309,10 @@ SolidModel.prototype.drawBills = function (gl, state, parentMatrix) {
     if (parentMatrix) {
       mat4.multiply(modelMatrix, parentMatrix, modelMatrix);
     }
-    gl.uniformMatrix4fv(state.uModelID, false, modelMatrix);
+    state.defaultShader.uniforms.uModel.value = modelMatrix;
 
     Mtrl.draw(gl, state, ent.billboard.mtrl);
+    state.defaultShader.uploadUniforms(gl);
     state.billboardMesh.draw(gl, state);
   }
 
