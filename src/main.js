@@ -8,7 +8,6 @@ var mat4 = require('gl-matrix').mat4;
 var screenfull = require('screenfull');
 var data = require('./data.js');
 
-var Solid = require('./solid.js');
 var GLState = require('./gl-state.js');
 var BallModel = require('./ball-model.js');
 
@@ -122,8 +121,8 @@ function init () {
       return;
     }
 
-    data.loadFile(this.files[0]).then(function (arrayBuffer) {
-      solFile = Solid.load(arrayBuffer);
+    data.loadSolid(this.files[0]).then(function (sol) {
+      solFile = sol;
       state.setModelFromSol(gl, 'level', solFile);
     });
   });

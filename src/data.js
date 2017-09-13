@@ -1,3 +1,5 @@
+var Solid = require('./solid.js');
+
 var data = module.exports;
 
 data.fetchBinaryFile = function (path) {
@@ -5,8 +7,8 @@ data.fetchBinaryFile = function (path) {
     var req = new window.XMLHttpRequest();
     req.responseType = 'arraybuffer';
     req.onload = function () {
-      if (this.status === 200) {
-        resolve(this.response);
+      if (req.status === 200) {
+        resolve(req.response);
       }
     };
     req.open('GET', 'data/' + path);
@@ -18,7 +20,7 @@ data.fetchImage = function (path) {
   return new Promise(function (resolve, reject) {
     var img = new window.Image();
     img.onload = function () {
-      resolve(this);
+      resolve(img);
     };
     img.src = 'data/' + path;
   });
@@ -26,16 +28,22 @@ data.fetchImage = function (path) {
 
 data.fetchSolid = function (path) {
   return data.fetchBinaryFile(path).then(function (buffer) {
-    return require('./solid.js').load(buffer);
+    return Solid.load(buffer);
   });
 };
 
-data.loadFile = function (file, onload) {
+data.loadFile = function (file) {
   return new Promise(function (resolve, reject) {
     var reader = new window.FileReader();
-    reader.addEventListener('load', function (e) {
-      resolve(this.result);
-    });
+    reader.onload = function () {
+      resolve(reader.result);
+    };
     reader.readAsArrayBuffer(file);
+  });
+};
+
+data.loadSolid = function (file) {
+  return data.loadFile(file).then(function (buffer) {
+    return Solid.load(buffer);
   });
 };
