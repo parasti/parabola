@@ -36,8 +36,8 @@ function loadBall (gl, state, name = 'basic-ball') {
 
 function init () {
   var canvas = document.getElementById('canvas');
-  var gl = GLState.initGL(canvas);
-  var state = new GLState(gl);
+  var state = GLState(canvas);
+  var gl = state.gl;
   var solFile = null;
 
   data.fetchSolid('map-easy/easy.sol').then(function (sol) {
@@ -139,11 +139,9 @@ function init () {
       if (screenfull.isFullscreen) {
         canvas.width = window.screen.width;
         canvas.height = window.screen.height;
-        canvas.style.background = 'black';
       } else {
         canvas.width = 800;
         canvas.height = 600;
-        canvas.style.background = 'inherit';
       }
       // TODO
       gl.viewport(0, 0, canvas.clientWidth, canvas.clientHeight);

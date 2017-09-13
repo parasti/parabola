@@ -7,7 +7,18 @@ var View = require('./view.js');
 var BillboardMesh = require('./billboard-mesh.js');
 var Shader = require('./shader.js');
 
-function GLState (gl) {
+/*
+ * A few notes on webglcontextrestored handling:
+ * 1) Context and GL objects/state need to be reacquired upon context-restore.
+ * 2) The vertex attributes/texture data/shader code needs to be kept around.
+ * 3) Each object rebuild should be async (in a Promise), to keep the thread from stalling.
+ */
+
+function GLState (canvas) {
+  if (!(this instanceof GLState)) {
+    return new GLState(canvas);
+  }
+
   this.defaultTexture = null;
   this.enableTextures = true;
 
@@ -23,8 +34,10 @@ function GLState (gl) {
   this.perspMatrix = mat4.create();
   this.viewMatrix = mat4.create();
 
+  // TODO This is simulation, not GL state
   this.view = new View();
 
+  // These are resources, not GL state
   this.models = { // TODO
     level: null,
     ball: null,
@@ -37,12 +50,9 @@ function GLState (gl) {
 
   this.billboardMesh = null;
 
-  this.time = 0.0;
-
-  // TODO What's the extent of this?
-  if (gl) {
-    this.init(gl);
-  }
+  this.gl = getContext(canvas);
+  setupContext(this.gl);
+  this.createDefaultObjects();
 }
 
 /*
@@ -54,9 +64,10 @@ function getContext (canvas) {
   return gl;
 }
 
-GLState.initGL = function (canvas) {
-  var gl = getContext(canvas);
-
+/*
+ * TODO? Some of this sets up material state, which could happen elsewhere.
+ */
+function setupContext (gl) {
   gl.enable(gl.CULL_FACE);
   gl.enable(gl.DEPTH_TEST);
   gl.enable(gl.BLEND);
@@ -73,14 +84,14 @@ GLState.initGL = function (canvas) {
 
   // Fix upside down images.
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-
-  return gl;
-};
+}
 
 /*
- * Initialize some state.
+ * TODO
  */
-GLState.prototype.init = function (gl) {
+GLState.prototype.createDefaultObjects = function () {
+  var gl = this.gl;
+
   this.createDefaultTexture(gl);
 
   this.defaultShader = Shader.origShader();
