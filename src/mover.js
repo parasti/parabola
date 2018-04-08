@@ -36,7 +36,7 @@ Mover.fromSolBody = function (sol, body) {
 /*
  * Motion easing.
  */
-Mover.erp = function (t) {
+function erp (t) {
   // float erp(float t)
   return 3.0 * t * t - 2.0 * t * t * t;
 };
@@ -60,7 +60,7 @@ Mover.prototype.getPosition = function (p, dt = 0.0) {
       s = this.time / thisPath.t;
     }
 
-    vec3.lerp(p, thisPath.p, nextPath.p, thisPath.s ? Mover.erp(s) : s);
+    vec3.lerp(p, thisPath.p, nextPath.p, thisPath.s ? erp(s) : s);
   }
 
   return p;
@@ -89,7 +89,7 @@ Mover.prototype.getOrientation = function (e, dt = 0.0) {
         s = this.time / thisPath.t;
       }
 
-      quat.slerp(e, thisPath.e, nextPath.e, thisPath.s ? Mover.erp(s) : s);
+      quat.slerp(e, thisPath.e, nextPath.e, thisPath.s ? erp(s) : s);
     }
   }
 
