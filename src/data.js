@@ -1,4 +1,4 @@
-var Solid = require('./solid.js');
+var Solid = require('neverball-sol-file');
 
 var data = module.exports;
 
@@ -27,9 +27,7 @@ data.fetchImage = function (path) {
 };
 
 data.fetchSolid = function (path) {
-  return data.fetchBinaryFile(path).then(function (buffer) {
-    return Solid.load(buffer);
-  });
+  return data.fetchBinaryFile(path).then(Solid);
 };
 
 data.loadFile = function (file) {
@@ -43,7 +41,5 @@ data.loadFile = function (file) {
 };
 
 data.loadSolid = function (file) {
-  return data.loadFile(file).then(function (buffer) {
-    return Solid.load(buffer);
-  });
+  return data.loadFile(file).then(Solid);
 };

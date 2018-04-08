@@ -12,7 +12,7 @@ function BodyModel () {
 
 BodyModel.fromSolBody = function (sol, solBody) {
   var model = BodyModel();
-  model.meshes = sol.getBodyMeshes(solBody);
+  model.meshes = getBodyMeshes(sol, solBody);
   model.sortMeshes();
   return model;
 };
@@ -99,4 +99,112 @@ function drawMesh (gl, state, mesh) {
     gl.drawElements(gl.TRIANGLES, mesh.elems.length, gl.UNSIGNED_SHORT, 0);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
   }
+}
+
+
+/*
+ * Body mesh creation.
+ */
+
+function indexGeomByMtrl (geoms, geom) {
+  var mi = geom.mi;
+
+  if (!geoms[mi]) {
+    geoms[mi] = [];
+  }
+
+  geoms[mi].push(geom);
+}
+
+function getBodyGeomsByMtrl (sol, body) {
+  var geoms = [];
+
+  var li, gi;
+
+  // OBJ geometry.
+  for (gi = 0; gi < body.gc; ++gi) {
+    indexGeomByMtrl(geoms, sol.gv[sol.iv[body.g0 + gi]]);
+  }
+
+  // Lump geometry.
+  for (li = 0; li < body.lc; ++li) {
+    var lump = sol.lv[body.l0 + li];
+    for (gi = 0; gi < lump.gc; ++gi) {
+      indexGeomByMtrl(geoms, sol.gv[sol.iv[lump.g0 + gi]]);
+    }
+  }
+
+  return geoms;
+}
+
+function getVertAttribs (sol, vert, offs) {
+  var vp = sol.vv[offs.vi];
+  var sp = sol.sv[offs.si].n;
+  var tp = sol.tv[offs.ti];
+
+  vert[0] = vp[0];
+  vert[1] = vp[1];
+  vert[2] = vp[2];
+
+  vert[3] = sp[0];
+  vert[4] = sp[1];
+  vert[5] = sp[2];
+
+  vert[6] = tp[0];
+  vert[7] = tp[1];
+}
+
+function addVertToMesh (mesh, sol, offs) {
+  var pos = mesh.count * 8;
+  var vert = mesh.verts.subarray(pos, pos + 8);
+
+  getVertAttribs(sol, vert, offs);
+
+  mesh.count++;
+}
+
+/*
+ * Create a list of meshes from a SOL body, mesh per each used material.
+ */
+function getBodyMeshes (sol, body) {
+  var meshes = [];
+
+  getBodyGeomsByMtrl(sol, body).forEach(function (geoms, mi) {
+    var mesh = {
+      mtrl: sol.mv[mi],
+      // 1 geom = 3 verts = 3 * (3 + 3 + 2) floats
+      verts: new Float32Array(geoms.length * 3 * 8),
+      elems: new Uint16Array(geoms.length * 3),
+      count: 0
+    };
+
+    var elemCache = [];
+
+    for (var i = 0; i < geoms.length; ++i) {
+      var geom = geoms[i];
+
+      if (elemCache[geom.oi] === undefined) {
+        elemCache[geom.oi] = mesh.count;
+        addVertToMesh(mesh, sol, sol.ov[geom.oi]);
+      }
+
+      if (elemCache[geom.oj] === undefined) {
+        elemCache[geom.oj] = mesh.count;
+        addVertToMesh(mesh, sol, sol.ov[geom.oj]);
+      }
+
+      if (elemCache[geom.ok] === undefined) {
+        elemCache[geom.ok] = mesh.count;
+        addVertToMesh(mesh, sol, sol.ov[geom.ok]);
+      }
+
+      mesh.elems[i * 3 + 0] = elemCache[geom.oi];
+      mesh.elems[i * 3 + 1] = elemCache[geom.oj];
+      mesh.elems[i * 3 + 2] = elemCache[geom.ok];
+    }
+
+    meshes.push(mesh);
+  });
+
+  return meshes;
 }

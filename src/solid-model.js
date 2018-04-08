@@ -8,7 +8,7 @@ var nanoECS = require('nano-ecs');
 var Mtrl = require('./mtrl.js');
 var Mover = require('./mover.js');
 var BodyModel = require('./body-model.js');
-var Solid = require('./solid.js');
+var Solid = require('neverball-sol-file');
 var Shader = require('./shader.js');
 var EC = require('./entity-components.js');
 

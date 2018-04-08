@@ -5,7 +5,7 @@ var quat = require('gl-matrix').quat;
 var mat4 = require('gl-matrix').mat4;
 var toRadian = require('gl-matrix').glMatrix.toRadian;
 
-var Solid = require('./solid.js');
+var Solid = require('neverball-sol-file');
 
 var EC = module.exports = {};
 
