@@ -17,18 +17,20 @@ function Mover (path) {
 Mover.fromSolBody = function (sol, body) {
   // sol_load_vary()
 
-  var moverTranslate;
-  var moverRotate;
+  var movers = {
+      translate: null,
+      rotate: null
+  };
 
-  moverTranslate = new Mover(sol.pv[body.pi]);
+  movers.translate = new Mover(sol.pv[body.pi]);
 
   if (body.pj === body.pi) {
-    moverRotate = moverTranslate;
+    movers.rotate = movers.translate;
   } else {
-    moverRotate = new Mover(sol.pv[body.pj]);
+    movers.rotate = new Mover(sol.pv[body.pj]);
   }
 
-  return { translate: moverTranslate, rotate: moverRotate };
+  return movers;
 };
 
 /*
