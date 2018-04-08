@@ -11,8 +11,11 @@ function Mover (path) {
   this.time = 0;
 }
 
+/*
+ * Create movers for a SOL body.
+ */
 Mover.fromSolBody = function (sol, body) {
-  // sol_load_vary
+  // sol_load_vary()
 
   var moverTranslate;
   var moverRotate;
@@ -28,6 +31,9 @@ Mover.fromSolBody = function (sol, body) {
   return { translate: moverTranslate, rotate: moverRotate };
 };
 
+/*
+ * Motion easing.
+ */
 Mover.erp = function (t) {
   // float erp(float t)
   return 3.0 * t * t - 2.0 * t * t * t;
@@ -37,7 +43,7 @@ Mover.erp = function (t) {
  * Calculate position (optionally after DT seconds).
  */
 Mover.prototype.getPosition = function (p, dt = 0.0) {
-  // sol_body_p
+  // sol_body_p()
 
   vec3.set(p, 0, 0, 0);
 
@@ -62,7 +68,7 @@ Mover.prototype.getPosition = function (p, dt = 0.0) {
  * Calculate orientation (optionally after DT seconds) as a quaternion.
  */
 Mover.prototype.getOrientation = function (e, dt = 0.0) {
-  // sol_body_e
+  // sol_body_e()
 
   const P_ORIENTED = 0x1;
 
