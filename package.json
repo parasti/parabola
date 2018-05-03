@@ -20,7 +20,6 @@
     "gl-matrix": "^2.4.0",
     "glslify": "^6.1.0",
     "nano-ecs": "^2.2.1",
-    "neverball-sol-file": "github:parasti/neverball-sol-file",
     "neverball-solid": "^1.0.0",
     "screenfull": "^3.3.1"
   },

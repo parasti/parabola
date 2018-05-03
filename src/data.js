@@ -1,4 +1,4 @@
-var Solid = require('neverball-sol-file');
+var Solid = require('neverball-solid');
 
 var data = module.exports;
 
