@@ -244,23 +244,21 @@ SolidModel.prototype.draw = SolidModel.prototype.drawBodies;
 /*
  * Render item entities with a pre-loaded model.
  */
-SolidModel.prototype.drawItems = function (gl, state) {
-  var modelsByTag = {
-    coin: state.models.coin,
-    coin5: state.models.coin5,
-    coin10: state.models.coin10,
-    grow: state.models.grow,
-    shrink: state.models.shrink
-  };
 
-  for (var tag in modelsByTag) {
-    var model = modelsByTag[tag];
+const itemModels = [
+  'coin', 'coin5', 'coin10', 'grow', 'shrink'
+];
+
+SolidModel.prototype.drawItems = function (gl, state) {
+  for (var i = 0; i < itemModels.length; ++i) {
+    var modelName = itemModels[i];
+    var model = state.models[modelName];
 
     if (model) {
-      var ents = this.entities.queryTag(tag);
+      var ents = this.entities.queryTag(modelName);
 
-      for (var i = 0; i < ents.length; ++i) {
-        model.draw(gl, state, ents[i].spatial.matrix);
+      for (var j = 0; j < ents.length; ++j) {
+        model.draw(gl, state, ents[j].spatial.matrix);
       }
     }
   }
