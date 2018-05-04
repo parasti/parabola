@@ -68,6 +68,11 @@ SolidModel.fromSol = function (sol) {
     var movers = Mover.fromSolBody(sol, solBody);
     ent.movers.translate = movers.translate;
     ent.movers.rotate = movers.rotate;
+
+    movers.translate.getPosition(ent.spatial.position);
+    movers.rotate.getOrientation(ent.spatial.orientation);
+
+    ent.spatial.updateMatrix();
   }
 
   // Items
