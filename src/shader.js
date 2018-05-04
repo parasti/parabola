@@ -8,6 +8,7 @@ var Uniform = require('./uniform.js');
 
 function createShader (properties) {
   var shader = Object.create(Shader.prototype);
+  shader.uniformLocations = {};
   return Object.assign(shader, properties);
 }
 
@@ -190,6 +191,11 @@ Shader.prototype.createObjects = function (gl) {
     throw gl.getProgramInfoLog(prog);
   }
 
+  // WIP
+  for (var uniform in shader.mangledUniforms) {
+    shader.uniformLocations[uniform] = gl.getUniformLocation(prog, uniform);  
+  }
+
   shader.program = prog;
 };
 
@@ -203,7 +209,7 @@ Shader.prototype.uploadUniforms = function (gl) {
     for (var name in uniforms) {
       // TODO cache this (not on the value holder)
       // TODO remember the reason for not doing it on the value holder
-      var location = gl.getUniformLocation(program, name);
+      var location = shader.uniformLocations[name];
       var uniform = uniforms[name];
       uniform.upload(gl, location);
     }
