@@ -50,10 +50,10 @@ var Shader = module.exports = function (mtrl) {
   if (shaderFlags & Shader.LIT) {
     frag
       .fan()
-        .pipe('frag.getTexCoord')
-        .pipe('sampleTexture', uniforms.sampleTexture)
+      .pipe('frag.getTexCoord')
+      .pipe('sampleTexture', uniforms.sampleTexture)
       .next()
-        .pipe('frag.getLightColor')
+      .pipe('frag.getLightColor')
       .end()
       .pipe('multiply');
   } else {
@@ -100,10 +100,10 @@ var Shader = module.exports = function (mtrl) {
     .pipe('vert.getPosition')
     .pipe('viewVertex', uniforms.viewVertex)
     .fan()
-      .pipe('projVertex', uniforms.projVertex)
-      .pipe('vert.setPosition')
+    .pipe('projVertex', uniforms.projVertex)
+    .pipe('vert.setPosition')
     .next()
-      .pipe(texCoordGraph)
+    .pipe(texCoordGraph)
     .end();
 
   var program = material.link();
@@ -345,12 +345,12 @@ var glslSnippets = {
 
   /* eslint-disable no-multi-spaces, key-spacing */
 
-  testEqual:    binaryOp('a == b', 'float', 'bool'),
-  testGequal:   binaryOp('a >= b', 'float', 'bool'),
-  testGreater:  binaryOp('a > b',  'float', 'bool'),
-  testLequal:   binaryOp('a <= b', 'float', 'bool'),
-  testLess:     binaryOp('a < b',  'float', 'bool'),
-  testNever:    binaryOp('false',  'float', 'bool'),
+  testEqual: binaryOp('a == b', 'float', 'bool'),
+  testGequal: binaryOp('a >= b', 'float', 'bool'),
+  testGreater: binaryOp('a > b', 'float', 'bool'),
+  testLequal: binaryOp('a <= b', 'float', 'bool'),
+  testLess: binaryOp('a < b', 'float', 'bool'),
+  testNever: binaryOp('false', 'float', 'bool'),
   testNotEqual: binaryOp('a != b', 'float', 'bool')
 
   /* eslint-enable no-multi-spaces, key-spacing */

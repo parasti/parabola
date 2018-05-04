@@ -18,8 +18,8 @@ Mover.fromSolBody = function (sol, body) {
   // sol_load_vary()
 
   var movers = {
-      translate: null,
-      rotate: null
+    translate: null,
+    rotate: null
   };
 
   movers.translate = new Mover(sol.pv[body.pi]);
@@ -39,7 +39,7 @@ Mover.fromSolBody = function (sol, body) {
 function erp (t) {
   // float erp(float t)
   return 3.0 * t * t - 2.0 * t * t * t;
-};
+}
 
 /*
  * Calculate position (optionally after DT seconds).

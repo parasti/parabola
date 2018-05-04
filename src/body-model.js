@@ -101,7 +101,6 @@ function drawMesh (gl, state, mesh) {
   }
 }
 
-
 /*
  * Body mesh creation.
  */
