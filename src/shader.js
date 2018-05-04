@@ -22,10 +22,16 @@ var Shader = module.exports = function (mtrl) {
   var frag = material.fragment;
   var vert = material.vertex;
 
-  // Each snippet instance has its own uniforms. That's what this is for.
+  /*
+   * We allocate a "value holder" for each uniform and make a per-snippet
+   * dictionary of uniform names/value holders to pass to ShaderGraph.
+   * ShaderGraph mangles names from per-snippet to per-shader, so we hold
+   * onto the value holders to be able to refer to our uniforms by whatever
+   * names we want.
+   */
 
   var uniforms = {
-    // snippet instance: { UniformName: valueHolder }
+    // snippetInstance: { snippetUniform: valueHolder }
     sampleTexture: { Texture: Uniform.i() },
     viewVertex: { Matrix: Uniform.mat4() },
     projVertex: { Matrix: Uniform.mat4() },
@@ -33,7 +39,7 @@ var Shader = module.exports = function (mtrl) {
     alphaTest: { AlphaRef: Uniform.f() }
   };
 
-  // Give our value holders some better names. This is what the caller gets.
+  // Give our per-snippet uniforms even better names.
 
   var namedUniforms = {
     mainTexture: uniforms.sampleTexture.Texture,
@@ -196,10 +202,10 @@ Shader.prototype.uploadUniforms = function (gl) {
 
     for (var name in uniforms) {
       // TODO cache this (not on the value holder)
+      // TODO remember the reason for not doing it on the value holder
       var location = gl.getUniformLocation(program, name);
       var uniform = uniforms[name];
-
-      Uniform.upload(gl, location, uniform);
+      uniform.upload(gl, location);
     }
   }
 };

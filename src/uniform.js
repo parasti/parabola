@@ -1,57 +1,30 @@
 'use strict';
 
-var Uniform = module.exports = function () {
-  throw Error('Use a typed Uniform creator');
+const uniformAllocators = {
+  i: () => 0,
+  f: () => 0.0,
+  vec2: () => new Float32Array(2),
+  vec3: () => new Float32Array(3),
+  vec4: () => new Float32Array(4),
+  mat3: () => new Float32Array(9),
+  mat4: () => new Float32Array(16)
 };
 
-function makeUniform (type) {
-  return {
-    type: type,
-    value: allocValue(type)
+const uniformUploaders = {
+  i: function (gl, loc) { gl.uniform1i(loc, this.value); },
+  f: function (gl, loc) { gl.uniform1f(loc, this.value); },
+  vec2: function (gl, loc) { gl.uniform2fv(loc, this.value); },
+  vec3: function (gl, loc) { gl.uniform3fv(loc, this.value); },
+  vec4: function (gl, loc) { gl.uniform4fv(loc, this.value); },
+  mat3: function (gl, loc) { gl.uniformMatrix3fv(loc, false, this.value); },
+  mat4: function (gl, loc) { gl.uniformMatrix4fv(loc, false, this.value); }
+};
+
+for (let type in uniformAllocators) {
+  module.exports[type] = function () {
+    return {
+      value: uniformAllocators[type](),
+      upload: uniformUploaders[type]
+    };
   };
-}
-
-Uniform.i = () => makeUniform('i');
-Uniform.f = () => makeUniform('f');
-Uniform.vec2 = () => makeUniform('vec2');
-Uniform.vec3 = () => makeUniform('vec3');
-Uniform.vec4 = () => makeUniform('vec4');
-Uniform.mat3 = () => makeUniform('mat3');
-Uniform.mat4 = () => makeUniform('mat4');
-
-Uniform.copyValue = function (output, input) {
-  if (output.type !== input.type) {
-    throw Error('Uniform input is ' + input.type + ', but expected ' + output.type);
-  }
-  output.value = input.value;
-};
-
-Uniform.upload = function (gl, location, uniform) {
-  switch (uniform.type) {
-    case 'i': gl.uniform1i(location, uniform.value); break;
-    case 'f': gl.uniform1f(location, uniform.value); break;
-    case 'vec2': gl.uniform2fv(location, uniform.value); break;
-    case 'vec3': gl.uniform3fv(location, uniform.value); break;
-    case 'vec4': gl.uniform4fv(location, uniform.value); break;
-    case 'mat3': gl.uniformMatrix3fv(location, false, uniform.value); break;
-    case 'mat4': gl.uniformMatrix4fv(location, false, uniform.value); break;
-    default: throw Error('Unknown uniform type ' + uniform.type);
-  }
-};
-
-function allocValue (type) {
-  var value = 0;
-
-  switch (type) {
-    case 'i': value = 0; break;
-    case 'f': value = 0.0; break;
-    case 'vec2': value = new Float32Array(2); break;
-    case 'vec3': value = new Float32Array(3); break;
-    case 'vec4': value = new Float32Array(4); break;
-    case 'mat3': value = new Float32Array(9); break;
-    case 'mat4': value = new Float32Array(16); break;
-    default: throw Error('Unknown uniform type ' + type);
-  }
-
-  return value;
 }
