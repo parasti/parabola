@@ -40,7 +40,7 @@ function init () {
   var gl = state.gl;
   var solFile = null;
 
-  data.fetchSolid('map-easy/easy.sol').then(function (sol) {
+  data.fetchSolid('map-fwp/adventure.sol').then(function (sol) {
     solFile = sol;
     state.setModelFromSol(gl, 'level', sol);
     state.view.setFromSol(sol, 1.0);
