@@ -1,6 +1,7 @@
 'use strict';
 
 var vec3 = require('gl-matrix').vec3;
+var mat3 = require('gl-matrix').mat3;
 var mat4 = require('gl-matrix').mat4;
 
 var nanoECS = require('nano-ecs');
@@ -200,15 +201,24 @@ SolidModel.prototype.drawMeshType = function (gl, state, meshType, parentMatrix)
     var ent = ents[i];
     var model = ent.drawable.model;
 
+    // TODO pre-allocate matrices and cache computations (at least) per-frame.
+
+    var modelViewMatrix = mat4.create();
+    var normalMatrix = mat3.create();
+
     if (parentMatrix) {
-      // TODO move this off the render path.
-      var modelMatrix = mat4.create();
-      mat4.multiply(modelMatrix, parentMatrix, ent.spatial.matrix);
-      // TODO update uniforms on actual change
-      state.defaultShader.uniforms.uModel.value = modelMatrix;
+      mat4.multiply(modelViewMatrix, parentMatrix, ent.spatial.matrix);
+      mat4.multiply(modelViewMatrix, state.viewMatrix, modelViewMatrix);
     } else {
-      state.defaultShader.uniforms.uModel.value = ent.spatial.matrix;
+      mat4.multiply(modelViewMatrix, state.viewMatrix, ent.spatial.matrix);
     }
+
+    // Here's how you transpose and invert a matrix.
+
+    mat3.fromMat4(normalMatrix, modelViewMatrix);
+
+    state.defaultShader.uniforms.ModelViewMatrix.value = modelViewMatrix;
+    state.defaultShader.uniforms.NormalMatrix.value = normalMatrix;
 
     // TODO tag entities w/ models that have this mesh type?
     // Iterate over tagged lists?
@@ -242,7 +252,7 @@ SolidModel.prototype.drawBodies = function (gl, state, parentMatrix) {
 };
 
 /*
- * Alias.
+ * Alias for a generic model.draw() interface.
  */
 SolidModel.prototype.draw = SolidModel.prototype.drawBodies;
 
@@ -287,11 +297,14 @@ SolidModel.prototype.drawBalls = function (gl, state) {
 };
 
 SolidModel.prototype.drawBills = function (gl, state, parentMatrix) {
+  //TODO
+  return;
+
   var ents = this.entities.queryComponents([EC.Billboard, EC.Spatial]);
 
   // TODO
   var viewBasis = state.view.getBasis();
-  var modelMatrix = mat4.create();
+  var modelViewMatrix = mat4.create();
 
   state.billboardMesh.enableDraw(gl, state);
 
@@ -306,13 +319,15 @@ SolidModel.prototype.drawBills = function (gl, state, parentMatrix) {
 
     // TODO too much math for a draw frame
     // if (!B_NOFACE)
-    mat4.multiply(modelMatrix, ent.spatial.matrix, viewBasis);
-    ent.billboard.getForegroundTransform(modelMatrix, state.time);
+    mat4.multiply(modelViewMatrix, ent.spatial.matrix, viewBasis);
+    ent.billboard.getForegroundTransform(modelViewMatrix, state.time);
 
     if (parentMatrix) {
-      mat4.multiply(modelMatrix, parentMatrix, modelMatrix);
+      mat4.multiply(modelViewMatrix, parentMatrix, modelViewMatrix);
     }
-    state.defaultShader.uniforms.uModel.value = modelMatrix;
+    mat4.multiply(modelViewMatrix, state.viewMatrix, modelViewMatrix);
+
+    state.defaultShader.uniforms.ModelViewMatrix.value = modelViewMatrix;
 
     Mtrl.draw(gl, state, ent.billboard.mtrl);
     state.defaultShader.uploadUniforms(gl);

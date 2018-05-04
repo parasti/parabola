@@ -194,8 +194,7 @@ GLState.prototype.draw = function (gl) {
 
   if (shader.use(gl, this)) {
     shader.uniforms.uTexture.value = 0;
-    shader.uniforms.uPersp.value = this.perspMatrix;
-    shader.uniforms.uView.value = this.viewMatrix;
+    shader.uniforms.ProjectionMatrix.value = this.perspMatrix;
 
     var levelModel = this.models.level;
 

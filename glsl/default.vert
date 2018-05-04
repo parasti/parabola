@@ -1,6 +1,6 @@
-uniform mat4 uPersp;
-uniform mat4 uView;
-uniform mat4 uModel;
+uniform mat4 ProjectionMatrix;
+uniform mat4 ModelViewMatrix;
+uniform mat3 NormalMatrix;
 
 attribute vec3 aPosition;
 attribute vec3 aNormal;
@@ -51,36 +51,31 @@ vec4 calcLight(Light light, vec4 eyeNormal) {
     max(0.0, dot(eyeNormal, normalize(light.position))) * uDiffuse * light.diffuse;
 }
 
-vec2 calcSphereMap(vec3 n) {
-  vec3 u = (uView * uModel * vec4(aPosition, 1.0)).xyz;
-  vec3 r = u - 2.0 * n * (n * u);
+vec2 genSphereMap(vec3 p, vec3 n) {
+  vec3 u = normalize(p);
+  vec3 r = reflect(u, n);
   r.z += 1.0;
   float m = 2.0 * length(r);
   return vec2(r.x / m + 0.5, r.y / m + 0.5);
 }
 
 void main() {
-  // TODO eye coordinates
-  mat3 normalMatrix = mat3(
-    uModel[0].xyz,
-    uModel[1].xyz,
-    uModel[2].xyz);
-
-  vec4 eyeNormal = vec4(normalize(normalMatrix * aNormal), 1.0);
+  vec3 eyeNormal = normalize(NormalMatrix * aNormal);
+  vec4 eyePos = ModelViewMatrix * vec4(aPosition, 1.0);
 
   vec4 lightColor =
     uEmissive +
     uAmbient * Light_GlobalAmbient +
-    calcLight(Light0, eyeNormal) +
-    calcLight(Light1, eyeNormal);
+    calcLight(Light0, vec4(eyeNormal, 1.0)) +
+    calcLight(Light1, vec4(eyeNormal, 1.0));
 
   vLightColor = clamp(vec4(lightColor.rgb, uDiffuse.a), 0.0, 1.0);
   //vLightColor.rgb = vLightColor.rgb * vLightColor.a; // Premultiply.
 
   if (uEnvironment)
-    vTexCoord = calcSphereMap(eyeNormal.xyz);
+    vTexCoord = genSphereMap(eyePos.xyz, eyeNormal);
   else
     vTexCoord = aTexCoord;
 
-  gl_Position = uPersp * uView * uModel * vec4(aPosition, 1.0);
+  gl_Position = ProjectionMatrix * eyePos;
 }

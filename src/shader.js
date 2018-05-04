@@ -131,9 +131,9 @@ var Shader = module.exports = function (mtrl) {
 Shader.origShader = function () {
   var uniforms = {
     uTexture: Uniform.i(),
-    uPersp: Uniform.mat4(),
-    uView: Uniform.mat4(),
-    uModel: Uniform.mat4(),
+    ProjectionMatrix: Uniform.mat4(),
+    ModelViewMatrix: Uniform.mat4(),
+    NormalMatrix: Uniform.mat3(),
     uDiffuse: Uniform.vec4(),
     uAmbient: Uniform.vec4(),
     uSpecular: Uniform.vec4(),
