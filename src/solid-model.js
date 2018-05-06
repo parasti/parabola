@@ -12,20 +12,22 @@ var BodyModel = require('./body-model.js');
 var Solid = require('neverball-solid');
 var Shader = require('./shader.js');
 var EC = require('./entity-components.js');
+var SceneNode = require('./scene-node.js');
 
 function SolidModel () {
-  var model = Object.create(SolidModel.prototype);
+  if (!(this instanceof SolidModel)) {
+    return new SolidModel();
+  }
 
-  model.entities = null;
-  model.models = null;
-  model.materials = null;
+  this.sceneRoot = null;
+  this.entities = null;
+  this.models = null;
+  this.materials = null;
 
   // Transparency defaults. Overridden by ball skins, primarily.
 
-  model.transparentDepthTest = true;
-  model.transparentDepthMask = false;
-
-  return model;
+  this.transparentDepthTest = true;
+  this.transparentDepthMask = false;
 }
 
 /*
@@ -34,6 +36,7 @@ function SolidModel () {
 SolidModel.fromSol = function (sol) {
   var solidModel = SolidModel();
 
+  var sceneRoot = solidModel.sceneRoot = SceneNode();
   var ents = solidModel.entities = nanoECS();
   var models = solidModel.models = [];
   var materials = solidModel.materials = [];
@@ -60,6 +63,9 @@ SolidModel.fromSol = function (sol) {
     ent.addComponent(EC.Drawable);
     ent.addComponent(EC.Spatial);
     ent.addComponent(EC.Movers);
+    ent.addComponent(EC.SceneNode);
+
+    ent.sceneNode.node = SceneNode(sceneRoot);
 
     var model = BodyModel.fromSolBody(sol, solBody);
     ent.drawable.model = model;
@@ -118,6 +124,9 @@ SolidModel.fromSol = function (sol) {
     ent = ents.createEntity().addTag('ball');
 
     ent.addComponent(EC.Spatial);
+    ent.addComponent(EC.SceneNode);
+
+    ent.sceneNode.node = SceneNode(sceneRoot);
 
     ent.spatial.scale = solBall.r;
     vec3.copy(ent.spatial.position, solBall.p);
@@ -195,7 +204,7 @@ SolidModel.prototype.createObjects = function (gl) {
  * Render entity meshes of the given type. Pass a parentMatrix for hierarchical transform.
  */
 SolidModel.prototype.drawMeshType = function (gl, state, meshType, parentMatrix) {
-  var ents = this.entities.queryComponents([EC.Drawable, EC.Spatial]);
+  var ents = this.entities.queryComponents([EC.Drawable, EC.SceneNode]);
 
   for (var i = 0; i < ents.length; ++i) {
     var ent = ents[i];
@@ -206,12 +215,7 @@ SolidModel.prototype.drawMeshType = function (gl, state, meshType, parentMatrix)
     var modelViewMatrix = mat4.create();
     var normalMatrix = mat3.create();
 
-    if (parentMatrix) {
-      mat4.multiply(modelViewMatrix, parentMatrix, ent.spatial.matrix);
-      mat4.multiply(modelViewMatrix, state.viewMatrix, modelViewMatrix);
-    } else {
-      mat4.multiply(modelViewMatrix, state.viewMatrix, ent.spatial.matrix);
-    }
+    mat4.multiply(modelViewMatrix, state.viewMatrix, ent.sceneNode.node.getWorldMatrix());
 
     // Here's how you transpose and invert a matrix.
 

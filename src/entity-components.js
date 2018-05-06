@@ -22,6 +22,13 @@ EC.Drawable = function drawable () {
 };
 
 /*
+ * Scene graph node.
+ */
+EC.SceneNode = function sceneNode () {
+  this.node = null;
+}
+
+/*
  * Spatial transform
  */
 EC.Spatial = function spatial () {
@@ -42,6 +49,11 @@ EC.Spatial.prototype.updateMatrix = (function () {
     vec3.set(s, this.scale, this.scale, this.scale);
 
     mat4.fromRotationTranslationScale(this.matrix, e, p, s);
+
+    if (this.entity.hasComponent(EC.SceneNode)) {
+      mat4.copy(this.entity.sceneNode.node.getLocalMatrix(), this.matrix);
+      this.entity.sceneNode.node.markDirty();
+    }
   };
 })();
 

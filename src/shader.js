@@ -193,7 +193,7 @@ Shader.prototype.createObjects = function (gl) {
 
   // WIP
   for (var uniform in shader.mangledUniforms) {
-    shader.uniformLocations[uniform] = gl.getUniformLocation(prog, uniform);  
+    shader.uniformLocations[uniform] = gl.getUniformLocation(prog, uniform);
   }
 
   shader.program = prog;
