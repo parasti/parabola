@@ -24,38 +24,26 @@ EC.Drawable = function drawable () {
 /*
  * Scene graph node.
  */
-EC.SceneNode = function sceneNode () {
+EC.SceneGraph = function sceneGraph () {
   this.node = null;
+}
+
+EC.SceneGraph.prototype.setMatrix = function (p, e, s) {
+  var node = this.node;
+
+  if (node) {
+    node.setLocalMatrix(p, e, s);
+  }
 }
 
 /*
  * Spatial transform
  */
 EC.Spatial = function spatial () {
-  this.matrix = mat4.create();
-
   this.position = vec3.create();
   this.orientation = quat.create();
   this.scale = 1;
 };
-
-EC.Spatial.prototype.updateMatrix = (function () {
-  var s = vec3.create();
-
-  return function () {
-    var p = this.position;
-    var e = this.orientation;
-
-    vec3.set(s, this.scale, this.scale, this.scale);
-
-    mat4.fromRotationTranslationScale(this.matrix, e, p, s);
-
-    if (this.entity.hasComponent(EC.SceneNode)) {
-      mat4.copy(this.entity.sceneNode.node.getLocalMatrix(), this.matrix);
-      this.entity.sceneNode.node.markDirty();
-    }
-  };
-})();
 
 /*
  * Path walkers

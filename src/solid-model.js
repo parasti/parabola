@@ -63,9 +63,9 @@ SolidModel.fromSol = function (sol) {
     ent.addComponent(EC.Drawable);
     ent.addComponent(EC.Spatial);
     ent.addComponent(EC.Movers);
-    ent.addComponent(EC.SceneNode);
+    ent.addComponent(EC.SceneGraph);
 
-    ent.sceneNode.node = SceneNode(sceneRoot);
+    ent.sceneGraph.node = SceneNode(sceneRoot);
 
     var model = BodyModel.fromSolBody(sol, solBody);
     ent.drawable.model = model;
@@ -78,8 +78,6 @@ SolidModel.fromSol = function (sol) {
 
     movers.translate.getPosition(ent.spatial.position);
     movers.rotate.getOrientation(ent.spatial.orientation);
-
-    ent.spatial.updateMatrix();
   }
 
   // Items
@@ -108,12 +106,12 @@ SolidModel.fromSol = function (sol) {
 
     ent.addComponent(EC.Item);
     ent.addComponent(EC.Spatial);
+    ent.addComponent(EC.SceneGraph);
 
     ent.item.value = solItem.n;
 
     vec3.copy(ent.spatial.position, solItem.p);
     ent.spatial.scale = 0.15; // Neverball default.
-    ent.spatial.updateMatrix();
   }
 
   // Balls
@@ -124,13 +122,9 @@ SolidModel.fromSol = function (sol) {
     ent = ents.createEntity().addTag('ball');
 
     ent.addComponent(EC.Spatial);
-    ent.addComponent(EC.SceneNode);
-
-    ent.sceneNode.node = SceneNode(sceneRoot);
 
     ent.spatial.scale = solBall.r;
     vec3.copy(ent.spatial.position, solBall.p);
-    ent.spatial.updateMatrix();
   }
 
   // Billboards
@@ -144,7 +138,6 @@ SolidModel.fromSol = function (sol) {
     ent.addComponent(EC.Billboard);
 
     vec3.copy(ent.spatial.position, solBill.p);
-    ent.spatial.updateMatrix();
 
     ent.billboard.fromSolBill(sol, solBill);
   }
@@ -152,8 +145,13 @@ SolidModel.fromSol = function (sol) {
   return solidModel;
 };
 
+/*
+ * Update systems.
+ */
+const systemComponents = [EC.Spatial, EC.Movers, EC.SceneGraph];
+
 SolidModel.prototype.step = function (dt) {
-  var ents = this.entities.queryComponents([EC.Spatial, EC.Movers]);
+  var ents = this.entities.queryComponents(systemComponents);
 
   for (var i = 0; i < ents.length; ++i) {
     var ent = ents[i];
@@ -170,13 +168,15 @@ SolidModel.prototype.step = function (dt) {
       moverRotate.step(dt);
     }
 
-    // Update model matrix.
+    // Update positions.
 
     // TODO do this only on actual update
     moverTranslate.getPosition(ent.spatial.position);
     moverRotate.getOrientation(ent.spatial.orientation);
 
-    ent.spatial.updateMatrix();
+    // Update scene node.
+
+    ent.sceneGraph.setMatrix(ent.spatial.position, ent.spatial.orientation, ent.spatial.scale);
   }
 };
 
@@ -203,8 +203,8 @@ SolidModel.prototype.createObjects = function (gl) {
 /*
  * Render entity meshes of the given type. Pass a parentMatrix for hierarchical transform.
  */
-SolidModel.prototype.drawMeshType = function (gl, state, meshType, parentMatrix) {
-  var ents = this.entities.queryComponents([EC.Drawable, EC.SceneNode]);
+SolidModel.prototype.drawMeshType = function (gl, state, meshType) {
+  var ents = this.entities.queryComponents([EC.Drawable, EC.SceneGraph]);
 
   for (var i = 0; i < ents.length; ++i) {
     var ent = ents[i];
@@ -215,7 +215,7 @@ SolidModel.prototype.drawMeshType = function (gl, state, meshType, parentMatrix)
     var modelViewMatrix = mat4.create();
     var normalMatrix = mat3.create();
 
-    mat4.multiply(modelViewMatrix, state.viewMatrix, ent.sceneNode.node.getWorldMatrix());
+    mat4.multiply(modelViewMatrix, state.viewMatrix, ent.sceneGraph.node.getWorldMatrix());
 
     // Here's how you transpose and invert a matrix.
 
@@ -231,25 +231,25 @@ SolidModel.prototype.drawMeshType = function (gl, state, meshType, parentMatrix)
 };
 
 /*
- * Render model meshes. Pass a parentMatrix for hierarchical transform.
+ * Render model meshes.
  */
-SolidModel.prototype.drawBodies = function (gl, state, parentMatrix) {
+SolidModel.prototype.drawBodies = function (gl, state) {
   // sol_draw()
 
   const mask = this.transparentDepthMask;
   const test = this.transparentDepthTest;
 
   // TODO mirrors
-  this.drawMeshType(gl, state, 'reflective', parentMatrix);
+  this.drawMeshType(gl, state, 'reflective');
 
-  this.drawMeshType(gl, state, 'opaque', parentMatrix);
-  this.drawMeshType(gl, state, 'opaqueDecal', parentMatrix);
+  this.drawMeshType(gl, state, 'opaque');
+  this.drawMeshType(gl, state, 'opaqueDecal');
 
   if (!test) gl.disable(gl.DEPTH_TEST);
   if (!mask) gl.depthMask(false);
 
-  this.drawMeshType(gl, state, 'transparentDecal', parentMatrix);
-  this.drawMeshType(gl, state, 'transparent', parentMatrix);
+  this.drawMeshType(gl, state, 'transparentDecal');
+  this.drawMeshType(gl, state, 'transparent');
 
   if (!mask) gl.depthMask(true);
   if (!test) gl.enable(gl.DEPTH_TEST);
@@ -277,7 +277,8 @@ SolidModel.prototype.drawItems = function (gl, state) {
       var ents = this.entities.queryTag(modelName);
 
       for (var j = 0; j < ents.length; ++j) {
-        model.draw(gl, state, ents[j].spatial.matrix);
+        var ent = ents[j];
+        model.draw(gl, state);
       }
     }
   }
@@ -295,12 +296,12 @@ SolidModel.prototype.drawBalls = function (gl, state) {
     for (var i = 0; i < ents.length; ++i) {
       var ent = ents[i];
 
-      model.draw(gl, state, ent.spatial.matrix);
+      model.draw(gl, state);
     }
   }
 };
 
-SolidModel.prototype.drawBills = function (gl, state, parentMatrix) {
+SolidModel.prototype.drawBills = function (gl, state) {
   //TODO
   return;
 
