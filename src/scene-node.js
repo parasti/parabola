@@ -65,7 +65,7 @@ SceneNode.prototype.setLocalMatrix = (function () {
 })();
 
 /*
- * Get the world matrix of this node, updating it first.
+ * Update and return the world matrix of this node.
  */
 SceneNode.prototype.getWorldMatrix = function () {
   this._update();
@@ -100,19 +100,20 @@ SceneNode.prototype.setParent = function (node) {
  * Create an instance of this node.
  */
 SceneNode.prototype.createInstance = function (parent) {
-  var inst = SceneNode(parent);
+  var node = SceneNode(parent);
 
-  inst.master = this;
-  this.instances.push(inst);
+  node.master = this;
 
-  // Create instances of all children and parent them to this instance.
+  this.instances.push(node);
+
+  // Create instances of all children and parent them to this node.
 
   for (var i = 0; i < this.children.length; ++i) {
-    var childInst = this.children[i].createInstance(inst);
-    childInst.setParent(inst);
+    var child = this.children[i].createInstance(node);
+    child.setParent(node);
   }
 
-  return inst;
+  return node;
 }
 
 SceneNode.prototype._addChild = function (node) {
@@ -129,7 +130,10 @@ SceneNode.prototype._removeChild = function (node) {
   }
 }
 
-SceneNode.prototype.getLocalMatrix = function () {
+/*
+ * Return the effective local matrix of this node.
+ */
+SceneNode.prototype._getLocalMatrix = function () {
   if (this.master) {
     return this.master.getLocalMatrix();
   } else {
@@ -137,17 +141,21 @@ SceneNode.prototype.getLocalMatrix = function () {
   }
 }
 
+/*
+ * Update world matrices of this and any parent/master nodes.
+ */
 SceneNode.prototype._update = function () {
-  if (this.master) {
-    this.master._update();
-  }
-
   if (this.dirty) {
     var parent = this.parent;
+    var master = this.master;
+
+    if (master) {
+      master._update();
+    }
 
     if (parent) {
       parent._update();
-      mat4.multiply(this.worldMatrix, parent.worldMatrix, this.getLocalMatrix());
+      mat4.multiply(this.worldMatrix, parent.worldMatrix, this._getLocalMatrix());
     }
 
     this.dirty = false;
