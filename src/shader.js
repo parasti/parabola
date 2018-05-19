@@ -207,11 +207,12 @@ Shader.prototype.uploadUniforms = function (gl) {
     var uniforms = shader.mangledUniforms;
 
     for (var name in uniforms) {
-      // TODO cache this (not on the value holder)
-      // TODO remember the reason for not doing it on the value holder
       var location = shader.uniformLocations[name];
-      var uniform = uniforms[name];
-      uniform.upload(gl, location);
+
+      if (location) {
+        var uniform = uniforms[name];
+        uniform.upload(gl, location);
+      }
     }
   }
 };
