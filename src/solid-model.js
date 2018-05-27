@@ -224,8 +224,6 @@ SolidModel.prototype.drawMeshType = function (gl, state, meshType) {
     state.defaultShader.uniforms.ModelViewMatrix.value = modelViewMatrix;
     state.defaultShader.uniforms.NormalMatrix.value = normalMatrix;
 
-    // TODO tag entities w/ models that have this mesh type?
-    // Iterate over tagged lists?
     model.drawMeshType(gl, state, meshType);
   }
 };
@@ -240,16 +238,16 @@ SolidModel.prototype.drawBodies = function (gl, state) {
   const test = this.transparentDepthTest;
 
   // TODO mirrors
-  this.drawMeshType(gl, state, 'reflective');
+  this.drawMeshType(gl, state, BodyModel.REFLECTIVE);
 
-  this.drawMeshType(gl, state, 'opaque');
-  this.drawMeshType(gl, state, 'opaqueDecal');
+  this.drawMeshType(gl, state, BodyModel.OPAQUE);;
+  this.drawMeshType(gl, state, BodyModel.OPAQUE_DECAL);
 
   if (!test) gl.disable(gl.DEPTH_TEST);
   if (!mask) gl.depthMask(false);
 
-  this.drawMeshType(gl, state, 'transparentDecal');
-  this.drawMeshType(gl, state, 'transparent');
+  this.drawMeshType(gl, state, BodyModel.TRANSPARENT_DECAL);
+  this.drawMeshType(gl, state, BodyModel.TRANSPARENT);
 
   if (!mask) gl.depthMask(true);
   if (!test) gl.enable(gl.DEPTH_TEST);

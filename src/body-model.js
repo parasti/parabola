@@ -5,20 +5,29 @@ module.exports = BodyModel;
 var Mtrl = require('./mtrl.js');
 
 function BodyModel () {
-  var model = Object.create(BodyModel.prototype);
-  model.meshes = null; // Both array and dictionary
-  return model;
+  if (!(this instanceof BodyModel)) {
+    return new BodyModel();
+  }
+
+  this.allMeshes = null;
+  this.sortedMeshes = new Array(5);
 }
+
+BodyModel.OPAQUE = 0;
+BodyModel.OPAQUE_DECAL = 1;
+BodyModel.TRANSPARENT_DECAL = 2;
+BodyModel.TRANSPARENT = 3;
+BodyModel.REFLECTIVE = 4;
 
 BodyModel.fromSolBody = function (sol, solBody) {
   var model = BodyModel();
-  model.meshes = getBodyMeshes(sol, solBody);
+  model.allMeshes = getBodyMeshes(sol, solBody);
   model.sortMeshes();
   return model;
 };
 
 BodyModel.prototype.createObjects = function (gl) {
-  var meshes = this.meshes;
+  var meshes = this.allMeshes;
 
   for (var i = 0; i < meshes.length; ++i) {
     var mesh = meshes[i];
@@ -27,32 +36,32 @@ BodyModel.prototype.createObjects = function (gl) {
 };
 
 BodyModel.prototype.sortMeshes = function () {
-  var opaqueMeshes = this.meshes.opaque = [];
-  var opaqueDecalMeshes = this.meshes.opaqueDecal = [];
-  var transparentDecalMeshes = this.meshes.transparentDecal = [];
-  var transparentMeshes = this.meshes.transparent = [];
-  var reflectiveMeshes = this.meshes.reflective = [];
+  var opaque = this.sortedMeshes[BodyModel.OPAQUE] = [];
+  var opaqueDecal = this.sortedMeshes[BodyModel.OPAQUE_DECAL] = [];
+  var transparentDecal = this.sortedMeshes[BodyModel.TRANSPARENT_DECAL] = [];
+  var transparent = this.sortedMeshes[BodyModel.TRANSPARENT] = [];
+  var reflective = this.sortedMeshes[BodyModel.REFLECTIVE] = [];
 
-  for (var i = 0; i < this.meshes.length; ++i) {
-    var mesh = this.meshes[i];
+  for (var i = 0; i < this.allMeshes.length; ++i) {
+    var mesh = this.allMeshes[i];
     var mtrl = mesh.mtrl;
 
     if (Mtrl.isOpaque(mtrl)) {
-      opaqueMeshes.push(mesh);
+      opaque.push(mesh);
     } else if (Mtrl.isOpaqueDecal(mtrl)) {
-      opaqueDecalMeshes.push(mesh);
+      opaqueDecal.push(mesh);
     } else if (Mtrl.isTransparentDecal(mtrl)) {
-      transparentDecalMeshes.push(mesh);
+      transparentDecal.push(mesh);
     } else if (Mtrl.isTransparent(mtrl)) {
-      transparentMeshes.push(mesh);
+      transparent.push(mesh);
     } else if (Mtrl.isReflective(mtrl)) {
-      reflectiveMeshes.push(mesh);
+      reflective.push(mesh);
     }
   }
 };
 
 BodyModel.prototype.drawMeshType = function (gl, state, meshType) {
-  var meshes = this.meshes[meshType];
+  var meshes = this.sortedMeshes[meshType];
   for (var i = 0; i < meshes.length; ++i) {
     drawMesh(gl, state, meshes[i]);
   }
