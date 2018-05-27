@@ -201,8 +201,8 @@ GLState.prototype.draw = function (gl) {
     if (levelModel) {
       levelModel.drawItems(gl, this);
       levelModel.drawBodies(gl, this);
-      levelModel.drawBalls(gl, this);
-      levelModel.drawBills(gl, this);
+      //levelModel.drawBalls(gl, this);
+      //levelModel.drawBills(gl, this);
     }
   }
 };
