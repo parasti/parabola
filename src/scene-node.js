@@ -135,7 +135,7 @@ SceneNode.prototype._removeChild = function (node) {
  */
 SceneNode.prototype._getLocalMatrix = function () {
   if (this.master) {
-    return this.master.getLocalMatrix();
+    return this.master._getLocalMatrix();
   } else {
     return this.localMatrix;
   }
@@ -145,16 +145,19 @@ SceneNode.prototype._getLocalMatrix = function () {
  * Update world matrices of this and any parent/master nodes.
  */
 SceneNode.prototype._update = function () {
+  var parent = this.parent;
+  var master = this.master;
+
+  if (master) {
+    master._update();
+  }
+
+  if (parent) {
+    parent._update();
+  }
+
   if (this.dirty) {
-    var parent = this.parent;
-    var master = this.master;
-
-    if (master) {
-      master._update();
-    }
-
     if (parent) {
-      parent._update();
       mat4.multiply(this.worldMatrix, parent.worldMatrix, this._getLocalMatrix());
     }
 
