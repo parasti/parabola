@@ -4,7 +4,6 @@ var mat4 = require('gl-matrix').mat4;
 
 var SolidModel = require('./solid-model.js');
 var View = require('./view.js');
-var BillboardMesh = require('./billboard-mesh.js');
 var Shader = require('./shader.js');
 
 /*
@@ -47,8 +46,6 @@ function GLState (canvas) {
     grow: null,
     shrink: null
   };
-
-  this.billboardMesh = null;
 
   this.gl = getContext(canvas);
   setupContext(this.gl);
@@ -96,11 +93,6 @@ GLState.prototype.createDefaultObjects = function () {
 
   this.defaultShader = Shader.origShader();
   this.defaultShader.createObjects(gl);
-
-  // Create billboard mesh.
-  // TODO mesh/model/what?
-  this.billboardMesh = new BillboardMesh();
-  this.billboardMesh.createVBO(gl);
 
   this.calcPerspective(gl.canvas.width, gl.canvas.height);
 };
