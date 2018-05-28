@@ -27,8 +27,9 @@ function GLState (canvas) {
   this.aNormalID = 1;
   this.aTexCoordID = 2;
 
-  this.enabledArrays = []; // TODO
+  this.enabledArrays = [];
   this.usedProgram = null;
+  this.boundBuffers = [];
 
   this.perspMatrix = mat4.create();
   this.viewMatrix = mat4.create();
@@ -173,6 +174,16 @@ GLState.prototype.useProgram = function (gl, program) {
     this.usedProgram = program;
   }
 };
+
+/*
+ * Track bound buffers.
+ */
+GLState.prototype.bindBuffer = function (gl, target, buffer) {
+  if (buffer !== this.boundBuffers[target]) {
+    gl.bindBuffer(target, buffer);
+    this.boundBuffers[target] = buffer;
+  }
+}
 
 /*
  * Render everything.

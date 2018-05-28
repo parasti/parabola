@@ -98,15 +98,13 @@ function drawMesh (gl, state, mesh) {
     state.enableArray(gl, state.aNormalID);
     state.enableArray(gl, state.aTexCoordID);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, mesh.vbo);
+    state.bindBuffer(gl, gl.ARRAY_BUFFER, mesh.vbo);
     gl.vertexAttribPointer(state.aPositionID, 3, gl.FLOAT, false, 8 * 4, 0);
     gl.vertexAttribPointer(state.aNormalID, 3, gl.FLOAT, false, 8 * 4, 12);
     gl.vertexAttribPointer(state.aTexCoordID, 2, gl.FLOAT, false, 8 * 4, 24);
-    gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.ebo);
+    state.bindBuffer(gl, gl.ELEMENT_ARRAY_BUFFER, mesh.ebo);
     gl.drawElements(gl.TRIANGLES, mesh.elems.length, gl.UNSIGNED_SHORT, 0);
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
   }
 }
 
