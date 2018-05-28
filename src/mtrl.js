@@ -68,8 +68,8 @@ Mtrl.createTexture = function (gl, mtrl) {
 /*
  * Apply material state.
  */
-Mtrl.draw = function (gl, state, mtrl) {
-  // TODO shadow state locally
+Mtrl.draw = function (state, mtrl) {
+  var gl = state.gl;
 
   if (state.enableTextures && mtrl.texture) {
     gl.bindTexture(gl.TEXTURE_2D, mtrl.texture);

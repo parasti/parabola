@@ -31,22 +31,12 @@ function GLState (canvas) {
   this.usedProgram = null;
   this.boundBuffers = [];
 
-  this.perspMatrix = mat4.create();
+  // TODO This is scene, not GL state
+
+  this.projectionMatrix = mat4.create();
   this.viewMatrix = mat4.create();
 
-  // TODO This is simulation, not GL state
   this.view = new View();
-
-  // These are resources, not GL state
-  this.models = { // TODO
-    level: null,
-    ball: null,
-    coin: null,
-    coin5: null,
-    coin10: null,
-    grow: null,
-    shrink: null
-  };
 
   this.gl = getContext(canvas);
   setupContext(this.gl);
@@ -134,33 +124,22 @@ GLState.prototype.calcPerspective = function (w, h) {
   var n = 0.1;
   var f = 512.0;
 
-  mat4.perspective(this.perspMatrix, fov, a, n, f);
-};
-
-GLState.prototype.setModelFromSol = function (gl, modelName, sol) {
-  var model = SolidModel.fromSol(sol);
-  model.createObjects(gl);
-  this.models[modelName] = model;
-};
-
-GLState.prototype.setModel = function (gl, modelName, model) {
-  model.createObjects(gl);
-  this.models[modelName] = model;
+  mat4.perspective(this.projectionMatrix, fov, a, n, f);
 };
 
 /*
  * Track vertex attribute array enabled/disabled state.
  */
-GLState.prototype.enableArray = function (gl, index) {
+GLState.prototype.enableArray = function (index) {
   if (!this.enabledArrays[index]) {
-    gl.enableVertexAttribArray(index);
+    this.gl.enableVertexAttribArray(index);
     this.enabledArrays[index] = true;
   }
 };
 
-GLState.prototype.disableArray = function (gl, index) {
+GLState.prototype.disableArray = function (index) {
   if (this.enabledArrays[index]) {
-    gl.disableVertexAttribArray(index);
+    this.gl.disableVertexAttribArray(index);
     this.enabledArrays[index] = false;
   }
 };
@@ -168,9 +147,9 @@ GLState.prototype.disableArray = function (gl, index) {
 /*
  * Track used program.
  */
-GLState.prototype.useProgram = function (gl, program) {
+GLState.prototype.useProgram = function (program) {
   if (program !== this.usedProgram) {
-    gl.useProgram(program);
+    this.gl.useProgram(program);
     this.usedProgram = program;
   }
 };
@@ -178,48 +157,11 @@ GLState.prototype.useProgram = function (gl, program) {
 /*
  * Track bound buffers.
  */
-GLState.prototype.bindBuffer = function (gl, target, buffer) {
+GLState.prototype.bindBuffer = function (target, buffer) {
   if (buffer !== this.boundBuffers[target]) {
-    gl.bindBuffer(target, buffer);
+    this.gl.bindBuffer(target, buffer);
     this.boundBuffers[target] = buffer;
   }
 }
-
-/*
- * Render everything.
- */
-GLState.prototype.draw = function (gl) {
-  // game_draw
-
-  var shader = this.defaultShader;
-
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-  if (shader.use(gl, this)) {
-    shader.uniforms.uTexture.value = 0;
-    shader.uniforms.ProjectionMatrix.value = this.perspMatrix;
-
-    var levelModel = this.models.level;
-
-    if (levelModel) {
-      levelModel.drawItems(gl, this);
-      levelModel.drawBodies(gl, this);
-      //levelModel.drawBalls(gl, this);
-      //levelModel.drawBills(gl, this);
-    }
-  }
-};
-
-GLState.prototype.step = function (dt) {
-  this.time += dt;
-
-  for (var name in this.models) {
-    var model = this.models[name];
-
-    if (model) {
-      model.step(dt);
-    }
-  }
-};
 
 module.exports = GLState;

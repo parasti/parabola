@@ -152,12 +152,12 @@ Shader.origShader = function () {
   });
 };
 
-Shader.prototype.use = function (gl, state) {
+Shader.prototype.use = function (state) {
   var shader = this;
   var program = shader.program;
 
   if (program) {
-    state.useProgram(gl, program);
+    state.useProgram(program);
     return true;
   }
 

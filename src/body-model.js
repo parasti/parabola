@@ -60,10 +60,10 @@ BodyModel.prototype.sortMeshes = function () {
   }
 };
 
-BodyModel.prototype.drawMeshType = function (gl, state, meshType) {
+BodyModel.prototype.drawMeshType = function (state, meshType) {
   var meshes = this.sortedMeshes[meshType];
   for (var i = 0; i < meshes.length; ++i) {
-    drawMesh(gl, state, meshes[i]);
+    drawMesh(state, meshes[i]);
   }
 };
 
@@ -88,22 +88,28 @@ function createMeshObjects (gl, mesh) {
   mesh.ebo = ebo;
 }
 
-function drawMesh (gl, state, mesh) {
-  Mtrl.draw(gl, state, mesh.mtrl);
+function drawMesh (state, mesh) {
+  var gl = state.gl;
 
+  // Apply material state.
+  Mtrl.draw(state, mesh.mtrl);
+
+  // Update shader globals.
   state.defaultShader.uploadUniforms(gl);
 
   if (mesh.vbo) {
-    state.enableArray(gl, state.aPositionID);
-    state.enableArray(gl, state.aNormalID);
-    state.enableArray(gl, state.aTexCoordID);
+    state.enableArray(state.aPositionID);
+    state.enableArray(state.aNormalID);
+    state.enableArray(state.aTexCoordID);
 
-    state.bindBuffer(gl, gl.ARRAY_BUFFER, mesh.vbo);
+    state.bindBuffer(gl.ARRAY_BUFFER, mesh.vbo);
+
     gl.vertexAttribPointer(state.aPositionID, 3, gl.FLOAT, false, 8 * 4, 0);
     gl.vertexAttribPointer(state.aNormalID, 3, gl.FLOAT, false, 8 * 4, 12);
     gl.vertexAttribPointer(state.aTexCoordID, 2, gl.FLOAT, false, 8 * 4, 24);
 
-    state.bindBuffer(gl, gl.ELEMENT_ARRAY_BUFFER, mesh.ebo);
+    state.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.ebo);
+
     gl.drawElements(gl.TRIANGLES, mesh.elems.length, gl.UNSIGNED_SHORT, 0);
   }
 }

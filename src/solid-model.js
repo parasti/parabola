@@ -203,7 +203,7 @@ SolidModel.prototype.createObjects = function (gl) {
 /*
  * Render entity meshes of the given type. Pass a parentMatrix for hierarchical transform.
  */
-SolidModel.prototype.drawMeshType = function (gl, state, meshType) {
+SolidModel.prototype.drawMeshType = function (state, meshType) {
   var ents = this.entities.queryComponents([EC.Drawable, EC.SceneGraph]);
   var models = this.models;
 
@@ -225,30 +225,30 @@ SolidModel.prototype.drawMeshType = function (gl, state, meshType) {
     state.defaultShader.uniforms.ModelViewMatrix.value = modelViewMatrix;
     state.defaultShader.uniforms.NormalMatrix.value = normalMatrix;
 
-    model.drawMeshType(gl, state, meshType);
+    model.drawMeshType(state, meshType);
   }
 };
 
 /*
  * Render model meshes.
  */
-SolidModel.prototype.drawBodies = function (gl, state) {
-  // sol_draw()
+SolidModel.prototype.drawBodies = function (state) {
+  var gl = state.gl;
 
   const mask = this.transparentDepthMask;
   const test = this.transparentDepthTest;
 
   // TODO mirrors
-  this.drawMeshType(gl, state, BodyModel.REFLECTIVE);
+  this.drawMeshType(state, BodyModel.REFLECTIVE);
 
-  this.drawMeshType(gl, state, BodyModel.OPAQUE);;
-  this.drawMeshType(gl, state, BodyModel.OPAQUE_DECAL);
+  this.drawMeshType(state, BodyModel.OPAQUE);;
+  this.drawMeshType(state, BodyModel.OPAQUE_DECAL);
 
   if (!test) gl.disable(gl.DEPTH_TEST);
   if (!mask) gl.depthMask(false);
 
-  this.drawMeshType(gl, state, BodyModel.TRANSPARENT_DECAL);
-  this.drawMeshType(gl, state, BodyModel.TRANSPARENT);
+  this.drawMeshType(state, BodyModel.TRANSPARENT_DECAL);
+  this.drawMeshType(state, BodyModel.TRANSPARENT);
 
   if (!mask) gl.depthMask(true);
   if (!test) gl.enable(gl.DEPTH_TEST);
@@ -258,30 +258,6 @@ SolidModel.prototype.drawBodies = function (gl, state) {
  * Alias for a generic model.draw() interface.
  */
 SolidModel.prototype.draw = SolidModel.prototype.drawBodies;
-
-/*
- * Render item entities with a pre-loaded model.
- */
-
-const itemModels = [
-  'coin', 'coin5', 'coin10', 'grow', 'shrink'
-];
-
-SolidModel.prototype.drawItems = function (gl, state) {
-  for (var i = 0; i < itemModels.length; ++i) {
-    var modelName = itemModels[i];
-    var model = state.models[modelName];
-
-    if (model) {
-      var ents = this.entities.queryTag(modelName);
-
-      for (var j = 0; j < ents.length; ++j) {
-        var ent = ents[j];
-        model.draw(gl, state);
-      }
-    }
-  }
-};
 
 /*
  * Render ball entities with a pre-loaded model.

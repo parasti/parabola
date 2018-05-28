@@ -9,6 +9,7 @@ var screenfull = require('screenfull');
 var data = require('./data.js');
 
 var GLState = require('./gl-state.js');
+var Scene = require('./scene.js');
 var BallModel = require('./ball-model.js');
 
 var getDeltaTime = (function () {
@@ -30,19 +31,20 @@ function loadBall (gl, state, name = 'basic-ball') {
   var basePath = 'ball/' + name + '/' + name;
 
   BallModel.fetch(basePath).then(function (model) {
-    state.setModel(gl, 'ball', model);
+    //state.setModel(gl, 'ball', model);
   });
 }
 
 function init () {
   var canvas = document.getElementById('canvas');
   var state = GLState(canvas);
+  var scene = Scene();
   var gl = state.gl;
   var solFile = null;
 
   data.fetchSolid('map-easy/easy.sol').then(function (sol) {
     solFile = sol;
-    state.setModelFromSol(gl, 'level', sol);
+    scene.setModel(gl, 'level', sol);
     state.view.setFromSol(sol, 1.0);
   });
 
@@ -56,7 +58,7 @@ function init () {
 
   for (let modelName in modelPaths) {
     data.fetchSolid(modelPaths[modelName]).then(function (sol) {
-      state.setModelFromSol(gl, modelName, sol);
+      scene.setModel(gl, modelName, sol);
     });
   }
 
@@ -69,11 +71,11 @@ function init () {
     state.view.mouseLook(0, 0); // lerp until stop
     state.view.step(dt);
 
-    state.step(dt);
+    scene.step(dt);
 
-    // TODO Move view to state?
+    // TODO Move view to scene
     mat4.copy(state.viewMatrix, state.view.getMatrix());
-    state.draw(gl);
+    scene.draw(state);
 
     window.requestAnimationFrame(step);
   }
