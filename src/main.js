@@ -179,7 +179,7 @@ function init () {
   canvas.addEventListener('wheel', function (e) {
     state.view.setMoveSpeed(-Math.sign(e.deltaY));
     e.preventDefault();
-  });
+  }, { passive: false });
 
   var textureInput = document.getElementById('textures');
   textureInput.addEventListener('change', function (e) {
