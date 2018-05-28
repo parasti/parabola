@@ -68,7 +68,7 @@ SolidModel.fromSol = function (sol) {
     ent.sceneGraph.node = SceneNode(sceneRoot);
 
     var model = BodyModel.fromSolBody(sol, solBody);
-    ent.drawable.model = model;
+    ent.drawable.model = models.length;
     models.push(model);
 
     // TODO should movers be entities?
@@ -205,10 +205,11 @@ SolidModel.prototype.createObjects = function (gl) {
  */
 SolidModel.prototype.drawMeshType = function (gl, state, meshType) {
   var ents = this.entities.queryComponents([EC.Drawable, EC.SceneGraph]);
+  var models = this.models;
 
   for (var i = 0; i < ents.length; ++i) {
     var ent = ents[i];
-    var model = ent.drawable.model;
+    var model = models[ent.drawable.model];
 
     // TODO pre-allocate matrices and cache computations (at least) per-frame.
 
