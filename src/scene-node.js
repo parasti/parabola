@@ -33,13 +33,13 @@ function SceneNode (parent) {
  * Mark this tree of nodes for update.
  */
 SceneNode.prototype._markDirty = function () {
-  var i = 0;
+  var i;
 
   for (i = 0; i < this.children.length; ++i) {
     this.children[i]._markDirty();
   }
 
-  for (i = 0; i <  this.instances.length; ++i) {
+  for (i = 0; i < this.instances.length; ++i) {
     this.instances[i]._markDirty();
   }
 
@@ -77,14 +77,14 @@ SceneNode.prototype.getWorldMatrix = function () {
  */
 SceneNode.prototype.setParent = function (node) {
   if (this.parent) {
-    this.parent._removeChild(this);
+    removeFromList(this.parent.children, this);
   }
 
   this.parent = node;
   this.dirty = true;
 
   if (node) {
-    node._addChild(this);
+    addToList(node.children, this);
 
     if (this.worldMatrix === this.localMatrix) {
       // We are now a child node, no longer sharing matrices.
@@ -97,36 +97,64 @@ SceneNode.prototype.setParent = function (node) {
 }
 
 /*
+ * Use the localMatrix of the given node.
+ */
+SceneNode.prototype._setMaster = function (node) {
+  if (this.master) {
+    removeFromList(this.master.instances, this);
+  }
+
+  this.master = node;
+  this.dirty = true;
+
+  if (node) {
+    addToList(node.instances, this);
+  }
+}
+
+/*
  * Create an instance of this node.
  */
-SceneNode.prototype.createInstance = function (parent) {
-  var node = SceneNode(parent);
+SceneNode.prototype.createInstance = function () {
+  var node = SceneNode();
 
-  node.master = this;
-
-  this.instances.push(node);
+  node._setMaster(this);
 
   // Create instances of all children and parent them to this node.
 
   for (var i = 0; i < this.children.length; ++i) {
-    var child = this.children[i].createInstance(node);
+    var child = this.children[i].createInstance();
     child.setParent(node);
   }
 
   return node;
 }
 
-SceneNode.prototype._addChild = function (node) {
-  var index = this.children.indexOf(node);
+/*
+ * Unlink node from its parent and master nodes.
+ */
+SceneNode.prototype.unlink = function () {
+  this._setMaster(null);
+  this.setParent(null);
+}
+
+/*
+ * Add unique object to list.
+ */
+function addToList (list, obj) {
+  var index = list.indexOf(obj);
   if (index < 0) {
-    this.children.push(node);
+    list.push(obj);
   }
 }
 
-SceneNode.prototype._removeChild = function (node) {
-  var index = this.children.indexOf(node);
+/*
+ * Remove matching object from list.
+ */
+function removeFromList (list, obj) {
+  var index = list.indexOf(obj);
   if (index >= 0) {
-    this.children.splice(index, 1);
+    list.splice(index, 1);
   }
 }
 
@@ -145,20 +173,13 @@ SceneNode.prototype._getLocalMatrix = function () {
  * Update world matrices of this and any parent/master nodes.
  */
 SceneNode.prototype._update = function () {
-  var parent = this.parent;
-  var master = this.master;
-
-  if (master) {
-    master._update();
-  }
-
-  if (parent) {
-    parent._update();
-  }
-
   if (this.dirty) {
+    var parent = this.parent;
+
     if (parent) {
-      mat4.multiply(this.worldMatrix, parent.worldMatrix, this._getLocalMatrix());
+      mat4.multiply(this.worldMatrix, parent.getWorldMatrix(), this._getLocalMatrix());
+    } else if (this.master || this.worldMatrix !== this.localMatrix) {
+      mat4.copy(this.worldMatrix, this._getLocalMatrix());
     }
 
     this.dirty = false;
