@@ -111,7 +111,7 @@ function init () {
   var viewPosition = document.getElementById('viewPosition');
   viewPosition.addEventListener('input', function () {
     if (solFile) {
-      state.view.setFromSol(solFile, this.value);
+      scene.view.setFromSol(solFile, this.value);
     }
   });
 
@@ -123,7 +123,7 @@ function init () {
 
     data.loadSolid(this.files[0]).then(function (sol) {
       solFile = sol;
-      state.setModelFromSol(gl, 'level', solFile);
+      scene.setModel(gl, 'level', solFile);
     });
   });
 
@@ -145,7 +145,7 @@ function init () {
       }
       // TODO
       gl.viewport(0, 0, canvas.clientWidth, canvas.clientHeight);
-      state.calcPerspective(canvas.clientWidth, canvas.clientHeight);
+      scene.view.setProjection(canvas.clientWidth, canvas.clientHeight, 50);
     });
   }
 
@@ -153,31 +153,31 @@ function init () {
     var code = e.code; // Not very portable.
 
     if (code === 'KeyW') {
-      state.view.moveForward(true);
+      scene.view.moveForward(true);
     } else if (code === 'KeyA') {
-      state.view.moveLeft(true);
+      scene.view.moveLeft(true);
     } else if (code === 'KeyS') {
-      state.view.moveBackward(true);
+      scene.view.moveBackward(true);
     } else if (code === 'KeyD') {
-      state.view.moveRight(true);
+      scene.view.moveRight(true);
     }
   }
   function keyUp (e) {
     var code = e.code;
 
     if (code === 'KeyW') {
-      state.view.moveForward(false);
+      scene.view.moveForward(false);
     } else if (code === 'KeyA') {
-      state.view.moveLeft(false);
+      scene.view.moveLeft(false);
     } else if (code === 'KeyS') {
-      state.view.moveBackward(false);
+      scene.view.moveBackward(false);
     } else if (code === 'KeyD') {
-      state.view.moveRight(false);
+      scene.view.moveRight(false);
     }
   }
 
   canvas.addEventListener('wheel', function (e) {
-    state.view.setMoveSpeed(-Math.sign(e.deltaY));
+    scene.view.setMoveSpeed(-Math.sign(e.deltaY));
     e.preventDefault();
   }, { passive: false });
 
