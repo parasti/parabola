@@ -42,10 +42,14 @@ function init () {
   var gl = state.gl;
   var solFile = null;
 
+  state._scene = scene; // TODO UNHACK
+
+  scene.view.setProjection(gl.canvas.width, gl.canvas.height, 50);
+
   data.fetchSolid('map-easy/easy.sol').then(function (sol) {
     solFile = sol;
     scene.setModel(gl, 'level', sol);
-    state.view.setFromSol(sol, 1.0);
+    scene.view.setFromSol(sol, 1.0);
   });
 
   var modelPaths = {
@@ -67,14 +71,8 @@ function init () {
   function step (currTime) {
     var dt = getDeltaTime(currTime);
 
-    // TODO
-    state.view.mouseLook(0, 0); // lerp until stop
-    state.view.step(dt);
-
+    scene.view.mouseLook(0, 0);
     scene.step(dt);
-
-    // TODO Move view to scene
-    mat4.copy(state.viewMatrix, state.view.getMatrix());
     scene.draw(state);
 
     window.requestAnimationFrame(step);
@@ -82,7 +80,7 @@ function init () {
   window.requestAnimationFrame(step);
 
   function mouseMove (e) {
-    state.view.mouseLook(e.movementX, e.movementY);
+    scene.view.mouseLook(e.movementX, e.movementY);
   }
 
   function pointerLockChange (e) {

@@ -6,12 +6,7 @@ var SolidModel = require('./solid-model.js');
 var View = require('./view.js');
 var Shader = require('./shader.js');
 
-/*
- * A few notes on webglcontextrestored handling:
- * 1) Context and GL objects/state need to be reacquired upon context-restore.
- * 2) The vertex attributes/texture data/shader code needs to be kept around.
- * 3) Each object rebuild should be async (in a Promise), to keep the thread from stalling.
- */
+module.exports = GLState;
 
 function GLState (canvas) {
   if (!(this instanceof GLState)) {
@@ -30,13 +25,6 @@ function GLState (canvas) {
   this.enabledArrays = [];
   this.usedProgram = null;
   this.boundBuffers = [];
-
-  // TODO This is scene, not GL state
-
-  this.projectionMatrix = mat4.create();
-  this.viewMatrix = mat4.create();
-
-  this.view = new View();
 
   this.gl = getContext(canvas);
   setupContext(this.gl);
@@ -84,8 +72,6 @@ GLState.prototype.createDefaultObjects = function () {
 
   this.defaultShader = Shader.origShader();
   this.defaultShader.createObjects(gl);
-
-  this.calcPerspective(gl.canvas.width, gl.canvas.height);
 };
 
 /*
@@ -111,20 +97,6 @@ GLState.prototype.createDefaultTexture = function (gl) {
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 2, 2, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(data));
   gl.bindTexture(gl.TEXTURE_2D, null);
   this.defaultTexture = tex;
-};
-
-/*
- * Compute a Neverball perspective matrix.
- */
-GLState.prototype.calcPerspective = function (w, h) {
-  var fov = 50 * Math.PI / 180; // TODO pass as a param?
-  var a = w / h;
-
-  // Neverball defaults.
-  var n = 0.1;
-  var f = 512.0;
-
-  mat4.perspective(this.projectionMatrix, fov, a, n, f);
 };
 
 /*
@@ -163,5 +135,3 @@ GLState.prototype.bindBuffer = function (target, buffer) {
     this.boundBuffers[target] = buffer;
   }
 }
-
-module.exports = GLState;

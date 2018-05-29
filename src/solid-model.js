@@ -203,6 +203,8 @@ SolidModel.prototype.createObjects = function (gl) {
 /*
  * Render entity meshes of the given type. Pass a parentMatrix for hierarchical transform.
  */
+var _modelViewMatrix = mat4.create();
+var _normalMatrix = mat3.create();
 SolidModel.prototype.drawMeshType = function (state, meshType) {
   var ents = this.entities.queryComponents([EC.Drawable, EC.SceneGraph]);
   var models = this.models;
@@ -211,19 +213,12 @@ SolidModel.prototype.drawMeshType = function (state, meshType) {
     var ent = ents[i];
     var model = models[ent.drawable.model];
 
-    // TODO pre-allocate matrices and cache computations (at least) per-frame.
+    // Move this to scene TODO
+    mat4.multiply(_modelViewMatrix, state._scene.view.getMatrix(), ent.sceneGraph.node.getWorldMatrix());
+    mat3.fromMat4(_normalMatrix, _modelViewMatrix);
 
-    var modelViewMatrix = mat4.create();
-    var normalMatrix = mat3.create();
-
-    mat4.multiply(modelViewMatrix, state.viewMatrix, ent.sceneGraph.node.getWorldMatrix());
-
-    // Here's how you transpose and invert a matrix.
-
-    mat3.fromMat4(normalMatrix, modelViewMatrix);
-
-    state.defaultShader.uniforms.ModelViewMatrix.value = modelViewMatrix;
-    state.defaultShader.uniforms.NormalMatrix.value = normalMatrix;
+    state.defaultShader.uniforms.ModelViewMatrix.value = _modelViewMatrix;
+    state.defaultShader.uniforms.NormalMatrix.value = _normalMatrix;
 
     model.drawMeshType(state, meshType);
   }

@@ -2,6 +2,7 @@
 
 var SceneNode = require('./scene-node.js');
 var SolidModel = require('./solid-model.js');
+var View = require('./view.js');
 
 module.exports = Scene;
 
@@ -11,6 +12,7 @@ function Scene () {
   }
 
   this.sceneRoot = SceneNode();
+  this.view = View();
 
   this.models = {
     level: null,
@@ -43,11 +45,13 @@ Scene.prototype.step = function (dt) {
       model.step(dt);
     }
   }
+
+  this.view.step(dt);
 };
 
 
 /*
- * Render everything. TODO totally rework this.
+ * Render everything. TODO rework this.
  */
 Scene.prototype.draw = function (state) {
   var gl = state.gl;
@@ -57,7 +61,7 @@ Scene.prototype.draw = function (state) {
 
   if (shader.use(gl, state)) {
     shader.uniforms.uTexture.value = 0;
-    shader.uniforms.ProjectionMatrix.value = state.projectionMatrix;
+    shader.uniforms.ProjectionMatrix.value = this.view._projectionMatrix;
 
     var levelModel = this.models.level;
 

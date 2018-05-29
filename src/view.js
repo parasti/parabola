@@ -4,7 +4,13 @@ var vec3 = require('gl-matrix').vec3;
 var mat4 = require('gl-matrix').mat4;
 var toRadian = require('gl-matrix').glMatrix.toRadian;
 
-var View = function (p, c) {
+module.exports = View;
+
+function View (p, c) {
+  if (!(this instanceof View)) {
+    return new View(p, c);
+  }
+
   this.p = vec3.create();
   this.c = vec3.create();
   this.u = vec3.fromValues(0, 1, 0);
@@ -20,6 +26,7 @@ var View = function (p, c) {
 
   this._basis = mat4.create();
   this._viewMatrix = mat4.create();
+  this._projectionMatrix = mat4.create();
 
   // TODO
   this.speed = View.SPEED;
@@ -29,6 +36,18 @@ var View = function (p, c) {
   this.right = false;
   this._dx = 0.0;
   this._dy = 0.0;
+};
+
+/*
+ * Compute a Neverball perspective projection matrix.
+ */
+View.prototype.setProjection = function (w, h, fovAngle) {
+  var fov = fovAngle * Math.PI / 180;
+  var a = w / h;
+  var n = 0.1;
+  var f = 512.0;
+
+  mat4.perspective(this._projectionMatrix, fov, a, n, f);
 };
 
 /*
@@ -215,8 +234,3 @@ View.prototype.mouseLook = function (dx, dy) {
   vec3.transformMat4(z, z, this.getBasis());
   vec3.add(this.c, this.p, vec3.negate(z, z));
 };
-
-/*
- * Exports.
- */
-module.exports = View;
