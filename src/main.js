@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', function () {
   init();
 });
 
-var mat4 = require('gl-matrix').mat4;
 var screenfull = require('screenfull');
 var data = require('./data.js');
 
@@ -31,7 +30,7 @@ function loadBall (gl, state, name = 'basic-ball') {
   var basePath = 'ball/' + name + '/' + name;
 
   BallModel.fetch(basePath).then(function (model) {
-    //state.setModel(gl, 'ball', model);
+    // state.setModel(gl, 'ball', model);
   });
 }
 

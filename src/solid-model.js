@@ -236,7 +236,7 @@ SolidModel.prototype.drawBodies = function (state) {
   // TODO mirrors
   this.drawMeshType(state, BodyModel.REFLECTIVE);
 
-  this.drawMeshType(state, BodyModel.OPAQUE);;
+  this.drawMeshType(state, BodyModel.OPAQUE);
   this.drawMeshType(state, BodyModel.OPAQUE_DECAL);
 
   if (!test) gl.disable(gl.DEPTH_TEST);
@@ -253,66 +253,5 @@ SolidModel.prototype.drawBodies = function (state) {
  * Alias for a generic model.draw() interface.
  */
 SolidModel.prototype.draw = SolidModel.prototype.drawBodies;
-
-/*
- * Render ball entities with a pre-loaded model.
- */
-SolidModel.prototype.drawBalls = function (gl, state) {
-  var model = state.models.ball;
-
-  if (model) {
-    var ents = this.entities.queryTag('ball');
-
-    for (var i = 0; i < ents.length; ++i) {
-      var ent = ents[i];
-
-      model.draw(gl, state);
-    }
-  }
-};
-
-SolidModel.prototype.drawBills = function (gl, state) {
-  //TODO
-  return;
-
-  var ents = this.entities.queryComponents([EC.Billboard, EC.Spatial]);
-
-  // TODO
-  var viewBasis = state.view.getBasis();
-  var modelViewMatrix = mat4.create();
-
-  state.billboardMesh.enableDraw(gl, state);
-
-  const test = this.transparentDepthTest;
-  const mask = this.transparentDepthMask;
-
-  if (!test) gl.disable(gl.DEPTH_TEST);
-  if (!mask) gl.depthMask(false);
-
-  for (var i = 0; i < ents.length; ++i) {
-    var ent = ents[i];
-
-    // TODO too much math for a draw frame
-    // if (!B_NOFACE)
-    mat4.multiply(modelViewMatrix, ent.spatial.matrix, viewBasis);
-    ent.billboard.getForegroundTransform(modelViewMatrix, state.time);
-
-    if (parentMatrix) {
-      mat4.multiply(modelViewMatrix, parentMatrix, modelViewMatrix);
-    }
-    mat4.multiply(modelViewMatrix, state.viewMatrix, modelViewMatrix);
-
-    state.defaultShader.uniforms.ModelViewMatrix.value = modelViewMatrix;
-
-    Mtrl.draw(gl, state, ent.billboard.mtrl);
-    state.defaultShader.uploadUniforms(gl);
-    state.billboardMesh.draw(gl, state);
-  }
-
-  if (!mask) gl.depthMask(true);
-  if (!test) gl.enable(gl.DEPTH_TEST);
-
-  state.billboardMesh.disableDraw(gl, state);
-};
 
 module.exports = SolidModel;

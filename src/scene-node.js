@@ -44,7 +44,7 @@ SceneNode.prototype._markDirty = function () {
   }
 
   this.dirty = true;
-}
+};
 
 /*
  * Set local matrix from given position vector, rotation quaternion and scale.
@@ -61,7 +61,7 @@ SceneNode.prototype.setLocalMatrix = (function () {
     vec3.set(s_, s, s, s);
     mat4.fromRotationTranslationScale(this.localMatrix, e, p, s_);
     this._markDirty();
-  }
+  };
 })();
 
 /*
@@ -70,7 +70,7 @@ SceneNode.prototype.setLocalMatrix = (function () {
 SceneNode.prototype.getWorldMatrix = function () {
   this._update();
   return this.worldMatrix;
-}
+};
 
 /*
  * Set node parent.
@@ -94,7 +94,7 @@ SceneNode.prototype.setParent = function (node) {
     // We are now a root node, sharing matrices.
     this.worldMatrix = this.localMatrix;
   }
-}
+};
 
 /*
  * Use the localMatrix of the given node.
@@ -110,7 +110,7 @@ SceneNode.prototype._setMaster = function (node) {
   if (node) {
     addToList(node.instances, this);
   }
-}
+};
 
 /*
  * Create an instance of this node.
@@ -128,7 +128,7 @@ SceneNode.prototype.createInstance = function () {
   }
 
   return node;
-}
+};
 
 /*
  * Unlink node from its parent and master nodes.
@@ -136,7 +136,7 @@ SceneNode.prototype.createInstance = function () {
 SceneNode.prototype.unlink = function () {
   this._setMaster(null);
   this.setParent(null);
-}
+};
 
 /*
  * Add unique object to list.
@@ -167,7 +167,7 @@ SceneNode.prototype._getLocalMatrix = function () {
   } else {
     return this.localMatrix;
   }
-}
+};
 
 /*
  * Update world matrices of this and any parent/master nodes.
@@ -184,4 +184,4 @@ SceneNode.prototype._update = function () {
 
     this.dirty = false;
   }
-}
+};

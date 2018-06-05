@@ -1,9 +1,5 @@
 'use strict';
 
-var mat4 = require('gl-matrix').mat4;
-
-var SolidModel = require('./solid-model.js');
-var View = require('./view.js');
 var Shader = require('./shader.js');
 
 module.exports = GLState;
@@ -133,5 +129,7 @@ GLState.prototype.bindBuffer = function (target, buffer) {
   if (buffer !== this.boundBuffers[target]) {
     this.gl.bindBuffer(target, buffer);
     this.boundBuffers[target] = buffer;
+  } else {
+    console.log('reusing bound buffer');
   }
-}
+};

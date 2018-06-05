@@ -49,7 +49,6 @@ Scene.prototype.step = function (dt) {
   this.view.step(dt);
 };
 
-
 /*
  * Render everything. TODO rework this.
  */
@@ -66,10 +65,7 @@ Scene.prototype.draw = function (state) {
     var levelModel = this.models.level;
 
     if (levelModel) {
-      //levelModel.drawItems(gl, state);
       levelModel.drawBodies(state);
-      //levelModel.drawBalls(gl, this);
-      //levelModel.drawBills(gl, this);
     }
   }
 };

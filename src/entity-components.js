@@ -26,7 +26,7 @@ EC.Drawable = function drawable () {
  */
 EC.SceneGraph = function sceneGraph () {
   this.node = null;
-}
+};
 
 EC.SceneGraph.prototype.setMatrix = function (p, e, s) {
   var node = this.node;
@@ -34,7 +34,7 @@ EC.SceneGraph.prototype.setMatrix = function (p, e, s) {
   if (node) {
     node.setLocalMatrix(p, e, s);
   }
-}
+};
 
 /*
  * Spatial transform

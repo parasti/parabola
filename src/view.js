@@ -36,7 +36,7 @@ function View (p, c) {
   this.right = false;
   this._dx = 0.0;
   this._dy = 0.0;
-};
+}
 
 /*
  * Compute a Neverball perspective projection matrix.
