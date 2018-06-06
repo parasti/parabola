@@ -20,7 +20,7 @@ function SceneNode (parent) {
   // Pre-allocate a separate matrix in case we get parented.
   this._worldMatrix = mat4.create();
 
-  // Instances use the localMatrix of a master node.
+  // Instances use the localMatrix and model of a master node.
   this.master = null;
   this.instances = [];
 
