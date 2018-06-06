@@ -108,7 +108,6 @@ Scene.prototype.draw = function (state) {
 
     gl.bindBuffer(gl.ARRAY_BUFFER, model.instanceVBO);
     gl.bufferData(gl.ARRAY_BUFFER, matrices, gl.DYNAMIC_DRAW);
-    gl.bindBuffer(gl.ARRAY_BUFFER, null);
   }
 
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);

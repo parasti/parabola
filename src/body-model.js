@@ -88,11 +88,9 @@ BodyModel.prototype.drawInstanced = function (state, count) {
     state.vertexAttribDivisor(state.aModelViewMatrixID + 2, 1);
     state.vertexAttribDivisor(state.aModelViewMatrixID + 3, 1);
 
-    state.bindBuffer(gl.ARRAY_BUFFER, null);
-  }
-
-  for (var i = 0; i < model.allMeshes.length; ++i) {
-    drawMeshInstanced(state, model.allMeshes[i], count);
+    for (var i = 0; i < model.allMeshes.length; ++i) {
+      drawMeshInstanced(state, model.allMeshes[i], count);
+    }
   }
 };
 
@@ -104,7 +102,6 @@ function createMeshObjects (gl, mesh) {
 
   gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
   gl.bufferData(gl.ARRAY_BUFFER, mesh.verts, gl.STATIC_DRAW);
-  gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
   mesh.vbo = vbo;
 
@@ -112,7 +109,6 @@ function createMeshObjects (gl, mesh) {
 
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo);
   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.elems, gl.STATIC_DRAW);
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 
   mesh.ebo = ebo;
 }
@@ -132,8 +128,6 @@ function drawMeshInstanced (state, mesh, count) {
     gl.vertexAttribPointer(state.aPositionID, 3, gl.FLOAT, false, 8 * 4, 0);
     gl.vertexAttribPointer(state.aNormalID, 3, gl.FLOAT, false, 8 * 4, 12);
     gl.vertexAttribPointer(state.aTexCoordID, 2, gl.FLOAT, false, 8 * 4, 24);
-
-    state.bindBuffer(gl.ARRAY_BUFFER, null);
   }
 
   state.enableArray(state.aPositionID);
