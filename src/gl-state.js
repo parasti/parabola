@@ -18,7 +18,6 @@ function GLState (canvas) {
   this.aNormalID = 1;
   this.aTexCoordID = 2;
   this.aModelViewMatrixID = 3;
-  this.aNormalMatrixID = 7;
 
   this.enabledArrays = [];
   this.usedProgram = null;

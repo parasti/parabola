@@ -132,8 +132,6 @@ Shader.origShader = function () {
   var uniforms = {
     uTexture: Uniform.i(),
     ProjectionMatrix: Uniform.mat4(),
-    ModelViewMatrix: Uniform.mat4(),
-    NormalMatrix: Uniform.mat3(),
     uDiffuse: Uniform.vec4(),
     uAmbient: Uniform.vec4(),
     uSpecular: Uniform.vec4(),
@@ -185,7 +183,6 @@ Shader.prototype.createObjects = function (gl) {
   gl.bindAttribLocation(prog, 1, 'aNormal');
   gl.bindAttribLocation(prog, 2, 'aTexCoord');
   gl.bindAttribLocation(prog, 3, 'aModelViewMatrix');
-  gl.bindAttribLocation(prog, 7, 'aNormalMatrix');
 
   gl.linkProgram(prog);
 

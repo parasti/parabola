@@ -108,12 +108,6 @@ Scene.prototype.draw = function (state) {
       nodes = sortedNodes.get(model);
       model.drawInstanced(state, nodes.length);
     }
-
-    /* var levelModel = this.models.level;
-
-    if (levelModel) {
-      levelModel.drawBodies(state);
-    } */
   }
 };
 

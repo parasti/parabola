@@ -78,23 +78,15 @@ BodyModel.prototype.drawInstanced = function (state, count) {
   if (model.instanceVBO) {
     state.bindBuffer(gl.ARRAY_BUFFER, model.instanceVBO);
 
-    gl.vertexAttribPointer(state.aModelViewMatrixID + 0, 4, gl.FLOAT, false, (16 + 9) * 4, 0);
-    gl.vertexAttribPointer(state.aModelViewMatrixID + 1, 4, gl.FLOAT, false, (16 + 9) * 4, 16);
-    gl.vertexAttribPointer(state.aModelViewMatrixID + 2, 4, gl.FLOAT, false, (16 + 9) * 4, 32);
-    gl.vertexAttribPointer(state.aModelViewMatrixID + 3, 4, gl.FLOAT, false, (16 + 9) * 4, 48);
+    gl.vertexAttribPointer(state.aModelViewMatrixID + 0, 4, gl.FLOAT, false, 16 * 4, 0);
+    gl.vertexAttribPointer(state.aModelViewMatrixID + 1, 4, gl.FLOAT, false, 16 * 4, 16);
+    gl.vertexAttribPointer(state.aModelViewMatrixID + 2, 4, gl.FLOAT, false, 16 * 4, 32);
+    gl.vertexAttribPointer(state.aModelViewMatrixID + 3, 4, gl.FLOAT, false, 16 * 4, 48);
 
     state.vertexAttribDivisor(state.aModelViewMatrixID + 0, 1);
     state.vertexAttribDivisor(state.aModelViewMatrixID + 1, 1);
     state.vertexAttribDivisor(state.aModelViewMatrixID + 2, 1);
     state.vertexAttribDivisor(state.aModelViewMatrixID + 3, 1);
-
-    gl.vertexAttribPointer(state.aNormalMatrixID + 0, 3, gl.FLOAT, false, (16 + 9) * 4, 0);
-    gl.vertexAttribPointer(state.aNormalMatrixID + 1, 3, gl.FLOAT, false, (16 + 9) * 4, 12);
-    gl.vertexAttribPointer(state.aNormalMatrixID + 2, 3, gl.FLOAT, false, (16 + 9) * 4, 24);
-
-    state.vertexAttribDivisor(state.aNormalMatrixID + 0, 1);
-    state.vertexAttribDivisor(state.aNormalMatrixID + 1, 1);
-    state.vertexAttribDivisor(state.aNormalMatrixID + 2, 1);
 
     state.bindBuffer(gl.ARRAY_BUFFER, null);
   }
@@ -152,10 +144,6 @@ function drawMeshInstanced (state, mesh, count) {
   state.enableArray(state.aModelViewMatrixID + 1);
   state.enableArray(state.aModelViewMatrixID + 2);
   state.enableArray(state.aModelViewMatrixID + 3);
-
-  state.enableArray(state.aNormalMatrixID + 0);
-  state.enableArray(state.aNormalMatrixID + 1);
-  state.enableArray(state.aNormalMatrixID + 2);
 
   if (mesh.ebo) {
     state.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.ebo);
