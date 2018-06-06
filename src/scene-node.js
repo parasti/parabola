@@ -83,7 +83,7 @@ SceneNode.prototype.getData = function () {
     return this.master.getData();
   }
   return this.data;
-}
+};
 
 /*
  * Set node parent.

@@ -1,8 +1,6 @@
 'use strict';
 
 var vec3 = require('gl-matrix').vec3;
-var mat3 = require('gl-matrix').mat3;
-var mat4 = require('gl-matrix').mat4;
 
 var nanoECS = require('nano-ecs');
 
