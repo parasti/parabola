@@ -69,7 +69,7 @@ SolidModel.fromSol = function (sol) {
 
     ent.sceneGraph.node = SceneNode(sceneRoot);
     // FIXME awkward
-    ent.sceneGraph.node.data = model;
+    ent.sceneGraph.node.model = model;
 
     // TODO should movers be entities?
     var movers = Mover.fromSolBody(sol, solBody);

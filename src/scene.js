@@ -80,9 +80,7 @@ Scene.prototype.draw = function (state) {
   /*
    * Make lists of nodes, indexed by model.
    */
-
-  var sortedNodes = new Map();
-  sortNodesByModel(sortedNodes, this.sceneRoot);
+  var sortedNodes = sortNodesByModel(new Map(), this.sceneRoot);
 
   /*
    * Make arrays of modelview matrices.
@@ -125,24 +123,24 @@ Scene.prototype.draw = function (state) {
 
 function sortNodesByModel (modelNodes, node) {
   if (!node) {
-    return;
+    return modelNodes;
   }
 
   for (var i = 0; i < node.children.length; ++i) {
     sortNodesByModel(modelNodes, node.children[i]);
   }
 
-  var data = node.getData();
+  var model = node.getModel();
 
-  if (data === null) {
-    return;
+  if (model === null) {
+    return modelNodes;
   }
-
-  var model = data;
 
   if (modelNodes.has(model)) {
     modelNodes.get(model).push(node);
   } else {
     modelNodes.set(model, [node]);
   }
+
+  return modelNodes;
 }
