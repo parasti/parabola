@@ -81,16 +81,13 @@ Scene.prototype.draw = function (state) {
   for (var model of bodyModels) {
     var nodes = sortedNodes.get(model);
     // Interleaved modelview and normal matrices.
-    var matrices = new Float32Array((16 + 9) * nodes.length);
+    var matrices = new Float32Array(16 * nodes.length);
 
     for (var j = 0; j < nodes.length; ++j) {
       var node = nodes[j];
-      const offset = j * (16 + 9);
-      var modelViewMat = matrices.subarray(offset, offset + 16);
-      var normalMat = matrices.subarray(offset + 16, offset + 16 + 9);
+      var modelViewMat = matrices.subarray(j * 16, (j + 1) * 16);
 
       mat4.multiply(modelViewMat, this.view.getMatrix(), node.getWorldMatrix());
-      mat3.fromMat4(normalMat, modelViewMat);
     }
 
     gl.bindBuffer(gl.ARRAY_BUFFER, model.instanceVBO);
