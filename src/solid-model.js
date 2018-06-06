@@ -12,6 +12,8 @@ var Shader = require('./shader.js');
 var EC = require('./entity-components.js');
 var SceneNode = require('./scene-node.js');
 
+module.exports = SolidModel;
+
 function SolidModel () {
   if (!(this instanceof SolidModel)) {
     return new SolidModel();
@@ -21,11 +23,6 @@ function SolidModel () {
   this.entities = null;
   this.models = null;
   this.materials = null;
-
-  // Transparency defaults. Overridden by ball skins, primarily.
-
-  this.transparentDepthTest = true;
-  this.transparentDepthMask = false;
 }
 
 /*
@@ -58,18 +55,16 @@ SolidModel.fromSol = function (sol) {
 
     ent = ents.createEntity().addTag('body');
 
-    ent.addComponent(EC.Drawable);
     ent.addComponent(EC.Spatial);
     ent.addComponent(EC.Movers);
     ent.addComponent(EC.SceneGraph);
 
+    // FIXME awkward
     var model = BodyModel.fromSolBody(sol, solBody);
-    ent.drawable.model = models.length;
     models.push(model);
 
-    ent.sceneGraph.node = SceneNode(sceneRoot);
-    // FIXME awkward
-    ent.sceneGraph.node.model = model;
+    ent.sceneGraph.setModel(model);
+    ent.sceneGraph.setParent(sceneRoot);
 
     // TODO should movers be entities?
     var movers = Mover.fromSolBody(sol, solBody);
@@ -108,7 +103,7 @@ SolidModel.fromSol = function (sol) {
     ent.addComponent(EC.Spatial);
     ent.addComponent(EC.SceneGraph);
 
-    ent.sceneGraph.node = SceneNode(sceneRoot);
+    ent.sceneGraph.setParent(sceneRoot);
 
     ent.item.value = solItem.n;
 
@@ -208,50 +203,3 @@ SolidModel.prototype.createObjects = function (gl) {
     }
   }
 };
-
-/*
- * Render entity meshes of the given type. Pass a parentMatrix for hierarchical transform.
- */
-SolidModel.prototype.drawMeshType = function (state, meshType) {
-  var ents = this.entities.queryComponents([EC.Drawable, EC.SceneGraph]);
-  var models = this.models;
-
-  for (var i = 0; i < ents.length; ++i) {
-    var ent = ents[i];
-    var model = models[ent.drawable.model];
-
-    model.drawMeshType(state, meshType);
-  }
-};
-
-/*
- * Render model meshes.
- */
-SolidModel.prototype.drawBodies = function (state) {
-  var gl = state.gl;
-
-  const mask = this.transparentDepthMask;
-  const test = this.transparentDepthTest;
-
-  // TODO mirrors
-  this.drawMeshType(state, BodyModel.REFLECTIVE);
-
-  this.drawMeshType(state, BodyModel.OPAQUE);
-  this.drawMeshType(state, BodyModel.OPAQUE_DECAL);
-
-  if (!test) gl.disable(gl.DEPTH_TEST);
-  if (!mask) gl.depthMask(false);
-
-  this.drawMeshType(state, BodyModel.TRANSPARENT_DECAL);
-  this.drawMeshType(state, BodyModel.TRANSPARENT);
-
-  if (!mask) gl.depthMask(true);
-  if (!test) gl.enable(gl.DEPTH_TEST);
-};
-
-/*
- * Alias for a generic model.draw() interface.
- */
-SolidModel.prototype.draw = SolidModel.prototype.drawBodies;
-
-module.exports = SolidModel;

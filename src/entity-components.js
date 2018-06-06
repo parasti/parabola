@@ -6,6 +6,7 @@ var mat4 = require('gl-matrix').mat4;
 var toRadian = require('gl-matrix').glMatrix.toRadian;
 
 var Solid = require('neverball-solid');
+var SceneNode = require('./scene-node.js');
 
 var EC = module.exports = {};
 
@@ -15,18 +16,19 @@ var EC = module.exports = {};
  */
 
 /*
- * Model (but I didn't want to type ent.model.model)
- */
-EC.Drawable = function drawable () {
-  this.model = null;
-};
-
-/*
  * Scene graph node.
  */
 EC.SceneGraph = function sceneGraph () {
-  this.node = null;
+  this.node = SceneNode();
 };
+
+EC.SceneGraph.prototype.setParent = function (node) {
+  this.node.setParent(node);
+};
+
+EC.SceneGraph.prototype.setModel = function (model) {
+  this.node.model = model;
+}
 
 EC.SceneGraph.prototype.setMatrix = function (p, e, s) {
   var node = this.node;
