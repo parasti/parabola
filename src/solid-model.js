@@ -65,12 +65,11 @@ SolidModel.fromSol = function (sol) {
     ent.addComponent(EC.Movers);
     ent.addComponent(EC.SceneGraph);
 
-    ent.sceneGraph.node = SceneNode(sceneRoot);
-
     var model = BodyModel.fromSolBody(sol, solBody);
     ent.drawable.model = models.length;
     models.push(model);
 
+    ent.sceneGraph.node = SceneNode(sceneRoot);
     // FIXME awkward
     ent.sceneGraph.node.data = model;
 
@@ -111,10 +110,15 @@ SolidModel.fromSol = function (sol) {
     ent.addComponent(EC.Spatial);
     ent.addComponent(EC.SceneGraph);
 
+    ent.sceneGraph.node = SceneNode(sceneRoot);
+
     ent.item.value = solItem.n;
 
     vec3.copy(ent.spatial.position, solItem.p);
     ent.spatial.scale = 0.15; // Neverball default.
+
+    // Update scene node.
+    ent.sceneGraph.setMatrix(ent.spatial.position, ent.spatial.orientation, ent.spatial.scale);
   }
 
   // Balls

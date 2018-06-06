@@ -1,8 +1,8 @@
 'use strict';
 
-var mat3 = require('gl-matrix').mat3;
 var mat4 = require('gl-matrix').mat4;
 
+var SceneNode = require('./scene-node.js');
 var SolidModel = require('./solid-model.js');
 var View = require('./view.js');
 
@@ -13,7 +13,7 @@ function Scene () {
     return new Scene();
   }
 
-  this.sceneRoot = null;
+  this.sceneRoot = SceneNode();
   this.view = View();
 
   this.models = {
@@ -35,8 +35,24 @@ Scene.prototype.setModel = function (gl, modelName, sol) {
   var model = SolidModel.fromSol(sol);
   model.createObjects(gl);
   this.models[modelName] = model;
+
   if (modelName === 'level') {
-    this.sceneRoot = model.sceneRoot.createInstance();
+    model.sceneRoot.setParent(this.sceneRoot);
+  }
+
+  var levelAndCoins = ((this.models.level && modelName === 'coin') ||
+                       (this.models.coin && modelName === 'level'));
+
+  if (levelAndCoins) {
+    // Add coin model instances
+    var levelModel = this.models.level;
+    var coinModel = this.models.coin;
+    var ents = levelModel.entities.queryTag('coin');
+
+    for (var i = 0; i < ents.length; ++i) {
+      var coinInstance = coinModel.sceneRoot.createInstance();
+      coinInstance.setParent(ents[i].sceneGraph.node);
+    }
   }
 };
 
