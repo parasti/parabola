@@ -184,6 +184,8 @@ Shader.prototype.createObjects = function (gl) {
   gl.bindAttribLocation(prog, 0, 'aPosition');
   gl.bindAttribLocation(prog, 1, 'aNormal');
   gl.bindAttribLocation(prog, 2, 'aTexCoord');
+  gl.bindAttribLocation(prog, 3, 'aModelViewMatrix');
+  gl.bindAttribLocation(prog, 7, 'aNormalMatrix');
 
   gl.linkProgram(prog);
 

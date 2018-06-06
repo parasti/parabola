@@ -71,6 +71,9 @@ SolidModel.fromSol = function (sol) {
     ent.drawable.model = models.length;
     models.push(model);
 
+    // FIXME awkward
+    ent.sceneGraph.node.data = model;
+
     // TODO should movers be entities?
     var movers = Mover.fromSolBody(sol, solBody);
     ent.movers.translate = movers.translate;
@@ -196,7 +199,11 @@ SolidModel.prototype.createObjects = function (gl) {
   }
 
   for (i = 0; i < materials.length; ++i) {
-    Mtrl.loadTexture(gl, materials[i]);
+    try {
+      Mtrl.loadTexture(gl, materials[i]);
+    } catch (e) {
+      console.error(e);
+    }
   }
 };
 

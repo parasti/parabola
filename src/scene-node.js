@@ -24,6 +24,9 @@ function SceneNode (parent) {
   this.master = null;
   this.instances = [];
 
+  // Arbitrary.
+  this.data = null;
+
   if (parent !== undefined) {
     this.setParent(parent);
   }
@@ -71,6 +74,16 @@ SceneNode.prototype.getWorldMatrix = function () {
   this._update();
   return this.worldMatrix;
 };
+
+/*
+ * Return node data.
+ */
+SceneNode.prototype.getData = function () {
+  if (this.master) {
+    return this.master.getData();
+  }
+  return this.data;
+}
 
 /*
  * Set node parent.

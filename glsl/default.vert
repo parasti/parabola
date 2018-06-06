@@ -5,6 +5,8 @@ uniform mat3 NormalMatrix;
 attribute vec3 aPosition;
 attribute vec3 aNormal;
 attribute vec2 aTexCoord;
+attribute mat4 aModelViewMatrix;
+attribute mat3 aNormalMatrix;
 
 varying vec2 vTexCoord;
 
@@ -60,8 +62,8 @@ vec2 genSphereMap(vec3 p, vec3 n) {
 }
 
 void main() {
-  vec3 eyeNormal = normalize(NormalMatrix * aNormal);
-  vec4 eyePos = ModelViewMatrix * vec4(aPosition, 1.0);
+  vec3 eyeNormal = normalize(aNormalMatrix * aNormal);
+  vec4 eyePos = aModelViewMatrix * vec4(aPosition, 1.0);
 
   vec4 lightColor =
     uEmissive +

@@ -17,6 +17,8 @@ function GLState (canvas) {
   this.aPositionID = 0;
   this.aNormalID = 1;
   this.aTexCoordID = 2;
+  this.aModelViewMatrixID = 3;
+  this.aNormalMatrixID = 7;
 
   this.enabledArrays = [];
   this.usedProgram = null;
@@ -25,7 +27,21 @@ function GLState (canvas) {
   this.gl = getContext(canvas);
   setupContext(this.gl);
   this.createDefaultObjects();
+
+  this.instancedArrays = this.gl.getExtension('ANGLE_instanced_arrays');
 }
+
+GLState.prototype.vertexAttribDivisor = function (index, divisor) {
+  if (this.instancedArrays) {
+    this.instancedArrays.vertexAttribDivisorANGLE(index, divisor);
+  }
+};
+
+GLState.prototype.drawElementsInstanced = function (mode, count, type, offset, primcount) {
+  if (this.instancedArrays) {
+    this.instancedArrays.drawElementsInstancedANGLE(mode, count, type, offset, primcount);
+  }
+};
 
 /*
  * Obtain a WebGL context. Now IE compatible, whoo.
