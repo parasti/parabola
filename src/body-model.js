@@ -9,16 +9,17 @@ function BodyModel () {
     return new BodyModel();
   }
 
-  this.allMeshes = null;
-  this.sortedMeshes = new Array(5);
+  this.meshes = null;
 
-  this.instanceVBO = null;
+  this.sortedMeshes = new Array(5); // TODO
 
   this.elems = null;
   this.elemsVBO = null;
 
   this.verts = null;
   this.vertsVBO = null;
+
+  this.instanceVBO = null;
 }
 
 BodyModel.OPAQUE = 0;
@@ -29,12 +30,9 @@ BodyModel.REFLECTIVE = 4;
 
 BodyModel.fromSolBody = function (sol, solBody) {
   var model = BodyModel();
-  var bodyMeshes = getBodyMeshes(sol, solBody);
 
-  model.allMeshes = bodyMeshes.meshes;
+  model.getMeshesFromSol(sol, solBody);
   model.sortMeshes();
-  model.elems = bodyMeshes.elems;
-  model.verts = bodyMeshes.verts;
 
   return model;
 };
@@ -52,7 +50,7 @@ BodyModel.prototype.createObjects = function (gl) {
   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.elems, gl.STATIC_DRAW);
   this.elemsVBO = bo;
 
-  // TODO
+  // TODO cleanup
   this.instanceVBO = gl.createBuffer();
 };
 
@@ -63,8 +61,8 @@ BodyModel.prototype.sortMeshes = function () {
   var transparent = this.sortedMeshes[BodyModel.TRANSPARENT] = [];
   var reflective = this.sortedMeshes[BodyModel.REFLECTIVE] = [];
 
-  for (var i = 0; i < this.allMeshes.length; ++i) {
-    var mesh = this.allMeshes[i];
+  for (var i = 0; i < this.meshes.length; ++i) {
+    var mesh = this.meshes[i];
     var mtrl = mesh.mtrl;
 
     if (Mtrl.isOpaque(mtrl)) {
@@ -88,7 +86,7 @@ BodyModel.prototype.drawInstanced = function (state, count) {
   state.bindBuffer(gl.ARRAY_BUFFER, model.vertsVBO);
 
   gl.vertexAttribPointer(state.aPositionID, 3, gl.FLOAT, false, 8 * 4, 0);
-  gl.vertexAttribPointer(state.aNormalID,   3, gl.FLOAT, false, 8 * 4, 12);
+  gl.vertexAttribPointer(state.aNormalID, 3, gl.FLOAT, false, 8 * 4, 12);
   gl.vertexAttribPointer(state.aTexCoordID, 2, gl.FLOAT, false, 8 * 4, 24);
 
   state.bindBuffer(gl.ARRAY_BUFFER, model.instanceVBO);
@@ -105,8 +103,8 @@ BodyModel.prototype.drawInstanced = function (state, count) {
 
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, model.elemsVBO);
 
-  for (var i = 0; i < model.allMeshes.length; ++i) {
-    drawMeshInstanced(state, model.allMeshes[i], count);
+  for (var i = 0; i < model.meshes.length; ++i) {
+    drawMeshInstanced(state, model.meshes[i], count);
   }
 };
 
@@ -187,7 +185,7 @@ function getVertAttribs (sol, vert, offs) {
 /*
  * Create a list of meshes from a SOL body, mesh per each used material.
  */
-function getBodyMeshes (sol, body) {
+BodyModel.prototype.getMeshesFromSol = function (sol, body) {
   const stride = (3 + 3 + 2); // p + n + t
 
   var geomsByMtrl = getBodyGeomsByMtrl(sol, body);
@@ -247,9 +245,7 @@ function getBodyMeshes (sol, body) {
     meshes.push(mesh);
   });
 
-  return {
-    meshes: meshes,
-    verts: verts.slice(0, vertsTotal * stride),
-    elems: elems
-  };
-}
+  this.meshes = meshes;
+  this.verts = verts.slice(0, vertsTotal * stride);
+  this.elems = elems;
+};
