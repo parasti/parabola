@@ -113,14 +113,14 @@ GLState.prototype.createDefaultTexture = function (gl) {
 /*
  * Track vertex attribute array enabled/disabled state.
  */
-GLState.prototype.enableArray = function (index) {
+GLState.prototype.enableVertexAttribArray = function (index) {
   if (!this.enabledArrays[index]) {
     this.gl.enableVertexAttribArray(index);
     this.enabledArrays[index] = true;
   }
 };
 
-GLState.prototype.disableArray = function (index) {
+GLState.prototype.disableVertexAttribArray = function (index) {
   if (this.enabledArrays[index]) {
     this.gl.disableVertexAttribArray(index);
     this.enabledArrays[index] = false;

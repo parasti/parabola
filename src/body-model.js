@@ -130,14 +130,14 @@ function drawMeshInstanced (state, mesh, count) {
     gl.vertexAttribPointer(state.aTexCoordID, 2, gl.FLOAT, false, 8 * 4, 24);
   }
 
-  state.enableArray(state.aPositionID);
-  state.enableArray(state.aNormalID);
-  state.enableArray(state.aTexCoordID);
+  state.enableVertexAttribArray(state.aPositionID);
+  state.enableVertexAttribArray(state.aNormalID);
+  state.enableVertexAttribArray(state.aTexCoordID);
 
-  state.enableArray(state.aModelViewMatrixID + 0);
-  state.enableArray(state.aModelViewMatrixID + 1);
-  state.enableArray(state.aModelViewMatrixID + 2);
-  state.enableArray(state.aModelViewMatrixID + 3);
+  state.enableVertexAttribArray(state.aModelViewMatrixID + 0);
+  state.enableVertexAttribArray(state.aModelViewMatrixID + 1);
+  state.enableVertexAttribArray(state.aModelViewMatrixID + 2);
+  state.enableVertexAttribArray(state.aModelViewMatrixID + 3);
 
   if (mesh.ebo) {
     state.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.ebo);
@@ -161,9 +161,9 @@ function drawMesh (state, mesh) {
     gl.vertexAttribPointer(state.aTexCoordID, 2, gl.FLOAT, false, 8 * 4, 24);
     state.bindBuffer(gl.ARRAY_BUFFER, null);
 
-    state.enableArray(state.aPositionID);
-    state.enableArray(state.aNormalID);
-    state.enableArray(state.aTexCoordID);
+    state.enableVertexAttribArray(state.aPositionID);
+    state.enableVertexAttribArray(state.aNormalID);
+    state.enableVertexAttribArray(state.aTexCoordID);
 
     state.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.ebo);
     gl.drawElements(gl.TRIANGLES, mesh.elems.length, gl.UNSIGNED_SHORT, 0);
