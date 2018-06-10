@@ -16,6 +16,9 @@ function BodyModel () {
 
   this.elems = null;
   this.elemsVBO = null;
+
+  this.verts = null;
+  this.vertsVBO = null;
 }
 
 BodyModel.OPAQUE = 0;
@@ -31,26 +34,26 @@ BodyModel.fromSolBody = function (sol, solBody) {
   model.allMeshes = bodyMeshes.meshes;
   model.sortMeshes();
   model.elems = bodyMeshes.elems;
+  model.verts = bodyMeshes.verts;
 
   return model;
 };
 
 BodyModel.prototype.createObjects = function (gl) {
-  var meshes = this.allMeshes;
+  var bo;
 
-  for (var i = 0; i < meshes.length; ++i) {
-    var mesh = meshes[i];
-    createMeshObjects(gl, mesh);
-  }
+  bo = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, bo);
+  gl.bufferData(gl.ARRAY_BUFFER, this.verts, gl.STATIC_DRAW);
+  this.vertsVBO = bo;
 
-  this.instanceVBO = gl.createBuffer();
-
-  var vbo = gl.createBuffer();
-
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, vbo);
+  bo = gl.createBuffer();
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bo);
   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.elems, gl.STATIC_DRAW);
+  this.elemsVBO = bo;
 
-  this.elemsVBO = vbo;
+  // TODO
+  this.instanceVBO = gl.createBuffer();
 };
 
 BodyModel.prototype.sortMeshes = function () {
@@ -82,35 +85,30 @@ BodyModel.prototype.drawInstanced = function (state, count) {
   var model = this;
   var gl = state.gl;
 
-  if (model.instanceVBO) {
-    state.bindBuffer(gl.ARRAY_BUFFER, model.instanceVBO);
+  state.bindBuffer(gl.ARRAY_BUFFER, model.vertsVBO);
 
-    gl.vertexAttribPointer(state.aModelViewMatrixID + 0, 4, gl.FLOAT, false, 16 * 4, 0);
-    gl.vertexAttribPointer(state.aModelViewMatrixID + 1, 4, gl.FLOAT, false, 16 * 4, 16);
-    gl.vertexAttribPointer(state.aModelViewMatrixID + 2, 4, gl.FLOAT, false, 16 * 4, 32);
-    gl.vertexAttribPointer(state.aModelViewMatrixID + 3, 4, gl.FLOAT, false, 16 * 4, 48);
+  gl.vertexAttribPointer(state.aPositionID, 3, gl.FLOAT, false, 8 * 4, 0);
+  gl.vertexAttribPointer(state.aNormalID,   3, gl.FLOAT, false, 8 * 4, 12);
+  gl.vertexAttribPointer(state.aTexCoordID, 2, gl.FLOAT, false, 8 * 4, 24);
 
-    state.vertexAttribDivisor(state.aModelViewMatrixID + 0, 1);
-    state.vertexAttribDivisor(state.aModelViewMatrixID + 1, 1);
-    state.vertexAttribDivisor(state.aModelViewMatrixID + 2, 1);
-    state.vertexAttribDivisor(state.aModelViewMatrixID + 3, 1);
+  state.bindBuffer(gl.ARRAY_BUFFER, model.instanceVBO);
 
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, model.elemsVBO);
+  gl.vertexAttribPointer(state.aModelViewMatrixID + 0, 4, gl.FLOAT, false, 16 * 4, 0);
+  gl.vertexAttribPointer(state.aModelViewMatrixID + 1, 4, gl.FLOAT, false, 16 * 4, 16);
+  gl.vertexAttribPointer(state.aModelViewMatrixID + 2, 4, gl.FLOAT, false, 16 * 4, 32);
+  gl.vertexAttribPointer(state.aModelViewMatrixID + 3, 4, gl.FLOAT, false, 16 * 4, 48);
 
-    for (var i = 0; i < model.allMeshes.length; ++i) {
-      drawMeshInstanced(state, model.allMeshes[i], count);
-    }
+  state.vertexAttribDivisor(state.aModelViewMatrixID + 0, 1);
+  state.vertexAttribDivisor(state.aModelViewMatrixID + 1, 1);
+  state.vertexAttribDivisor(state.aModelViewMatrixID + 2, 1);
+  state.vertexAttribDivisor(state.aModelViewMatrixID + 3, 1);
+
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, model.elemsVBO);
+
+  for (var i = 0; i < model.allMeshes.length; ++i) {
+    drawMeshInstanced(state, model.allMeshes[i], count);
   }
 };
-
-function createMeshObjects (gl, mesh) {
-  var vbo = gl.createBuffer();
-
-  gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-  gl.bufferData(gl.ARRAY_BUFFER, mesh.verts, gl.STATIC_DRAW);
-
-  mesh.vbo = vbo;
-}
 
 function drawMeshInstanced (state, mesh, count) {
   var gl = state.gl;
@@ -120,14 +118,6 @@ function drawMeshInstanced (state, mesh, count) {
 
   // Update shader globals.
   state.defaultShader.uploadUniforms(gl);
-
-  if (mesh.vbo) {
-    state.bindBuffer(gl.ARRAY_BUFFER, mesh.vbo);
-
-    gl.vertexAttribPointer(state.aPositionID, 3, gl.FLOAT, false, 8 * 4, 0);
-    gl.vertexAttribPointer(state.aNormalID, 3, gl.FLOAT, false, 8 * 4, 12);
-    gl.vertexAttribPointer(state.aTexCoordID, 2, gl.FLOAT, false, 8 * 4, 24);
-  }
 
   state.enableVertexAttribArray(state.aPositionID);
   state.enableVertexAttribArray(state.aNormalID);
@@ -139,7 +129,6 @@ function drawMeshInstanced (state, mesh, count) {
   state.enableVertexAttribArray(state.aModelViewMatrixID + 3);
 
   // Took forever to figure out that glDrawElements offset is in bytes.
-
   state.drawElementsInstanced(gl.TRIANGLES, mesh.elemCount, gl.UNSIGNED_SHORT, mesh.elemBase * 2, count);
 }
 
@@ -195,64 +184,72 @@ function getVertAttribs (sol, vert, offs) {
   vert[7] = t[1];
 }
 
-function addVertToMesh (mesh, sol, offs) {
-  var pos = mesh.count * 8;
-  var vert = mesh.verts.subarray(pos, pos + 8);
-
-  getVertAttribs(sol, vert, offs);
-
-  mesh.count++;
-}
-
 /*
  * Create a list of meshes from a SOL body, mesh per each used material.
  */
 function getBodyMeshes (sol, body) {
+  const stride = (3 + 3 + 2); // p + n + t
+
+  var geomsByMtrl = getBodyGeomsByMtrl(sol, body);
+  var geomsTotal = geomsByMtrl.reduce((total, geoms) => (total + geoms.length), 0);
+
+  var verts = new Float32Array(geomsTotal * 3 * stride);
+  var vertsTotal = 0;
+
+  var elems = new Uint16Array(geomsTotal * 3);
+  var elemsTotal = 0;
+
   var meshes = [];
-  var elems = [];
+
+  function addVert (sol, offs) {
+    var pos = vertsTotal * stride;
+    var vert = verts.subarray(pos, pos + stride);
+    getVertAttribs(sol, vert, offs);
+    vertsTotal++;
+  }
 
   getBodyGeomsByMtrl(sol, body).forEach(function (geoms, mi) {
     var mesh = {
       mtrl: sol.mv[mi],
-      // 1 geom = 3 verts = 3 * (3 + 3 + 2) floats
-      verts: new Float32Array(geoms.length * 3 * 8),
-      elemBase: elems.length,
-      elemCount: 0,
-      count: 0
+      elemBase: elemsTotal,
+      elemCount: 0
     };
 
-    var elemCache = [];
+    var offsToVert = [];
 
     for (var i = 0; i < geoms.length; ++i) {
       var geom = geoms[i];
 
-      if (elemCache[geom.oi] === undefined) {
-        elemCache[geom.oi] = mesh.count;
-        addVertToMesh(mesh, sol, sol.ov[geom.oi]);
+      if (offsToVert[geom.oi] === undefined) {
+        offsToVert[geom.oi] = vertsTotal;
+        addVert(sol, sol.ov[geom.oi]);
       }
 
-      if (elemCache[geom.oj] === undefined) {
-        elemCache[geom.oj] = mesh.count;
-        addVertToMesh(mesh, sol, sol.ov[geom.oj]);
+      if (offsToVert[geom.oj] === undefined) {
+        offsToVert[geom.oj] = vertsTotal;
+        addVert(sol, sol.ov[geom.oj]);
       }
 
-      if (elemCache[geom.ok] === undefined) {
-        elemCache[geom.ok] = mesh.count;
-        addVertToMesh(mesh, sol, sol.ov[geom.ok]);
+      if (offsToVert[geom.ok] === undefined) {
+        offsToVert[geom.ok] = vertsTotal;
+        addVert(sol, sol.ov[geom.ok]);
       }
 
-      elems.push(elemCache[geom.oi]);
-      elems.push(elemCache[geom.oj]);
-      elems.push(elemCache[geom.ok]);
+      elems[mesh.elemBase + i * 3 + 0] = offsToVert[geom.oi];
+      elems[mesh.elemBase + i * 3 + 1] = offsToVert[geom.oj];
+      elems[mesh.elemBase + i * 3 + 2] = offsToVert[geom.ok];
+
+      elemsTotal += 3;
     }
 
-    mesh.elemCount = elems.length - mesh.elemBase;
+    mesh.elemCount = elemsTotal - mesh.elemBase;
 
     meshes.push(mesh);
   });
 
   return {
     meshes: meshes,
-    elems: Uint16Array.from(elems)
+    verts: verts.slice(0, vertsTotal * stride),
+    elems: elems
   };
 }
