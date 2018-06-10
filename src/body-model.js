@@ -179,20 +179,20 @@ function getBodyGeomsByMtrl (sol, body) {
 }
 
 function getVertAttribs (sol, vert, offs) {
-  var vp = sol.vv[offs.vi];
-  var sp = sol.sv[offs.si].n;
-  var tp = sol.tv[offs.ti];
+  var p = sol.vv[offs.vi];
+  var n = sol.sv[offs.si].n;
+  var t = sol.tv[offs.ti];
 
-  vert[0] = vp[0];
-  vert[1] = vp[1];
-  vert[2] = vp[2];
+  vert[0] = p[0];
+  vert[1] = p[1];
+  vert[2] = p[2];
 
-  vert[3] = sp[0];
-  vert[4] = sp[1];
-  vert[5] = sp[2];
+  vert[3] = n[0];
+  vert[4] = n[1];
+  vert[5] = n[2];
 
-  vert[6] = tp[0];
-  vert[7] = tp[1];
+  vert[6] = t[0];
+  vert[7] = t[1];
 }
 
 function addVertToMesh (mesh, sol, offs) {
