@@ -15,18 +15,13 @@
   "author": "Jānis Rūcis",
   "license": "GPL-3.0",
   "dependencies": {
-    "@parasti/shadergraph": "^2.0.8-0",
-    "cursor": "^0.1.5",
-    "gl-matrix": "^2.4.0",
+    "gl-matrix": "^2.6.1",
     "glslify": "^6.1.0",
     "nano-ecs": "^2.2.1",
     "neverball-solid": "^1.0.0",
     "screenfull": "^3.3.1"
   },
   "devDependencies": {
-    "babel-preset-env": "^1.6.0",
-    "babelify": "^7.3.0",
-    "beefy": "^2.1.8",
     "browserify": "^14.4.0",
     "semistandard": "^11.0.0"
   }
