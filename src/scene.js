@@ -31,30 +31,45 @@ function Scene () {
   this.time = 0.0;
 }
 
-Scene.prototype.setModel = function (gl, modelName, sol) {
+Scene.prototype.setModel = function (gl, modelName, sol) { // TODO support unloading (sol = null)
   var model = SolidModel.fromSol(sol);
   model.createObjects(gl);
   this.models[modelName] = model;
 
+  // Update scene graph.
   if (modelName === 'level') {
-    model.sceneRoot.setParent(this.sceneRoot);
-  }
-
-  var levelAndCoins = ((this.models.level && modelName === 'coin') ||
-                       (this.models.coin && modelName === 'level'));
-
-  if (levelAndCoins) {
-    // Add coin model instances
+    // Just loaded level model. Attach instances of loaded entity models.
     var levelModel = this.models.level;
-    var coinModel = this.models.coin;
-    var ents = levelModel.entities.queryTag('coin');
 
-    for (var i = 0; i < ents.length; ++i) {
-      var coinInstance = coinModel.sceneRoot.createInstance();
-      coinInstance.setParent(ents[i].sceneGraph.node);
+    for (var name in this.models) {
+      var entModel = this.models[name];
+
+      if (levelModel && entModel && entModel !== levelModel) {
+        attachModelToEnts(levelModel, entModel, name);
+      }
+    }
+
+    // Set level model as the root of the entire scene.
+    levelModel.sceneRoot.setParent(this.sceneRoot);
+  } else {
+    // Just loaded entity model. Attach instances of it to level model.
+    var levelModel = this.models.level;
+    var entModel = this.models[modelName];
+
+    if (levelModel && entModel) {
+      attachModelToEnts(levelModel, entModel, modelName);
     }
   }
 };
+
+function attachModelToEnts(levelModel, entModel, tag) {
+  var ents = levelModel.entities.queryTag(tag);
+
+  for (var i = 0, n = ents.length; i < n; ++i) {
+    var instance = entModel.sceneRoot.createInstance();
+    instance.setParent(ents[i].sceneGraph.node);
+  }
+}
 
 Scene.prototype.step = function (dt) {
   this.time += dt;
