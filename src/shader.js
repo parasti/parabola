@@ -2,132 +2,24 @@
 
 var glsl = require('glslify');
 
-var ShaderGraph = require('@parasti/shadergraph')(fetchSnippet);
-var Mtrl = require('./mtrl.js');
 var Uniform = require('./uniform.js');
 
-function createShader (properties) {
-  var shader = Object.create(Shader.prototype);
-  shader.uniformLocations = {};
-  return Object.assign(shader, properties);
+module.exports = Shader;
+
+function Shader () {
+  if (!(this instanceof Shader)) {
+    return new Shader();
+  }
+
+  // TODO
+  this.program = null;
+  this.vertexShader = '';
+  this.fragmentShader = '';
+  this.uniforms = {};
+  this.mangledUniforms = this.uniforms;
+  this.uniformLocations = {};
 }
 
-/*
- * Build shaders and uniforms for the given material.
- */
-var Shader = module.exports = function (mtrl) {
-  var shaderFlags = shaderFlagsFromMtrl(mtrl) & ~Shader.LIT; // TODO
-
-  var material = ShaderGraph.material();
-
-  var frag = material.fragment;
-  var vert = material.vertex;
-
-  /*
-   * We allocate a "value holder" for each uniform and make a per-snippet
-   * dictionary of uniform names/value holders to pass to ShaderGraph.
-   * ShaderGraph mangles names from per-snippet to per-shader, so we hold
-   * onto the value holders to be able to refer to our uniforms by whatever
-   * names we want.
-   */
-
-  var uniforms = {
-    // snippetInstance: { snippetUniform: valueHolder }
-    sampleTexture: { Texture: Uniform.i() },
-    viewVertex: { Matrix: Uniform.mat4() },
-    projVertex: { Matrix: Uniform.mat4() },
-    viewNormal: { Matrix: Uniform.mat3() },
-    alphaTest: { AlphaRef: Uniform.f() }
-  };
-
-  // Give our per-snippet uniforms even better names.
-
-  var namedUniforms = {
-    mainTexture: uniforms.sampleTexture.Texture,
-    viewModelMatrix: uniforms.viewVertex.Matrix,
-    projectionMatrix: uniforms.projVertex.Matrix,
-    normalMatrix: uniforms.viewNormal.Matrix,
-    alphaRef: uniforms.alphaTest.AlphaRef
-  };
-
-  /*
-   * Build a fragment shader.
-   */
-
-  if (shaderFlags & Shader.LIT) {
-    frag
-      .fan()
-      .pipe('frag.getTexCoord')
-      .pipe('sampleTexture', uniforms.sampleTexture)
-      .next()
-      .pipe('frag.getLightColor')
-      .end()
-      .pipe('multiply');
-  } else {
-    frag
-      .pipe('frag.getTexCoord')
-      .pipe('sampleTexture', uniforms.sampleTexture);
-  }
-
-  if (shaderFlags & Shader.ALPHA_TEST) {
-    var alphaFunc = alphaFuncSnippets[alphaFuncFromShaderFlags(shaderFlags)];
-
-    if (alphaFunc) {
-      frag
-        .require(alphaFunc)
-        .pipe('frag.alphaTest', uniforms.alphaTest);
-    }
-  }
-
-  frag.pipe('frag.setFragColor');
-
-  /*
-   * Build a vertex shader.
-   */
-
-  // First, build the texcoord subgraph.
-
-  var texCoordGraph = ShaderGraph.shader();
-
-  if (shaderFlags & Shader.ENVIRONMENT) {
-    texCoordGraph
-      .pipe('vert.getNormal')
-      .pipe('viewNormal', uniforms.viewNormal)
-      .pipe('genSphereMapCoords') // 1 leftover input serves as subgraph input
-      .pipe('vert.setTexCoord');
-  } else {
-    texCoordGraph
-      .pipe('vert.getTexCoord')
-      .pipe('vert.setTexCoord');
-  }
-
-  // Then, build the main graph.
-
-  vert
-    .pipe('vert.getPosition')
-    .pipe('viewVertex', uniforms.viewVertex)
-    .fan()
-    .pipe('projVertex', uniforms.projVertex)
-    .pipe('vert.setPosition')
-    .next()
-    .pipe(texCoordGraph)
-    .end();
-
-  var program = material.link();
-
-  return createShader({
-    program: null,
-    shaderFlags: shaderFlags,
-    vertexShader: program.vertexShader,
-    fragmentShader: 'precision highp float;\n' + program.fragmentShader,
-    uniforms: namedUniforms,
-    mangledUniforms: program.uniforms
-  });
-};
-
-/*
- * Wrap the old shader with the new API.
- */
 Shader.origShader = function () {
   var uniforms = {
     uTexture: Uniform.i(),
@@ -140,14 +32,14 @@ Shader.origShader = function () {
     uEnvironment: Uniform.i()
   };
 
-  return createShader({
-    program: null,
-    shaderFlags: 0,
-    vertexShader: glsl.file('../glsl/default.vert'),
-    fragmentShader: glsl.file('../glsl/default.frag'),
-    uniforms: uniforms,
-    mangledUniforms: uniforms
-  });
+  var shader = Shader();
+
+  shader.vertexShader = glsl.file('../glsl/default.vert');
+  shader.fragmentShader = glsl.file('../glsl/default.frag');
+  shader.uniforms = uniforms;
+  shader.mangledUniforms = uniforms;
+
+  return shader;
 };
 
 Shader.prototype.use = function (state) {
@@ -226,156 +118,4 @@ function compileShaderSource (gl, type, source) {
     throw gl.getShaderInfoLog(shader);
   }
   return shader;
-}
-
-/*
- * Features that a shader implements. Together these form the signature of a shader.
- */
-
-// Gather shader flags from a SOL material.
-function shaderFlagsFromMtrl (mtrl) {
-  var flags = 0;
-
-  if (mtrl.fl & Mtrl.LIT) {
-    flags |= Shader.LIT;
-  }
-
-  if (mtrl.fl & Mtrl.ALPHA_TEST) {
-    flags |= shaderFlagsFromAlphaFunc(mtrl.alphaFunc);
-  }
-
-  if (mtrl.fl & Mtrl.ENVIRONMENT) {
-    flags |= Shader.ENVIRONMENT;
-  }
-
-  return flags;
-}
-
-Shader.LIT = (1 << 0);
-Shader.ENVIRONMENT = (1 << 1);
-Shader.ALPHA_TEST = (7 << 2); // 3 bits = space for a number in range [1, 7]
-
-var alphaFuncFromShaderFlags = (flags) => (flags >> 2) & 0x7;
-var shaderFlagsFromAlphaFunc = (index) => (index & 0x7) << 2;
-
-// Alpha function snippets by index (indices from share/solid_base.c)
-var alphaFuncSnippets = [
-  undefined, // 0 = always = no alpha test
-  'testEqual',
-  'testGequal',
-  'testGreater',
-  'testLequal',
-  'testLess',
-  'testNever',
-  'testNotEqual'
-];
-
-/*
- * Snippet library.
- */
-
-function fetchSnippet (key) {
-  if (/^vert\./.test(key)) {
-    return vertSnippets[key.slice(5)];
-  } else if (/^frag\./.test(key)) {
-    return fragSnippets[key.slice(5)];
-  } else {
-    return glslSnippets[key];
-  }
-}
-
-var fragSnippets = {
-  getTexCoord: `
-  varying vec2 vTexCoord;
-  vec2 getTexCoord() { return vTexCoord; }`,
-
-  getLightColor: `
-  varying vec4 vLightColor;
-  vec4 getLightColor() { return vLightColor; }`,
-
-  alphaTest: `
-  uniform float AlphaRef;
-
-  bool alphaFunc(float alpha, float ref);
-  vec4 alphaTest(vec4 color) {
-    if (!alphaFunc(color.a, ref))
-      discard;
-    return color;
-  }`,
-
-  setFragColor: `
-  void setFragColor(vec4 color) { gl_FragColor = color; }`
-};
-
-var vertSnippets = {
-  getPosition: `
-  attribute vec3 aPosition;
-  vec4 getPosition() { return vec4(aPosition, 1.0); }`,
-
-  getNormal: `
-  attribute vec3 aNormal;
-  vec3 getNormal() { return aNormal; }`,
-
-  getTexCoord: `
-  attribute vec2 aTexCoord;
-  vec2 getTexCoord() { return aTexCoord; }`,
-
-  setPosition: `
-  void setPosition(vec4 v) { gl_Position = v; }
-  `,
-
-  setTexCoord: `
-  varying vec2 vTexCoord;
-  void setTexCoord(vec2 uv) { vTexCoord = uv; }`,
-
-  setLightColor: `
-  varying vec4 vLightColor;
-  void setLightColor(vec4 color) { vLightColor = color; }`
-};
-
-var glslSnippets = {
-  multiply: binaryOp('a * b', 'vec4'),
-
-  sampleTexture: `
-  uniform sampler2D Texture;
-  vec4 sampleTexture(vec2 uv) { return texture2D(Texture, uv); }`,
-
-  genSphereMapCoords: `
-  vec2 genSphereMapCoords(vec3 u, vec3 n) {
-    vec3 r = u - 2.0 * n * (n * u);
-    r.z += 1.0;
-    float m = 2.0 * length(r);
-    return vec2(r.x / m + 0.5, r.y / m + 0.5);
-  }
-  vec2 genSphereMapCoords(vec4 u, vec3 n) {
-    return genSphereMapCoords(vec3(u), n);
-  }`,
-
-  viewVertex: transformVec(4),
-  viewNormal: transformVec(3),
-  projVertex: transformVec(4),
-
-  /* eslint-disable no-multi-spaces, key-spacing */
-
-  testEqual: binaryOp('a == b', 'float', 'bool'),
-  testGequal: binaryOp('a >= b', 'float', 'bool'),
-  testGreater: binaryOp('a > b', 'float', 'bool'),
-  testLequal: binaryOp('a <= b', 'float', 'bool'),
-  testLess: binaryOp('a < b', 'float', 'bool'),
-  testNever: binaryOp('false', 'float', 'bool'),
-  testNotEqual: binaryOp('a != b', 'float', 'bool')
-
-  /* eslint-enable no-multi-spaces, key-spacing */
-};
-
-// Make a snippet for a binary operation. MathBox-inspired.
-function binaryOp (expr, valType, retType) {
-  retType = retType || valType;
-  return `${retType} binaryOp(${valType} a, ${valType} b) { return ${expr}; }`;
-}
-
-// Make a snippet for vector transform by a matrix uniform.
-function transformVec (n) {
-  return `uniform mat${n} Matrix;
-  vec${n} transformVec(vec${n} v) { return Matrix * v; }`;
 }
