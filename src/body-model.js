@@ -13,11 +13,11 @@ function BodyModel () {
 
   this.sortedMeshes = new Array(5); // TODO
 
-  this.elems = null;
-  this.elemsVBO = null;
-
   this.verts = null;
   this.vertsVBO = null;
+
+  this.elems = null;
+  this.elemsVBO = null;
 
   this.instanceVBO = null;
 }
@@ -38,17 +38,17 @@ BodyModel.fromSolBody = function (sol, solBody) {
 };
 
 BodyModel.prototype.createObjects = function (gl) {
-  var bo;
+  var vbo;
 
-  bo = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, bo);
+  vbo = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
   gl.bufferData(gl.ARRAY_BUFFER, this.verts, gl.STATIC_DRAW);
-  this.vertsVBO = bo;
+  this.vertsVBO = vbo;
 
-  bo = gl.createBuffer();
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bo);
+  vbo = gl.createBuffer();
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, vbo);
   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.elems, gl.STATIC_DRAW);
-  this.elemsVBO = bo;
+  this.elemsVBO = vbo;
 
   // TODO cleanup
   this.instanceVBO = gl.createBuffer();
