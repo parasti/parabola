@@ -4,6 +4,7 @@
   "description": "A WebGL port of Neverball",
   "main": "src/main.js",
   "scripts": {
+    "start": "budo src/main.js:parabola.js --live",
     "build": "browserify src/main.js > parabola.js",
     "test": "semistandard src/*.js"
   },
@@ -23,6 +24,7 @@
   },
   "devDependencies": {
     "browserify": "^14.4.0",
+    "budo": "^11.2.2",
     "semistandard": "^11.0.0"
   }
 }
