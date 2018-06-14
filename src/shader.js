@@ -16,7 +16,6 @@ function Shader () {
   this.vertexShader = '';
   this.fragmentShader = '';
   this.uniforms = {};
-  this.mangledUniforms = this.uniforms;
   this.uniformLocations = {};
 }
 
@@ -37,7 +36,6 @@ Shader.origShader = function () {
   shader.vertexShader = glsl.file('../glsl/default.vert');
   shader.fragmentShader = glsl.file('../glsl/default.frag');
   shader.uniforms = uniforms;
-  shader.mangledUniforms = uniforms;
 
   return shader;
 };
@@ -82,8 +80,7 @@ Shader.prototype.createObjects = function (gl) {
     throw gl.getProgramInfoLog(prog);
   }
 
-  // WIP
-  for (var uniform in shader.mangledUniforms) {
+  for (var uniform in shader.uniforms) {
     shader.uniformLocations[uniform] = gl.getUniformLocation(prog, uniform);
   }
 
@@ -95,7 +92,7 @@ Shader.prototype.uploadUniforms = function (gl) {
   var program = shader.program;
 
   if (program) {
-    var uniforms = shader.mangledUniforms;
+    var uniforms = shader.uniforms;
 
     for (var name in uniforms) {
       var location = shader.uniformLocations[name];
