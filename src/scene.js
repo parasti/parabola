@@ -36,13 +36,15 @@ Scene.prototype.setModel = function (gl, modelName, sol) { // TODO support unloa
   model.createObjects(gl);
   this.models[modelName] = model;
 
+  var levelModel, entModel;
+
   // Update scene graph.
   if (modelName === 'level') {
     // Just loaded level model. Attach instances of loaded entity models.
-    var levelModel = this.models.level;
+    levelModel = this.models.level;
 
     for (var name in this.models) {
-      var entModel = this.models[name];
+      entModel = this.models[name];
 
       if (levelModel && entModel && entModel !== levelModel) {
         attachModelToEnts(levelModel, entModel, name);
@@ -53,8 +55,8 @@ Scene.prototype.setModel = function (gl, modelName, sol) { // TODO support unloa
     levelModel.sceneRoot.setParent(this.sceneRoot);
   } else {
     // Just loaded entity model. Attach instances of it to level model.
-    var levelModel = this.models.level;
-    var entModel = this.models[modelName];
+    levelModel = this.models.level;
+    entModel = this.models[modelName];
 
     if (levelModel && entModel) {
       attachModelToEnts(levelModel, entModel, modelName);
@@ -62,7 +64,7 @@ Scene.prototype.setModel = function (gl, modelName, sol) { // TODO support unloa
   }
 };
 
-function attachModelToEnts(levelModel, entModel, tag) {
+function attachModelToEnts (levelModel, entModel, tag) {
   var ents = levelModel.entities.queryTag(tag);
 
   for (var i = 0, n = ents.length; i < n; ++i) {

@@ -86,9 +86,24 @@ SceneNode.prototype.getModel = function () {
 };
 
 /*
+ * Test the given node for ancestry.
+ */
+SceneNode.prototype.hasAncestor = function (node) {
+  if (node === null) {
+    return false;
+  } else {
+    return this.parent && (this.parent === node || this.parent.hasAncestor(node));
+  }
+};
+
+/*
  * Set node parent.
  */
 SceneNode.prototype.setParent = function (node) {
+  if (this === node || this.hasAncestor(node)) {
+    throw Error('Can not parent node to itself');
+  }
+
   if (this.parent) {
     removeFromList(this.parent.children, this);
   }

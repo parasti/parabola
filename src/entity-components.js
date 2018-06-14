@@ -28,7 +28,7 @@ EC.SceneGraph.prototype.setParent = function (node) {
 
 EC.SceneGraph.prototype.setModel = function (model) {
   this.node.model = model;
-}
+};
 
 EC.SceneGraph.prototype.setMatrix = function (p, e, s) {
   var node = this.node;
