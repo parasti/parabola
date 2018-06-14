@@ -127,7 +127,7 @@ Scene.prototype.draw = function (state) {
 
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-  if (shader.use(gl, state)) {
+  if (shader.use(state)) {
     shader.uniforms.uTexture.value = 0;
     shader.uniforms.ProjectionMatrix.value = this.view._projectionMatrix;
 
