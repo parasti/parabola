@@ -3,6 +3,7 @@
 module.exports = BodyModel;
 
 var Mtrl = require('./mtrl.js');
+var Shader = require('./shader.js');
 
 function BodyModel () {
   if (!(this instanceof BodyModel)) {
@@ -28,7 +29,8 @@ BodyModel.fromSolBody = function (sol, solBody) {
   return model;
 };
 
-BodyModel.prototype.createObjects = function (gl) {
+BodyModel.prototype.createObjects = function (state) {
+  var gl = state.gl;
   var vbo;
 
   vbo = gl.createBuffer();
@@ -49,11 +51,14 @@ BodyModel.prototype.createObjects = function (gl) {
   var meshes = this.meshes;
 
   for (var i = 0, n = meshes.length; i < n; ++i) {
-    meshes[i].mtrl.createObjects(gl);
+    var mesh = meshes[i];
+
+    mesh.mtrl.createObjects(state);
+    mesh.shader.createObjects(state);
   }
 };
 
-BodyModel.prototype.drawInstanced = function (scene, state, count) {
+BodyModel.prototype.drawInstanced = function (state, count) {
   var model = this;
   var gl = state.gl;
 
@@ -78,27 +83,24 @@ BodyModel.prototype.drawInstanced = function (scene, state, count) {
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, model.elemsVBO);
 
   for (var i = 0; i < model.meshes.length; ++i) {
-    drawMeshInstanced(scene, state, model.meshes[i], count);
+    drawMeshInstanced(state, model.meshes[i], count);
   }
 };
 
-function drawMeshInstanced (scene, state, mesh, count) {
+function drawMeshInstanced (state, mesh, count) {
   var gl = state.gl;
 
   var mtrl = mesh.mtrl;
-  var shader = mtrl.shader;
-
-  // Bind shader.
-  shader.use(state);
+  var shader = mesh.shader;
 
   // Apply material state.
   mtrl.draw(state);
 
-  // Apply scene state. TODO
-  shader.uniforms.ProjectionMatrix.value = scene.view._projectionMatrix;
+  // Bind shader.
+  shader.use(state);
 
   // Update shader globals.
-  shader.uploadUniforms(gl);
+  shader.uploadUniforms(state);
 
   state.enableVertexAttribArray(state.aPositionID);
   state.enableVertexAttribArray(state.aNormalID);
@@ -190,8 +192,11 @@ BodyModel.prototype.getMeshesFromSol = function (sol, body) {
   }
 
   getBodyGeomsByMtrl(sol, body).forEach(function (geoms, mi) {
+    var solMtrl = sol.mv[mi];
+
     var mesh = {
-      mtrl: Mtrl.fromSolMtrl(sol.mv[mi]),
+      mtrl: Mtrl.fromSolMtrl(solMtrl),
+      shader: Shader.fromSolMtrl(solMtrl),
       elemBase: elemsTotal,
       elemCount: 0
     };

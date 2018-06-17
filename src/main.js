@@ -47,7 +47,7 @@ function init () {
 
   data.fetchSolid('map-easy/easy.sol').then(function (sol) {
     solFile = sol;
-    scene.setModel(gl, 'level', sol);
+    scene.setModel(state, 'level', sol);
     scene.view.setFromSol(sol, 1.0);
   });
 
@@ -61,7 +61,7 @@ function init () {
 
   for (let modelName in modelPaths) {
     data.fetchSolid(modelPaths[modelName]).then(function (sol) {
-      scene.setModel(gl, modelName, sol);
+      scene.setModel(state, modelName, sol);
     });
   }
 

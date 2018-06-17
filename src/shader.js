@@ -11,11 +11,9 @@ function Shader () {
     return new Shader();
   }
 
-  // TODO
   this.program = null;
   this.vertexShader = '';
   this.fragmentShader = '';
-  this.uniforms = {};
   this.uniformLocations = {};
 }
 
@@ -23,27 +21,15 @@ function Shader () {
 Shader._cachedShader = null;
 
 Shader.fromSolMtrl = function (mtrl) {
-  // TODO return not the first shader
+  // TODO
   if (Shader._cachedShader) {
     return Shader._cachedShader;
   }
 
-  var uniforms = {
-    uTexture: Uniform.i(),
-    ProjectionMatrix: Uniform.mat4(),
-    uDiffuse: Uniform.vec4(),
-    uAmbient: Uniform.vec4(),
-    uSpecular: Uniform.vec4(),
-    uEmissive: Uniform.vec4(),
-    uShininess: Uniform.f(),
-    uEnvironment: Uniform.i()
-  };
-
-  var shader = Shader();
+  var shader = Shader._cachedShader = Shader();
 
   shader.vertexShader = glsl.file('../glsl/default.vert');
   shader.fragmentShader = glsl.file('../glsl/default.frag');
-  shader.uniforms = uniforms;
 
   return shader;
 }
@@ -60,11 +46,13 @@ Shader.prototype.use = function (state) {
   return false;
 };
 
-Shader.prototype.createObjects = function (gl) {
+Shader.prototype.createObjects = function (state) {
   var shader = this;
+  var gl = state.gl;
 
   if (shader.program) {
-    throw Error('Shader program already exists');
+    console.warn('Shader program already exists');
+    return;
   }
 
   var vs = compileShaderSource(gl, gl.VERTEX_SHADER, shader.vertexShader);
@@ -88,27 +76,32 @@ Shader.prototype.createObjects = function (gl) {
     throw gl.getProgramInfoLog(prog);
   }
 
-  for (var uniform in shader.uniforms) {
-    shader.uniformLocations[uniform] = gl.getUniformLocation(prog, uniform);
+  // Cache uniform locations that we want from the shader.
+
+  for (var name in state.uniforms) {
+    var location = gl.getUniformLocation(prog, name);
+
+    if (location) {
+      shader.uniformLocations[name] = location;
+    }
   }
 
   shader.program = prog;
 };
 
-Shader.prototype.uploadUniforms = function (gl) {
+Shader.prototype.uploadUniforms = function (state) {
+  var gl = state.gl;
   var shader = this;
   var program = shader.program;
 
   if (program) {
-    var uniforms = shader.uniforms;
+    var uniformLocations = shader.uniformLocations;
 
-    for (var name in uniforms) {
-      var location = shader.uniformLocations[name];
+    for (var name in uniformLocations) {
+      var uniform = state.uniforms[name];
+      var location = uniformLocations[name];
 
-      if (location) {
-        var uniform = uniforms[name];
-        uniform.upload(gl, location);
-      }
+      uniform.upload(gl, location);
     }
   }
 };

@@ -2,7 +2,6 @@
 
 var data = require('./data.js');
 var mtrlImages = require('./mtrl-images.json');
-var Shader = require('./shader.js');
 
 module.exports = Mtrl;
 
@@ -28,8 +27,6 @@ function Mtrl() {
   this.specularColor = null;
   this.emissiveColor = null;
   this.shininess = null;
-
-  this.shader = null;
 }
 
 Mtrl.fromSolMtrl = function (solMtrl) {
@@ -44,9 +41,6 @@ Mtrl.fromSolMtrl = function (solMtrl) {
   mtrl.specularColor = solMtrl.s;
   mtrl.emissiveColor = solMtrl.e;
   mtrl.shininess = solMtrl.h;
-
-  // TODO
-  mtrl.shader = Shader.fromSolMtrl(solMtrl);
 
   return mtrl;
 }
@@ -70,7 +64,8 @@ Mtrl.CLAMP_T = (1 << 0);
 /*
  * Create a GL texture from the given image.
  */
-Mtrl.prototype.createTexture = function (gl) {
+Mtrl.prototype.createTexture = function (state) {
+  var gl = state.gl;
   var tex = gl.createTexture();
 
   gl.bindTexture(gl.TEXTURE_2D, tex);
@@ -96,7 +91,6 @@ Mtrl.prototype.createTexture = function (gl) {
 Mtrl.prototype.draw = function (state) {
   var mtrl = this;
   var gl = state.gl;
-  var shader = mtrl.shader;
 
   if (state.enableTextures && mtrl.texture) {
     gl.bindTexture(gl.TEXTURE_2D, mtrl.texture);
@@ -104,7 +98,7 @@ Mtrl.prototype.draw = function (state) {
     gl.bindTexture(gl.TEXTURE_2D, state.defaultTexture);
   }
 
-  var uniforms = shader.uniforms;
+  var uniforms = state.uniforms;
 
   uniforms.uTexture.value = 0;
 
@@ -163,18 +157,16 @@ Mtrl.prototype.fetchImage = function () {
 };
 
 /*
- * Create texture and shader.
+ * Create material texture.
  */
-Mtrl.prototype.createObjects = function (gl) {
+Mtrl.prototype.createObjects = function (state) {
   var mtrl = this;
-
-  mtrl.shader.createObjects(gl);
 
   if (!mtrl._imageProm) {
     throw Error('Attempted to create material texture without fetching it first');
   }
 
   mtrl._imageProm.then(function () {
-    mtrl.createTexture(gl);
+    mtrl.createTexture(state);
   });
 };

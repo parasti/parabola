@@ -171,14 +171,14 @@ SolidModel.prototype.step = function (dt) {
 /*
  * Create body mesh VBOs and textures.
  */
-SolidModel.prototype.createObjects = function (gl) {
+SolidModel.prototype.createObjects = function (state) {
   var models = this.models;
   var i;
 
   for (i = 0; i < models.length; ++i) {
     var model = models[i];
     if (model) {
-      model.createObjects(gl);
+      model.createObjects(state);
     }
   }
 };

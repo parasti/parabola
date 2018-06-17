@@ -31,9 +31,9 @@ function Scene () {
   this.time = 0.0;
 }
 
-Scene.prototype.setModel = function (gl, modelName, sol) { // TODO support unloading (sol = null)
+Scene.prototype.setModel = function (state, modelName, sol) { // TODO support unloading (sol = null)
   var model = SolidModel.fromSol(sol);
-  model.createObjects(gl);
+  model.createObjects(state);
   this.models[modelName] = model;
 
   var levelModel, entModel;
@@ -123,11 +123,17 @@ Scene.prototype.draw = function (state) {
     gl.bufferData(gl.ARRAY_BUFFER, matrices, gl.DYNAMIC_DRAW);
   }
 
+  // Set some uniforms.
+
+  state.uniforms.ProjectionMatrix.value = this.view._projectionMatrix;
+
+  // Draw stuff.
+
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
   for (model of sortedNodes.keys()) {
     nodes = sortedNodes.get(model);
-    model.drawInstanced(this, state, nodes.length);
+    model.drawInstanced(state, nodes.length);
   }
 };
 

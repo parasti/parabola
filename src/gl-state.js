@@ -1,6 +1,7 @@
 'use strict';
 
 var Shader = require('./shader.js');
+var Uniform = require('./uniform.js');
 
 module.exports = GLState;
 
@@ -11,8 +12,6 @@ function GLState (canvas) {
 
   this.defaultTexture = null;
   this.enableTextures = true;
-
-  this.defaultShader = null;
 
   this.aPositionID = 0;
   this.aNormalID = 1;
@@ -28,6 +27,18 @@ function GLState (canvas) {
   this.createDefaultObjects();
 
   this.instancedArrays = this.gl.getExtension('ANGLE_instanced_arrays');
+
+  // TODO
+  this.uniforms = {
+    uTexture: Uniform.i(),
+    ProjectionMatrix: Uniform.mat4(),
+    uDiffuse: Uniform.vec4(),
+    uAmbient: Uniform.vec4(),
+    uSpecular: Uniform.vec4(),
+    uEmissive: Uniform.vec4(),
+    uShininess: Uniform.f(),
+    uEnvironment: Uniform.i()
+  };
 }
 
 GLState.prototype.vertexAttribDivisor = function (index, divisor) {
