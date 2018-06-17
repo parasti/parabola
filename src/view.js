@@ -127,8 +127,8 @@ View.prototype.getMatrix = (function () {
 View.prototype.setFromSol = (function () {
   // game_view_fly
 
-  var ball = new View();
-  var view = new View();
+  var ball = View();
+  var view = View();
 
   return function (sol, k) {
     if (sol.uv.length) {

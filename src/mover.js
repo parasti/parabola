@@ -7,6 +7,9 @@ var quat = require('gl-matrix').quat;
  * Walk the path entities in life. Don't we all.
  */
 function Mover (path) {
+  if (!(this instanceof Mover)) {
+    return new Mover(path);
+  }
   this.path = path || null;
   this.time = 0;
 }
@@ -22,12 +25,12 @@ Mover.fromSolBody = function (sol, body) {
     rotate: null
   };
 
-  movers.translate = new Mover(sol.pv[body.pi]);
+  movers.translate = Mover(sol.pv[body.pi]);
 
   if (body.pj === body.pi) {
     movers.rotate = movers.translate;
   } else {
-    movers.rotate = new Mover(sol.pv[body.pj]);
+    movers.rotate = Mover(sol.pv[body.pj]);
   }
 
   return movers;
