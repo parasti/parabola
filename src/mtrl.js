@@ -2,6 +2,7 @@
 
 var data = require('./data.js');
 var mtrlImages = require('./mtrl-images.json');
+var Shader = require('./shader.js');
 
 module.exports = Mtrl;
 
@@ -18,7 +19,8 @@ function Mtrl() {
   // GL texture
   this.texture = null;
 
-  this._loading = false;
+  // Image fetch promise
+  this._imageProm = null;
 
   // TODO
   this.diffuseColor = null;
@@ -26,12 +28,15 @@ function Mtrl() {
   this.specularColor = null;
   this.emissiveColor = null;
   this.shininess = null;
+
+  this.shader = null;
 }
 
 Mtrl.fromSolMtrl = function (solMtrl) {
   var mtrl = Mtrl();
 
   mtrl.name = solMtrl.f;
+  mtrl.fetchImage();
   mtrl.flags = solMtrl.fl;
 
   mtrl.diffuseColor = solMtrl.d;
@@ -39,6 +44,9 @@ Mtrl.fromSolMtrl = function (solMtrl) {
   mtrl.specularColor = solMtrl.s;
   mtrl.emissiveColor = solMtrl.e;
   mtrl.shininess = solMtrl.h;
+
+  // TODO
+  mtrl.shader = Shader.fromSolMtrl(solMtrl);
 
   return mtrl;
 }
@@ -88,6 +96,7 @@ Mtrl.prototype.createTexture = function (gl) {
 Mtrl.prototype.draw = function (state) {
   var mtrl = this;
   var gl = state.gl;
+  var shader = mtrl.shader;
 
   if (state.enableTextures && mtrl.texture) {
     gl.bindTexture(gl.TEXTURE_2D, mtrl.texture);
@@ -95,7 +104,9 @@ Mtrl.prototype.draw = function (state) {
     gl.bindTexture(gl.TEXTURE_2D, state.defaultTexture);
   }
 
-  var uniforms = state.defaultShader.uniforms;
+  var uniforms = shader.uniforms;
+
+  uniforms.uTexture.value = 0;
 
   uniforms.uDiffuse.value = mtrl.diffuseColor;
   uniforms.uAmbient.value = mtrl.ambientColor;
@@ -131,26 +142,39 @@ Mtrl.prototype.draw = function (state) {
 };
 
 /*
- * Download material image and create a texture.
+ * Download material image.
  */
-Mtrl.prototype.loadTexture = function (gl) {
+Mtrl.prototype.fetchImage = function () {
   var mtrl = this;
 
-  if (mtrl._loading) {
-    return;
-  }
-  if (mtrl.image) {
-    throw Error('Material image for ' + mtrl.name + ' has already been loaded');
+  if (!mtrl._imageProm) {
+    var imagePath = mtrlImages[mtrl.name];
+    if (!imagePath) {
+      console.warn('Material image for ' + mtrl.name + ' is unknown');
+      return Promise.reject();
+    }
+
+    mtrl._imageProm = data.fetchImage(imagePath).then(function (image) {
+      mtrl.image = image;
+    });
   }
 
-  var imagePath = mtrlImages[mtrl.name];
-  if (!imagePath) {
-    throw Error('Material image for ' + mtrl.name + ' is unknown');
+  return mtrl._imageProm;
+};
+
+/*
+ * Create texture and shader.
+ */
+Mtrl.prototype.createObjects = function (gl) {
+  var mtrl = this;
+
+  mtrl.shader.createObjects(gl);
+
+  if (!mtrl._imageProm) {
+    throw Error('Attempted to create material texture without fetching it first');
   }
 
-  mtrl._loading = true;
-  data.fetchImage(imagePath).then(function (image) {
-    mtrl.image = image;
+  mtrl._imageProm.then(function () {
     mtrl.createTexture(gl);
   });
 };

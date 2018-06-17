@@ -80,9 +80,6 @@ GLState.prototype.createDefaultObjects = function () {
   var gl = this.gl;
 
   this.createDefaultTexture(gl);
-
-  this.defaultShader = Shader.origShader();
-  this.defaultShader.createObjects(gl);
 };
 
 /*

@@ -92,7 +92,6 @@ Scene.prototype.step = function (dt) {
  */
 Scene.prototype.draw = function (state) {
   var gl = state.gl;
-  var shader = state.defaultShader;
 
   /*
    * Make lists of nodes, indexed by model.
@@ -111,7 +110,6 @@ Scene.prototype.draw = function (state) {
 
   for (var model of bodyModels) {
     var nodes = sortedNodes.get(model);
-    // Interleaved modelview and normal matrices.
     var matrices = new Float32Array(16 * nodes.length);
 
     for (var j = 0; j < nodes.length; ++j) {
@@ -127,14 +125,9 @@ Scene.prototype.draw = function (state) {
 
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-  if (shader.use(state)) {
-    shader.uniforms.uTexture.value = 0;
-    shader.uniforms.ProjectionMatrix.value = this.view._projectionMatrix;
-
-    for (model of sortedNodes.keys()) {
-      nodes = sortedNodes.get(model);
-      model.drawInstanced(state, nodes.length);
-    }
+  for (model of sortedNodes.keys()) {
+    nodes = sortedNodes.get(model);
+    model.drawInstanced(this, state, nodes.length);
   }
 };
 

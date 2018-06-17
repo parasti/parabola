@@ -49,11 +49,11 @@ BodyModel.prototype.createObjects = function (gl) {
   var meshes = this.meshes;
 
   for (var i = 0, n = meshes.length; i < n; ++i) {
-    meshes[i].mtrl.loadTexture(gl);
+    meshes[i].mtrl.createObjects(gl);
   }
 };
 
-BodyModel.prototype.drawInstanced = function (state, count) {
+BodyModel.prototype.drawInstanced = function (scene, state, count) {
   var model = this;
   var gl = state.gl;
 
@@ -78,18 +78,27 @@ BodyModel.prototype.drawInstanced = function (state, count) {
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, model.elemsVBO);
 
   for (var i = 0; i < model.meshes.length; ++i) {
-    drawMeshInstanced(state, model.meshes[i], count);
+    drawMeshInstanced(scene, state, model.meshes[i], count);
   }
 };
 
-function drawMeshInstanced (state, mesh, count) {
+function drawMeshInstanced (scene, state, mesh, count) {
   var gl = state.gl;
 
+  var mtrl = mesh.mtrl;
+  var shader = mtrl.shader;
+
+  // Bind shader.
+  shader.use(state);
+
   // Apply material state.
-  mesh.mtrl.draw(state);
+  mtrl.draw(state);
+
+  // Apply scene state. TODO
+  shader.uniforms.ProjectionMatrix.value = scene.view._projectionMatrix;
 
   // Update shader globals.
-  state.defaultShader.uploadUniforms(gl);
+  shader.uploadUniforms(gl);
 
   state.enableVertexAttribArray(state.aPositionID);
   state.enableVertexAttribArray(state.aNormalID);

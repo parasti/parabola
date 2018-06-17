@@ -19,7 +19,15 @@ function Shader () {
   this.uniformLocations = {};
 }
 
-Shader.origShader = function () {
+// DOUBLE PLUS TODO
+Shader._cachedShader = null;
+
+Shader.fromSolMtrl = function (mtrl) {
+  // TODO return not the first shader
+  if (Shader._cachedShader) {
+    return Shader._cachedShader;
+  }
+
   var uniforms = {
     uTexture: Uniform.i(),
     ProjectionMatrix: Uniform.mat4(),
@@ -38,7 +46,7 @@ Shader.origShader = function () {
   shader.uniforms = uniforms;
 
   return shader;
-};
+}
 
 Shader.prototype.use = function (state) {
   var shader = this;
