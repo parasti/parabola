@@ -22,7 +22,6 @@ function SolidModel () {
   this.sceneRoot = null;
   this.entities = null;
   this.models = null;
-  this.materials = null;
 }
 
 /*
@@ -34,19 +33,8 @@ SolidModel.fromSol = function (sol) {
   var sceneRoot = solidModel.sceneRoot = SceneNode();
   var ents = solidModel.entities = nanoECS();
   var models = solidModel.models = [];
-  var materials = solidModel.materials = [];
 
   var i, ent;
-
-  // Materials
-
-  for (i = 0; i < sol.mv.length; ++i) {
-    var mtrl = sol.mv[i];
-    materials.push(mtrl);
-
-    // TODO
-    Shader(mtrl);
-  }
 
   // Bodies
 
@@ -185,21 +173,12 @@ SolidModel.prototype.step = function (dt) {
  */
 SolidModel.prototype.createObjects = function (gl) {
   var models = this.models;
-  var materials = this.materials;
   var i;
 
   for (i = 0; i < models.length; ++i) {
     var model = models[i];
     if (model) {
       model.createObjects(gl);
-    }
-  }
-
-  for (i = 0; i < materials.length; ++i) {
-    try {
-      Mtrl.loadTexture(gl, materials[i]);
-    } catch (e) {
-      console.error(e);
     }
   }
 };

@@ -11,8 +11,6 @@ function BodyModel () {
 
   this.meshes = null;
 
-  this.sortedMeshes = new Array(5); // TODO
-
   this.verts = null;
   this.vertsVBO = null;
 
@@ -22,17 +20,10 @@ function BodyModel () {
   this.instanceVBO = null;
 }
 
-BodyModel.OPAQUE = 0;
-BodyModel.OPAQUE_DECAL = 1;
-BodyModel.TRANSPARENT_DECAL = 2;
-BodyModel.TRANSPARENT = 3;
-BodyModel.REFLECTIVE = 4;
-
 BodyModel.fromSolBody = function (sol, solBody) {
   var model = BodyModel();
 
   model.getMeshesFromSol(sol, solBody);
-  model.sortMeshes();
 
   return model;
 };
@@ -52,30 +43,13 @@ BodyModel.prototype.createObjects = function (gl) {
 
   // TODO cleanup
   this.instanceVBO = gl.createBuffer();
-};
 
-BodyModel.prototype.sortMeshes = function () {
-  var opaque = this.sortedMeshes[BodyModel.OPAQUE] = [];
-  var opaqueDecal = this.sortedMeshes[BodyModel.OPAQUE_DECAL] = [];
-  var transparentDecal = this.sortedMeshes[BodyModel.TRANSPARENT_DECAL] = [];
-  var transparent = this.sortedMeshes[BodyModel.TRANSPARENT] = [];
-  var reflective = this.sortedMeshes[BodyModel.REFLECTIVE] = [];
+  // TODO
 
-  for (var i = 0; i < this.meshes.length; ++i) {
-    var mesh = this.meshes[i];
-    var mtrl = mesh.mtrl;
+  var meshes = this.meshes;
 
-    if (Mtrl.isOpaque(mtrl)) {
-      opaque.push(mesh);
-    } else if (Mtrl.isOpaqueDecal(mtrl)) {
-      opaqueDecal.push(mesh);
-    } else if (Mtrl.isTransparentDecal(mtrl)) {
-      transparentDecal.push(mesh);
-    } else if (Mtrl.isTransparent(mtrl)) {
-      transparent.push(mesh);
-    } else if (Mtrl.isReflective(mtrl)) {
-      reflective.push(mesh);
-    }
+  for (var i = 0, n = meshes.length; i < n; ++i) {
+    meshes[i].mtrl.loadTexture(gl);
   }
 };
 
@@ -112,7 +86,7 @@ function drawMeshInstanced (state, mesh, count) {
   var gl = state.gl;
 
   // Apply material state.
-  Mtrl.draw(state, mesh.mtrl);
+  mesh.mtrl.draw(state);
 
   // Update shader globals.
   state.defaultShader.uploadUniforms(gl);
@@ -208,7 +182,7 @@ BodyModel.prototype.getMeshesFromSol = function (sol, body) {
 
   getBodyGeomsByMtrl(sol, body).forEach(function (geoms, mi) {
     var mesh = {
-      mtrl: sol.mv[mi],
+      mtrl: Mtrl.fromSolMtrl(sol.mv[mi]),
       elemBase: elemsTotal,
       elemCount: 0
     };

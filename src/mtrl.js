@@ -3,7 +3,45 @@
 var data = require('./data.js');
 var mtrlImages = require('./mtrl-images.json');
 
-var Mtrl = {};
+module.exports = Mtrl;
+
+function Mtrl() {
+  if (!(this instanceof Mtrl)) {
+    return new Mtrl();
+  }
+
+  this.name = '';
+  this.flags = 0;
+
+  // DOM image
+  this.image = null;
+  // GL texture
+  this.texture = null;
+
+  this._loading = false;
+
+  // TODO
+  this.diffuseColor = null;
+  this.ambientColor = null;
+  this.specularColor = null;
+  this.emissiveColor = null;
+  this.shininess = null;
+}
+
+Mtrl.fromSolMtrl = function (solMtrl) {
+  var mtrl = Mtrl();
+
+  mtrl.name = solMtrl.f;
+  mtrl.flags = solMtrl.fl;
+
+  mtrl.diffuseColor = solMtrl.d;
+  mtrl.ambientColor = solMtrl.a;
+  mtrl.specularColor = solMtrl.s;
+  mtrl.emissiveColor = solMtrl.e;
+  mtrl.shininess = solMtrl.h;
+
+  return mtrl;
+}
 
 /*
  * Material type flags.
@@ -22,53 +60,33 @@ Mtrl.CLAMP_S = (1 << 1);
 Mtrl.CLAMP_T = (1 << 0);
 
 /*
- * Material sorting rules.
- */
-var opaqueRules = { in: 0, ex: Mtrl.REFLECTIVE | Mtrl.TRANSPARENT | Mtrl.DECAL };
-var opaqueDecalRules = { in: Mtrl.DECAL, ex: Mtrl.REFLECTIVE | Mtrl.TRANSPARENT };
-var transparentDecalRules = { in: Mtrl.DECAL | Mtrl.TRANSPARENT, ex: Mtrl.REFLECTIVE };
-var transparentRules = { in: Mtrl.TRANSPARENT, ex: Mtrl.REFLECTIVE | Mtrl.DECAL };
-var reflectiveRules = { in: Mtrl.REFLECTIVE, ex: 0 };
-
-function testMtrl (rules) {
-  return function (mtrl) {
-    return ((mtrl.fl & rules.in) === rules.in && (mtrl.fl & rules.ex) === 0);
-  };
-}
-
-Mtrl.isOpaque = testMtrl(opaqueRules);
-Mtrl.isOpaqueDecal = testMtrl(opaqueDecalRules);
-Mtrl.isTransparentDecal = testMtrl(transparentDecalRules);
-Mtrl.isTransparent = testMtrl(transparentRules);
-Mtrl.isReflective = testMtrl(reflectiveRules);
-
-/*
  * Create a GL texture from the given image.
  */
-Mtrl.createTexture = function (gl, mtrl) {
+Mtrl.prototype.createTexture = function (gl) {
   var tex = gl.createTexture();
 
   gl.bindTexture(gl.TEXTURE_2D, tex);
 
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S,
-      mtrl.fl & Mtrl.CLAMP_S ? gl.CLAMP_TO_EDGE : gl.REPEAT);
+      this.flags & Mtrl.CLAMP_S ? gl.CLAMP_TO_EDGE : gl.REPEAT);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T,
-      mtrl.fl & Mtrl.CLAMP_T ? gl.CLAMP_TO_EDGE : gl.REPEAT);
+      this.flags & Mtrl.CLAMP_T ? gl.CLAMP_TO_EDGE : gl.REPEAT);
 
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
 
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, mtrl.image);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.image);
   gl.generateMipmap(gl.TEXTURE_2D);
   gl.bindTexture(gl.TEXTURE_2D, null);
 
-  mtrl.texture = tex;
+  this.texture = tex;
 };
 
 /*
  * Apply material state.
  */
-Mtrl.draw = function (state, mtrl) {
+Mtrl.prototype.draw = function (state) {
+  var mtrl = this;
   var gl = state.gl;
 
   if (state.enableTextures && mtrl.texture) {
@@ -79,31 +97,31 @@ Mtrl.draw = function (state, mtrl) {
 
   var uniforms = state.defaultShader.uniforms;
 
-  uniforms.uDiffuse.value = mtrl.d;
-  uniforms.uAmbient.value = mtrl.a;
-  uniforms.uSpecular.value = mtrl.s;
-  uniforms.uEmissive.value = mtrl.e;
-  uniforms.uShininess.value = mtrl.h;
+  uniforms.uDiffuse.value = mtrl.diffuseColor;
+  uniforms.uAmbient.value = mtrl.ambientColor;
+  uniforms.uSpecular.value = mtrl.specularColor;
+  uniforms.uEmissive.value = mtrl.emissiveColor;
+  uniforms.uShininess.value = mtrl.shininess;
 
-  if (mtrl.fl & Mtrl.ENVIRONMENT) {
+  if (mtrl.flags & Mtrl.ENVIRONMENT) {
     uniforms.uEnvironment.value = 1;
   } else {
     uniforms.uEnvironment.value = 0;
   }
 
-  if (mtrl.fl & Mtrl.ADDITIVE) {
+  if (mtrl.flags & Mtrl.ADDITIVE) {
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
   } else {
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
   }
 
-  if (mtrl.fl & Mtrl.TWO_SIDED) {
+  if (mtrl.flags & Mtrl.TWO_SIDED) {
     gl.disable(gl.CULL_FACE);
   } else {
     gl.enable(gl.CULL_FACE);
   }
 
-  if (mtrl.fl & Mtrl.DECAL) {
+  if (mtrl.flags & Mtrl.DECAL) {
     gl.enable(gl.POLYGON_OFFSET_FILL);
     gl.polygonOffset(-1.0, -2.0);
   } else {
@@ -115,28 +133,24 @@ Mtrl.draw = function (state, mtrl) {
 /*
  * Download material image and create a texture.
  */
-Mtrl.loadTexture = function (gl, mtrl) {
+Mtrl.prototype.loadTexture = function (gl) {
+  var mtrl = this;
+
   if (mtrl._loading) {
     return;
   }
   if (mtrl.image) {
-    throw Error('Material image for ' + mtrl.f + ' has already been loaded');
+    throw Error('Material image for ' + mtrl.name + ' has already been loaded');
   }
 
-  var imagePath = mtrlImages[mtrl.f];
+  var imagePath = mtrlImages[mtrl.name];
   if (!imagePath) {
-    throw Error('Material image for ' + mtrl.f + ' is unknown');
+    throw Error('Material image for ' + mtrl.name + ' is unknown');
   }
 
   mtrl._loading = true;
   data.fetchImage(imagePath).then(function (image) {
     mtrl.image = image;
-    Mtrl.createTexture(gl, mtrl);
-    delete mtrl._loading;
+    mtrl.createTexture(gl);
   });
 };
-
-/*
- * Exports.
- */
-module.exports = Mtrl;
