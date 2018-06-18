@@ -106,6 +106,8 @@ BodyModel.prototype.drawInstanced = function (state, count) {
   for (var i = 0; i < model.meshes.length; ++i) {
     drawMeshInstanced(state, model.meshes[i], count);
   }
+
+  state.bindVertexArray(null);
 };
 
 function drawMeshInstanced (state, mesh, count) {
