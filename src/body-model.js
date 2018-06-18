@@ -19,6 +19,8 @@ function BodyModel () {
   this.elemsVBO = null;
 
   this.instanceVBO = null;
+
+  this.vao = null;
 }
 
 BodyModel.fromSolBody = function (sol, solBody) {
@@ -62,25 +64,44 @@ BodyModel.prototype.drawInstanced = function (state, count) {
   var model = this;
   var gl = state.gl;
 
-  state.bindBuffer(gl.ARRAY_BUFFER, model.vertsVBO);
+  if (model.vao) {
+    state.bindVertexArray(model.vao);
+  } else {
+    model.vao = state.createVertexArray();
 
-  gl.vertexAttribPointer(state.aPositionID, 3, gl.FLOAT, false, 8 * 4, 0);
-  gl.vertexAttribPointer(state.aNormalID, 3, gl.FLOAT, false, 8 * 4, 12);
-  gl.vertexAttribPointer(state.aTexCoordID, 2, gl.FLOAT, false, 8 * 4, 24);
+    state.bindVertexArray(model.vao);
 
-  state.bindBuffer(gl.ARRAY_BUFFER, model.instanceVBO);
+    gl.bindBuffer(gl.ARRAY_BUFFER, model.vertsVBO);
 
-  gl.vertexAttribPointer(state.aModelViewMatrixID + 0, 4, gl.FLOAT, false, 16 * 4, 0);
-  gl.vertexAttribPointer(state.aModelViewMatrixID + 1, 4, gl.FLOAT, false, 16 * 4, 16);
-  gl.vertexAttribPointer(state.aModelViewMatrixID + 2, 4, gl.FLOAT, false, 16 * 4, 32);
-  gl.vertexAttribPointer(state.aModelViewMatrixID + 3, 4, gl.FLOAT, false, 16 * 4, 48);
+    gl.vertexAttribPointer(state.aPositionID, 3, gl.FLOAT, false, 8 * 4, 0);
+    gl.vertexAttribPointer(state.aNormalID, 3, gl.FLOAT, false, 8 * 4, 12);
+    gl.vertexAttribPointer(state.aTexCoordID, 2, gl.FLOAT, false, 8 * 4, 24);
 
-  state.vertexAttribDivisor(state.aModelViewMatrixID + 0, 1);
-  state.vertexAttribDivisor(state.aModelViewMatrixID + 1, 1);
-  state.vertexAttribDivisor(state.aModelViewMatrixID + 2, 1);
-  state.vertexAttribDivisor(state.aModelViewMatrixID + 3, 1);
+    gl.bindBuffer(gl.ARRAY_BUFFER, model.instanceVBO);
 
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, model.elemsVBO);
+    gl.vertexAttribPointer(state.aModelViewMatrixID + 0, 4, gl.FLOAT, false, 16 * 4, 0);
+    gl.vertexAttribPointer(state.aModelViewMatrixID + 1, 4, gl.FLOAT, false, 16 * 4, 16);
+    gl.vertexAttribPointer(state.aModelViewMatrixID + 2, 4, gl.FLOAT, false, 16 * 4, 32);
+    gl.vertexAttribPointer(state.aModelViewMatrixID + 3, 4, gl.FLOAT, false, 16 * 4, 48);
+
+    state.vertexAttribDivisor(state.aModelViewMatrixID + 0, 1);
+    state.vertexAttribDivisor(state.aModelViewMatrixID + 1, 1);
+    state.vertexAttribDivisor(state.aModelViewMatrixID + 2, 1);
+    state.vertexAttribDivisor(state.aModelViewMatrixID + 3, 1);
+
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, model.elemsVBO);
+
+    gl.enableVertexAttribArray(state.aPositionID);
+    gl.enableVertexAttribArray(state.aNormalID);
+    gl.enableVertexAttribArray(state.aTexCoordID);
+
+    gl.enableVertexAttribArray(state.aModelViewMatrixID + 0);
+    gl.enableVertexAttribArray(state.aModelViewMatrixID + 1);
+    gl.enableVertexAttribArray(state.aModelViewMatrixID + 2);
+    gl.enableVertexAttribArray(state.aModelViewMatrixID + 3);
+
+    // VAO stays bound.
+  }
 
   for (var i = 0; i < model.meshes.length; ++i) {
     drawMeshInstanced(state, model.meshes[i], count);
@@ -101,15 +122,6 @@ function drawMeshInstanced (state, mesh, count) {
 
   // Update shader globals.
   shader.uploadUniforms(state);
-
-  state.enableVertexAttribArray(state.aPositionID);
-  state.enableVertexAttribArray(state.aNormalID);
-  state.enableVertexAttribArray(state.aTexCoordID);
-
-  state.enableVertexAttribArray(state.aModelViewMatrixID + 0);
-  state.enableVertexAttribArray(state.aModelViewMatrixID + 1);
-  state.enableVertexAttribArray(state.aModelViewMatrixID + 2);
-  state.enableVertexAttribArray(state.aModelViewMatrixID + 3);
 
   // Took forever to figure out that glDrawElements offset is in bytes.
   state.drawElementsInstanced(gl.TRIANGLES, mesh.elemCount, gl.UNSIGNED_SHORT, mesh.elemBase * 2, count);

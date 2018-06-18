@@ -18,15 +18,14 @@ function GLState (canvas) {
   this.aTexCoordID = 2;
   this.aModelViewMatrixID = 3;
 
-  this.enabledArrays = [];
   this.usedProgram = null;
-  this.boundBuffers = [];
 
   this.gl = getContext(canvas);
   setupContext(this.gl);
   this.createDefaultObjects();
 
   this.instancedArrays = this.gl.getExtension('ANGLE_instanced_arrays');
+  this.vertexArrayObject = this.gl.getExtension('OES_vertex_array_object');
 
   // TODO
   this.uniforms = {
@@ -41,16 +40,20 @@ function GLState (canvas) {
   };
 }
 
+GLState.prototype.createVertexArray = function () {
+  return this.vertexArrayObject.createVertexArrayOES();
+};
+
+GLState.prototype.bindVertexArray = function (vao) {
+  this.vertexArrayObject.bindVertexArrayOES(vao);
+};
+
 GLState.prototype.vertexAttribDivisor = function (index, divisor) {
-  if (this.instancedArrays) {
-    this.instancedArrays.vertexAttribDivisorANGLE(index, divisor);
-  }
+  this.instancedArrays.vertexAttribDivisorANGLE(index, divisor);
 };
 
 GLState.prototype.drawElementsInstanced = function (mode, count, type, offset, primcount) {
-  if (this.instancedArrays) {
-    this.instancedArrays.drawElementsInstancedANGLE(mode, count, type, offset, primcount);
-  }
+  this.instancedArrays.drawElementsInstancedANGLE(mode, count, type, offset, primcount);
 };
 
 /*
@@ -119,40 +122,11 @@ GLState.prototype.createDefaultTexture = function (gl) {
 };
 
 /*
- * Track vertex attribute array enabled/disabled state.
- */
-GLState.prototype.enableVertexAttribArray = function (index) {
-  if (!this.enabledArrays[index]) {
-    this.gl.enableVertexAttribArray(index);
-    this.enabledArrays[index] = true;
-  }
-};
-
-GLState.prototype.disableVertexAttribArray = function (index) {
-  if (this.enabledArrays[index]) {
-    this.gl.disableVertexAttribArray(index);
-    this.enabledArrays[index] = false;
-  }
-};
-
-/*
  * Track used program.
  */
 GLState.prototype.useProgram = function (program) {
   if (program !== this.usedProgram) {
     this.gl.useProgram(program);
     this.usedProgram = program;
-  }
-};
-
-/*
- * Track bound buffers.
- */
-GLState.prototype.bindBuffer = function (target, buffer) {
-  if (buffer !== this.boundBuffers[target]) {
-    this.gl.bindBuffer(target, buffer);
-    this.boundBuffers[target] = buffer;
-  } else {
-    console.log('reusing bound buffer');
   }
 };
