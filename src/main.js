@@ -122,7 +122,7 @@ function init () {
 
     data.loadSolid(this.files[0]).then(function (sol) {
       solFile = sol;
-      scene.setModel(gl, 'level', solFile);
+      scene.setModel(state, 'level', solFile);
     });
   });
 
