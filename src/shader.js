@@ -1,7 +1,5 @@
 'use strict';
 
-var glsl = require('glslify');
-
 var Uniform = require('./uniform.js');
 
 module.exports = Shader;
@@ -28,8 +26,8 @@ Shader.fromSolMtrl = function (mtrl) {
 
   var shader = Shader._cachedShader = Shader();
 
-  shader.vertexShader = glsl.file('../glsl/default.vert');
-  shader.fragmentShader = glsl.file('../glsl/default.frag');
+  shader.vertexShader = require('./glsl.js').defaultVertexShader;
+  shader.fragmentShader = require('./glsl.js').defaultFragmentShader;
 
   return shader;
 }
