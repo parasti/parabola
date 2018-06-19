@@ -22,10 +22,10 @@ function Mtrl() {
   this._imageProm = null;
 
   // TODO
-  this.diffuseColor = null;
-  this.ambientColor = null;
-  this.specularColor = null;
-  this.emissiveColor = null;
+  this.diffuse = null;
+  this.ambient = null;
+  this.specular = null;
+  this.emissions = null;
   this.shininess = null;
 }
 
@@ -34,20 +34,50 @@ Mtrl.fromSolMtrl = function (solMtrl) {
 
   mtrl.name = solMtrl.f;
   mtrl.fetchImage();
-  mtrl.flags = solMtrl.fl;
+  mtrl.flags = decomposeFlags(solMtrl.fl);
 
-  mtrl.diffuseColor = solMtrl.d;
-  mtrl.ambientColor = solMtrl.a;
-  mtrl.specularColor = solMtrl.s;
-  mtrl.emissiveColor = solMtrl.e;
+  mtrl.diffuse = solMtrl.d;
+  mtrl.ambient = solMtrl.a;
+  mtrl.specular = solMtrl.s;
+  mtrl.emissions = solMtrl.e;
   mtrl.shininess = solMtrl.h;
 
   return mtrl;
 }
 
+function decomposeFlags (flags) {
+  var fl = flags | Mtrl._DEPTH_TEST;
+
+  if (fl & Mtrl.TRANSPARENT) {
+    fl |=  Mtrl._BLEND;
+    fl &= ~Mtrl._DEPTH_WRITE;
+  } else {
+    fl &= ~Mtrl._BLEND;
+    fl |= Mtrl._DEPTH_WRITE;
+  }
+
+  // TODO:
+  // Mtrl.LIT (separate shader)
+  // Mtrl.PARTICLE (TODO entirely)
+  // Mtrl.REFLECTIVE (combo material: stencil pass, transparent pass)
+  // Mtrl.SHADOWED (separate shader + some state)
+  // Mtrl.ENVIRONMENT (separate shader)
+  // Mtrl.CLAMP_S (tex param)
+  // Mtrl.CLAMP_T (tex param)
+
+  return fl;
+}
+
 /*
  * Material type flags.
  */
+
+// Our custom flags.
+Mtrl._DEPTH_TEST = (1 << 14);
+Mtrl._DEPTH_WRITE = (1 << 13);
+Mtrl._BLEND = (1 << 12);
+
+// Neverball flags.
 Mtrl.LIT = (1 << 11);
 Mtrl.PARTICLE = (1 << 10);
 Mtrl.ALPHA_TEST = (1 << 9);
@@ -92,26 +122,39 @@ Mtrl.prototype.draw = function (state) {
   var mtrl = this;
   var gl = state.gl;
 
-  if (state.enableTextures && mtrl.texture) {
-    gl.bindTexture(gl.TEXTURE_2D, mtrl.texture);
+  if (mtrl.texture && state.enableTextures) {
+    state.bindTexture(gl.TEXTURE_2D, mtrl.texture);
   } else {
-    gl.bindTexture(gl.TEXTURE_2D, state.defaultTexture);
+    state.bindTexture(gl.TEXTURE_2D, state.defaultTexture);
   }
 
+  // TODO caching
   var uniforms = state.uniforms;
 
   uniforms.uTexture.value = 0;
 
-  uniforms.uDiffuse.value = mtrl.diffuseColor;
-  uniforms.uAmbient.value = mtrl.ambientColor;
-  uniforms.uSpecular.value = mtrl.specularColor;
-  uniforms.uEmissive.value = mtrl.emissiveColor;
+  uniforms.uDiffuse.value = mtrl.diffuse;
+  uniforms.uAmbient.value = mtrl.ambient;
+  uniforms.uSpecular.value = mtrl.specular;
+  uniforms.uEmissive.value = mtrl.emissions;
   uniforms.uShininess.value = mtrl.shininess;
 
-  if (mtrl.flags & Mtrl.ENVIRONMENT) {
-    uniforms.uEnvironment.value = 1;
+  if (mtrl.flags & Mtrl._BLEND) {
+    gl.enable(gl.BLEND);
   } else {
-    uniforms.uEnvironment.value = 0;
+    gl.disable(gl.BLEND);
+  }
+
+  if (mtrl.flags & Mtrl._DEPTH_WRITE) {
+    gl.depthMask(true);
+  } else {
+    gl.depthMask(false);
+  }
+
+  if (mtrl.flags & Mtrl._DEPTH_TEST) {
+    gl.enable(gl.DEPTH_TEST);
+  } else {
+    gl.disable(gl.DEPTH_TEST);
   }
 
   if (mtrl.flags & Mtrl.ADDITIVE) {

@@ -19,6 +19,7 @@ function GLState (canvas) {
   this.aModelViewMatrixID = 3;
 
   this.usedProgram = null;
+  this.boundTextures = [];
 
   this.gl = getContext(canvas);
   setupContext(this.gl);
@@ -38,6 +39,13 @@ function GLState (canvas) {
     uShininess: Uniform.f(),
     uEnvironment: Uniform.i()
   };
+}
+
+GLState.prototype.bindTexture = function (target, texture) {
+  if (this.boundTextures[target] !== texture) {
+    this.boundTextures[target] = texture;
+    this.gl.bindTexture(target, texture);
+  }
 }
 
 GLState.prototype.createVertexArray = function () {
@@ -65,21 +73,13 @@ function getContext (canvas) {
   return gl;
 }
 
-/*
- * TODO? Some of this sets up material state, which could happen elsewhere.
- */
 function setupContext (gl) {
-  gl.enable(gl.CULL_FACE);
-  gl.enable(gl.DEPTH_TEST);
-  gl.enable(gl.BLEND);
-
   // Straight alpha vs premultiplied alpha:
   // https://limnu.com/webgl-blending-youre-probably-wrong/
   // https://developer.nvidia.com/content/alpha-blending-pre-or-not-pre
   // gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
   // gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
-  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
   gl.depthFunc(gl.LEQUAL);
   gl.clearColor(0, 0, 0, 1.0);
 

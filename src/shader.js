@@ -1,6 +1,7 @@
 'use strict';
 
 var Uniform = require('./uniform.js');
+var Solid = require('neverball-solid');
 
 module.exports = Shader;
 
@@ -15,19 +16,21 @@ function Shader () {
   this.uniformLocations = {};
 }
 
-// DOUBLE PLUS TODO
-Shader._cachedShader = null;
-
 Shader.fromSolMtrl = function (mtrl) {
-  // TODO
-  if (Shader._cachedShader) {
-    return Shader._cachedShader;
+  var defs = '';
+
+  var shader = Shader();
+
+  if (mtrl.fl & Solid.MTRL_LIT) {
+    defs += '#define M_LIT\n';
   }
 
-  var shader = Shader._cachedShader = Shader();
+  if (mtrl.fl & Solid.MTRL_ENVIRONMENT) {
+    defs += '#define M_ENVIRONMENT\n';
+  }
 
-  shader.vertexShader = require('./glsl.js').defaultVertexShader;
-  shader.fragmentShader = require('./glsl.js').defaultFragmentShader;
+  shader.vertexShader = defs + require('./glsl.js').defaultVertexShader;
+  shader.fragmentShader = defs + require('./glsl.js').defaultFragmentShader;
 
   return shader;
 }

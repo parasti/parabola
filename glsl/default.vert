@@ -9,6 +9,8 @@ attribute mat4 aModelViewMatrix;
 
 varying vec2 vTexCoord;
 
+#ifdef M_LIT
+
 //
 // Lighting
 //
@@ -51,7 +53,9 @@ vec4 calcLight(Light light, vec4 eyeNormal) {
     uAmbient * light.ambient +
     max(0.0, dot(eyeNormal, normalize(light.position))) * uDiffuse * light.diffuse;
 }
+#endif // M_LIT
 
+#ifdef M_ENVIRONMENT
 vec2 genSphereMap(vec3 p, vec3 n) {
   vec3 u = normalize(p);
   vec3 r = reflect(u, n);
@@ -59,11 +63,13 @@ vec2 genSphereMap(vec3 p, vec3 n) {
   float m = 2.0 * length(r);
   return vec2(r.x / m + 0.5, r.y / m + 0.5);
 }
+#endif
 
 void main() {
   vec3 eyeNormal = normalize(mat3(aModelViewMatrix) * aNormal);
   vec4 eyePos = aModelViewMatrix * vec4(aPosition, 1.0);
 
+#ifdef M_LIT
   vec4 lightColor =
     uEmissive +
     uAmbient * Light_GlobalAmbient +
@@ -72,11 +78,13 @@ void main() {
 
   vLightColor = clamp(vec4(lightColor.rgb, uDiffuse.a), 0.0, 1.0);
   //vLightColor.rgb = vLightColor.rgb * vLightColor.a; // Premultiply.
+#endif
 
-  if (uEnvironment)
-    vTexCoord = genSphereMap(eyePos.xyz, eyeNormal);
-  else
-    vTexCoord = aTexCoord;
+#if defined(M_ENVIRONMENT)
+  vTexCoord = genSphereMap(eyePos.xyz, eyeNormal);
+#else
+  vTexCoord = aTexCoord;
+#endif
 
   gl_Position = ProjectionMatrix * eyePos;
 }
