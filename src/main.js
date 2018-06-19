@@ -45,7 +45,7 @@ function init () {
 
   scene.view.setProjection(gl.canvas.width, gl.canvas.height, 50);
 
-  data.fetchSolid('map-easy/easy.sol').then(function (sol) {
+  data.fetchSolid('map-fwp/adventure.sol').then(function (sol) {
     solFile = sol;
     scene.setModel(state, 'level', sol);
     scene.view.setFromSol(sol, 1.0);
