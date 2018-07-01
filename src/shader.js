@@ -14,20 +14,42 @@ function Shader () {
   this.vertexShader = '';
   this.fragmentShader = '';
   this.uniformLocations = {};
+  this.flags = 0;
+}
+
+Shader.LIT = 0x1;
+Shader.ENVIRONMENT = 0x2;
+
+Shader.prototype.getDefs = function () {
+  var defs = '';
+
+  if (this.flags & Shader.LIT) {
+    defs += '#define M_LIT 1\n';
+  }
+  if (this.flags & Shader.ENVIRONMENT) {
+    defs += '#define M_ENVIRONMENT 1\n';
+  }
+
+  return defs;
+}
+
+Shader.prototype.getFlagsFromMtrl = function (mtrl) {
+  var shader = this;
+
+  if (mtrl.fl & Solid.MTRL_LIT) {
+    shader.flags |= Shader.LIT;
+  }
+  if (mtrl.fl & Solid.MTRL_ENVIRONMENT) {
+    shader.flags |= Shader.ENVIRONMENT;
+  }
 }
 
 Shader.fromSolMtrl = function (mtrl) {
-  var defs = '';
-
   var shader = Shader();
 
-  if (mtrl.fl & Solid.MTRL_LIT) {
-    defs += '#define M_LIT\n';
-  }
+  shader.getFlagsFromMtrl(mtrl);
 
-  if (mtrl.fl & Solid.MTRL_ENVIRONMENT) {
-    defs += '#define M_ENVIRONMENT\n';
-  }
+  var defs = shader.getDefs();
 
   shader.vertexShader = defs + require('./glsl.js').defaultVertexShader;
   shader.fragmentShader = defs + require('./glsl.js').defaultFragmentShader;
@@ -36,15 +58,11 @@ Shader.fromSolMtrl = function (mtrl) {
 }
 
 Shader.prototype.use = function (state) {
-  var shader = this;
-  var program = shader.program;
+  var program = this.program;
 
   if (program) {
     state.useProgram(program);
-    return true;
   }
-
-  return false;
 };
 
 Shader.prototype.createObjects = function (state) {
