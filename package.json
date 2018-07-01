@@ -24,7 +24,7 @@
   },
   "devDependencies": {
     "browserify": "^14.4.0",
-    "budo": "^11.3.0",
+    "budo": "^11.3.2",
     "semistandard": "^11.0.0"
   }
 }
