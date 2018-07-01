@@ -5,7 +5,7 @@ var mtrlImages = require('./mtrl-images.json');
 
 module.exports = Mtrl;
 
-function Mtrl() {
+function Mtrl () {
   if (!(this instanceof Mtrl)) {
     return new Mtrl();
   }
@@ -43,13 +43,13 @@ Mtrl.fromSolMtrl = function (solMtrl) {
   mtrl.shininess = solMtrl.h;
 
   return mtrl;
-}
+};
 
 function decomposeFlags (flags) {
   var fl = flags | Mtrl._DEPTH_TEST;
 
   if (fl & Mtrl.TRANSPARENT) {
-    fl |=  Mtrl._BLEND;
+    fl |= Mtrl._BLEND;
     fl &= ~Mtrl._DEPTH_WRITE;
   } else {
     fl &= ~Mtrl._BLEND;
@@ -187,8 +187,7 @@ Mtrl.prototype.fetchImage = function () {
   if (!mtrl._imageProm) {
     var imagePath = mtrlImages[mtrl.name];
     if (!imagePath) {
-      console.warn('Material image for ' + mtrl.name + ' is unknown');
-      return Promise.reject();
+      return Error('Material image for ' + mtrl.name + ' is unknown');
     }
 
     mtrl._imageProm = data.fetchImage(imagePath).then(function (image) {

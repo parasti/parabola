@@ -1,6 +1,5 @@
 'use strict';
 
-var Shader = require('./shader.js');
 var Uniform = require('./uniform.js');
 
 module.exports = GLState;
@@ -46,7 +45,7 @@ GLState.prototype.bindTexture = function (target, texture) {
     this.boundTextures[target] = texture;
     this.gl.bindTexture(target, texture);
   }
-}
+};
 
 GLState.prototype.createVertexArray = function () {
   return this.vertexArrayObject.createVertexArrayOES();

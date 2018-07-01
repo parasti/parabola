@@ -1,6 +1,5 @@
 'use strict';
 
-var Uniform = require('./uniform.js');
 var Solid = require('neverball-solid');
 
 module.exports = Shader;
@@ -31,7 +30,7 @@ Shader.prototype.getDefs = function () {
   }
 
   return defs;
-}
+};
 
 Shader.prototype.getFlagsFromMtrl = function (mtrl) {
   var shader = this;
@@ -42,7 +41,7 @@ Shader.prototype.getFlagsFromMtrl = function (mtrl) {
   if (mtrl.fl & Solid.MTRL_ENVIRONMENT) {
     shader.flags |= Shader.ENVIRONMENT;
   }
-}
+};
 
 Shader.fromSolMtrl = function (mtrl) {
   var shader = Shader();
@@ -55,7 +54,7 @@ Shader.fromSolMtrl = function (mtrl) {
   shader.fragmentShader = defs + require('./glsl.js').defaultFragmentShader;
 
   return shader;
-}
+};
 
 Shader.prototype.use = function (state) {
   var program = this.program;
