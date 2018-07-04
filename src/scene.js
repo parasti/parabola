@@ -31,14 +31,9 @@ function Scene () {
   this.time = 0.0;
 }
 
-Scene.prototype.setModel = function (state, modelName, sol) { // TODO support unloading (sol = null)
-  var model = SolidModel.fromSol(sol);
-  model.createObjects(state);
-  this.models[modelName] = model;
-
+Scene.prototype._attachModelInstances = function (modelName) {
   var levelModel, entModel;
 
-  // Update scene graph.
   if (modelName === 'level') {
     // Just loaded level model. Attach instances of loaded entity models.
     levelModel = this.models.level;
@@ -47,11 +42,12 @@ Scene.prototype.setModel = function (state, modelName, sol) { // TODO support un
       entModel = this.models[name];
 
       if (levelModel && entModel && entModel !== levelModel) {
-        attachModelToEnts(levelModel, entModel, name);
+        levelModel.attachModelToEnts(entModel, name);
       }
     }
 
     // Set level model as the root of the entire scene.
+    // TODO why here?
     levelModel.sceneRoot.setParent(this.sceneRoot);
   } else {
     // Just loaded entity model. Attach instances of it to level model.
@@ -59,19 +55,20 @@ Scene.prototype.setModel = function (state, modelName, sol) { // TODO support un
     entModel = this.models[modelName];
 
     if (levelModel && entModel) {
-      attachModelToEnts(levelModel, entModel, modelName);
+      levelModel.attachModelToEnts(entModel, modelName);
     }
   }
-};
-
-function attachModelToEnts (levelModel, entModel, tag) {
-  var ents = levelModel.entities.queryTag(tag);
-
-  for (var i = 0, n = ents.length; i < n; ++i) {
-    var instance = entModel.sceneRoot.createInstance();
-    instance.setParent(ents[i].sceneGraph.node);
-  }
 }
+
+Scene.prototype.setModel = function (state, modelName, sol) { // TODO support unloading (sol = null)
+  var model = SolidModel.fromSol(sol);
+  model.createObjects(state);
+  this.models[modelName] = model;
+
+  // TODO should this be done dynamically as part of draw()?
+  // "Hey, this should have a model, oh, here's a model, let's attach it"
+  this._attachModelInstances(modelName);
+};
 
 Scene.prototype.step = function (dt) {
   this.time += dt;

@@ -8,6 +8,7 @@ var screenfull = require('screenfull');
 var data = require('./data.js');
 
 var GLState = require('./gl-state.js');
+var GLCache = require('./gl-cache.js');
 var Scene = require('./scene.js');
 var BallModel = require('./ball-model.js');
 
@@ -37,11 +38,10 @@ function loadBall (gl, state, name = 'basic-ball') {
 function init () {
   var canvas = document.getElementById('canvas');
   var state = GLState(canvas);
+  var cache = GLCache();
   var scene = Scene();
   var gl = state.gl;
   var solFile = null;
-
-  state._scene = scene; // TODO UNHACK
 
   scene.view.setProjection(gl.canvas.width, gl.canvas.height, 50);
 
@@ -52,7 +52,7 @@ function init () {
   });
 
   var modelPaths = {
-    coin: 'item/coin/coin.sol',
+    coin: 'ball/snowglobe/snowglobe-inner.sol',
     coin5: 'item/coin/coin5.sol',
     coin10: 'item/coin/coin10.sol',
     grow: 'item/grow/grow.sol',

@@ -180,3 +180,15 @@ SolidModel.prototype.createObjects = function (state) {
     }
   }
 };
+
+/*
+ * Attach model instances to tagged entities.
+ */
+SolidModel.prototype.attachModelToEnts = function (model, tag) {
+  var ents = this.entities.queryTag(tag);
+
+  for (var i = 0, n = ents.length; i < n; ++i) {
+    var instance = model.sceneRoot.createInstance();
+    instance.setParent(ents[i].sceneGraph.node);
+  }
+}

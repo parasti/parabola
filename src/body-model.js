@@ -5,6 +5,8 @@ module.exports = BodyModel;
 var Mtrl = require('./mtrl.js');
 var Shader = require('./shader.js');
 
+var _modelIndex = 0;
+
 function BodyModel () {
   if (!(this instanceof BodyModel)) {
     return new BodyModel();
@@ -21,6 +23,8 @@ function BodyModel () {
   this.instanceVBO = null;
 
   this.vao = null;
+
+  this.id = _modelIndex++;
 }
 
 BodyModel.fromSolBody = function (sol, solBody) {
@@ -125,7 +129,7 @@ function drawMeshInstanced (state, mesh, count) {
   // Update shader globals.
   shader.uploadUniforms(state);
 
-  // Took forever to figure out that glDrawElements offset is in bytes.
+  // PSA: glDrawElements offset is in bytes.
   state.drawElementsInstanced(gl.TRIANGLES, mesh.elemCount, gl.UNSIGNED_SHORT, mesh.elemBase * 2, count);
 }
 

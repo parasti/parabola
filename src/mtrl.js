@@ -5,12 +5,12 @@ var mtrlImages = require('./mtrl-images.json');
 
 module.exports = Mtrl;
 
-function Mtrl () {
+function Mtrl (name) {
   if (!(this instanceof Mtrl)) {
-    return new Mtrl();
+    return new Mtrl(name);
   }
 
-  this.name = '';
+  this.name = name;
   this.flags = 0;
 
   // DOM image
@@ -25,54 +25,48 @@ function Mtrl () {
   this.diffuse = null;
   this.ambient = null;
   this.specular = null;
-  this.emissions = null;
+  this.emission = null;
   this.shininess = null;
 }
 
 Mtrl.fromSolMtrl = function (solMtrl) {
-  var mtrl = Mtrl();
+  var mtrl = Mtrl(solMtrl.f);
 
-  mtrl.name = solMtrl.f;
   mtrl.fetchImage();
+
   mtrl.flags = decomposeFlags(solMtrl.fl);
 
   mtrl.diffuse = solMtrl.d;
   mtrl.ambient = solMtrl.a;
   mtrl.specular = solMtrl.s;
-  mtrl.emissions = solMtrl.e;
+  mtrl.emission = solMtrl.e;
   mtrl.shininess = solMtrl.h;
 
   return mtrl;
 };
 
-function decomposeFlags (flags) {
-  var fl = flags | Mtrl._DEPTH_TEST;
+function decomposeFlags (fl) {
+  var flags = fl | Mtrl._DEPTH_TEST;
 
-  if (fl & Mtrl.TRANSPARENT) {
-    fl |= Mtrl._BLEND;
-    fl &= ~Mtrl._DEPTH_WRITE;
+  if (flags & Mtrl.TRANSPARENT) {
+    flags |= Mtrl._BLEND;
+    flags &= ~Mtrl._DEPTH_WRITE;
   } else {
-    fl &= ~Mtrl._BLEND;
-    fl |= Mtrl._DEPTH_WRITE;
+    flags &= ~Mtrl._BLEND;
+    flags |= Mtrl._DEPTH_WRITE;
   }
 
   // TODO:
-  // Mtrl.LIT (separate shader)
   // Mtrl.PARTICLE (TODO entirely)
   // Mtrl.REFLECTIVE (combo material: stencil pass, transparent pass)
   // Mtrl.SHADOWED (separate shader + some state)
-  // Mtrl.ENVIRONMENT (separate shader)
   // Mtrl.CLAMP_S (tex param)
   // Mtrl.CLAMP_T (tex param)
 
-  return fl;
+  return flags;
 }
 
-/*
- * Material type flags.
- */
-
-// Our custom flags.
+// Decomposed flags.
 Mtrl._DEPTH_TEST = (1 << 14);
 Mtrl._DEPTH_WRITE = (1 << 13);
 Mtrl._BLEND = (1 << 12);
@@ -136,7 +130,7 @@ Mtrl.prototype.draw = function (state) {
   uniforms.uDiffuse.value = mtrl.diffuse;
   uniforms.uAmbient.value = mtrl.ambient;
   uniforms.uSpecular.value = mtrl.specular;
-  uniforms.uEmissive.value = mtrl.emissions;
+  uniforms.uEmissive.value = mtrl.emission;
   uniforms.uShininess.value = mtrl.shininess;
 
   if (mtrl.flags & Mtrl._BLEND) {
@@ -187,15 +181,14 @@ Mtrl.prototype.fetchImage = function () {
   if (!mtrl._imageProm) {
     var imagePath = mtrlImages[mtrl.name];
     if (!imagePath) {
-      return Error('Material image for ' + mtrl.name + ' is unknown');
+      console.warn(Error('Material image for ' + mtrl.name + ' is unknown'));
+      return;
     }
 
     mtrl._imageProm = data.fetchImage(imagePath).then(function (image) {
       mtrl.image = image;
     });
   }
-
-  return mtrl._imageProm;
 };
 
 /*
