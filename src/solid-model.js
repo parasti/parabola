@@ -9,10 +9,6 @@ var Solid = require('neverball-solid');
 var EC = require('./entity-components.js');
 var SceneNode = require('./scene-node.js');
 
-var Mtrl = require('./mtrl.js');
-var Shader = require('./shader.js');
-var BodyModel = require('./body-model.js');
-
 module.exports = SolidModel;
 
 function SolidModel () {
@@ -26,66 +22,9 @@ function SolidModel () {
 }
 
 /*
- * Cache materials in the pool and add a SOL index-to-object map.
- */
-function _cacheMtrls (pool, sol) {
-  sol._materials = Array(sol.mtrls.length);
-
-  for (var mi = 0; mi < sol.mtrls.length; ++mi) {
-    var solMtrl = sol.mtrls[mi];
-    var mtrl = pool.getMtrl(solMtrl.f);
-
-    if (!mtrl) {
-      mtrl = Mtrl.fromSolMtrl(solMtrl);
-      pool.cacheMtrl(mtrl);
-    }
-
-    sol._materials[mi] = mtrl;
-  }
-}
-
-/*
- * Cache body models in the pool and add a SOL index-to-object map.
- */
-function _cacheModels (pool, sol) {
-  sol._models = Array(sol.bodies.length);
-
-  for (var bi = 0; bi < sol.bodies.length; ++bi) {
-    var id = BodyModel.getIdFromSolBody(sol, bi);
-    var model = pool.getModel(id);
-
-    if (!model) {
-      model = BodyModel.fromSolBody(sol, bi);
-      pool.cacheModel(model);
-    }
-    sol._models[bi] = model;
-  }
-}
-
-/*
- * Cache shaders in the pool and add a SOL index-to-object map.
- */
-function _cacheShaders (pool, sol) {
-  sol._shaders = Array(sol.mtrls.length);
-
-  for (var mi = 0; mi < sol.mtrls.length; ++mi) {
-    var solMtrl = sol.mtrls[mi];
-    var flags = Shader.getFlagsFromSolMtrl(solMtrl);
-    var shader = pool.getShader(flags);
-
-    if (!shader) {
-      shader = Shader.fromSolMtrl(solMtrl);
-      pool.cacheShader(shader);
-    }
-
-    sol._shaders[mi] = shader;
-  }
-}
-
-/*
  * Load entities from SOL.
  */
-SolidModel.fromSol = function (sol, pool) {
+SolidModel.fromSol = function (sol) {
   var solidModel = SolidModel();
 
   var sceneRoot = solidModel.sceneRoot = SceneNode();
@@ -93,10 +32,6 @@ SolidModel.fromSol = function (sol, pool) {
   var models = solidModel.models = [];
 
   var i, ent;
-
-  _cacheShaders(pool, sol);
-  _cacheMtrls(pool, sol);
-  _cacheModels(pool, sol);
 
   // Bodies
 
@@ -227,21 +162,6 @@ SolidModel.prototype.step = function (dt) {
     // Update scene node.
 
     ent.sceneGraph.setMatrix(ent.spatial.position, ent.spatial.orientation, ent.spatial.scale);
-  }
-};
-
-/*
- * Create body mesh VBOs and textures.
- */
-SolidModel.prototype.createObjects = function (state) {
-  var models = this.models;
-  var i;
-
-  for (i = 0; i < models.length; ++i) {
-    var model = models[i];
-    if (model) {
-      model.createObjects(state);
-    }
   }
 };
 

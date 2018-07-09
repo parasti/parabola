@@ -44,19 +44,24 @@ function init () {
   var gl = state.gl;
   var solFile = null;
 
-  function createModelObjects (model) {
-    model.createObjects(state);
+  function createObjects (res) {
+    res.createObjects(state);
   }
+
+  pool.emitter.on('mtrl', createObjects);
+  pool.emitter.on('model', createObjects);
+  pool.emitter.on('shader', createObjects);
 
   scene.view.setProjection(gl.canvas.width, gl.canvas.height, 50);
 
   data.fetchSolid('map-fwp/adventure.sol').then(function (sol) {
-    var model = SolidModel.fromSol(sol, pool);
+    pool.cacheSol(sol);
+    var model = SolidModel.fromSol(sol);
     scene.setModel(state, 'level', model);
     scene.view.setFromSol(sol, 1.0);
     solFile = sol;
     return model;
-  }).then(createModelObjects);
+  });
 
   var modelPaths = {
     coin: 'ball/snowglobe/snowglobe-inner.sol',
@@ -68,22 +73,23 @@ function init () {
 
   for (let modelName in modelPaths) {
     data.fetchSolid(modelPaths[modelName]).then(function (sol) {
-      var model = SolidModel.fromSol(sol, pool);
+      pool.cacheSol(sol);
+      var model = SolidModel.fromSol(sol);
       scene.setModel(state, modelName, model);
       return model;
-    }).then(createModelObjects);
+    });
   }
 
   //loadBall(gl, state, 'snowglobe');
 
   function step (currTime) {
+    window.requestAnimationFrame(step);
+
     var dt = getDeltaTime(currTime);
 
     scene.view.mouseLook(0, 0);
     scene.step(dt);
     scene.draw(state);
-
-    window.requestAnimationFrame(step);
   }
   window.requestAnimationFrame(step);
 
@@ -131,10 +137,11 @@ function init () {
 
     data.loadSolid(this.files[0]).then(function (sol) {
       solFile = sol;
-      var model = SolidModel.fromSol(sol, pool);
+      pool.cacheSol(sol);
+      var model = SolidModel.fromSol(sol);
       scene.setModel(state, 'level', model);
       return model;
-    }).then(createModelObjects);
+    });
   });
 
   var fullscreen = document.getElementById('fullscreen');

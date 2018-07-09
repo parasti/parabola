@@ -104,6 +104,10 @@ Scene.prototype.draw = function (state) {
   var bodyModels = sortedNodes.keys();
 
   for (var model of bodyModels) {
+    if (!model.instanceVBO) {
+      continue;
+    }
+
     var nodes = sortedNodes.get(model);
     var matrices = new Float32Array(16 * nodes.length);
 

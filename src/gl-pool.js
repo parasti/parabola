@@ -1,5 +1,7 @@
 'use strict';
 
+var EventEmitter = require('events');
+
 var Mtrl = require('./mtrl.js');
 var Shader = require('./shader.js');
 var BodyModel = require('./body-model.js');
@@ -11,21 +13,23 @@ function GLPool () {
     return new GLPool();
   }
 
-  this.materials = makeCache({});
+  this.emitter = new EventEmitter();
+
+  this.materials = makeCache(Object.create(null));
   this.shaders = makeCache([]);
-  this.models = makeCache({});
+  this.models = makeCache(Object.create(null));
 }
 
-function makeCache (pool) {
+function makeCache (store) {
   return {
-    _pool: pool,
+    store: store,
 
     set: function (key, obj) {
-      this._pool[key] = obj;
+      this.store[key] = obj;
     },
 
     get: function (key) {
-      return this._pool[key];
+      return this.store[key];
     }
   }
 }
@@ -42,14 +46,90 @@ GLPool.prototype.getModel = function (id) {
   return this.models.get(id);
 }
 
-GLPool.prototype.cacheMtrl = function (mtrl) {
+GLPool.prototype._cacheMtrl = function (mtrl) {
   this.materials.set(mtrl.name, mtrl);
+  this.emitter.emit('mtrl', mtrl);
 }
 
-GLPool.prototype.cacheShader = function (shader) {
+GLPool.prototype._cacheShader = function (shader) {
   this.shaders.set(shader.flags, shader);
+  this.emitter.emit('shader', shader);
 }
 
-GLPool.prototype.cacheModel = function (model) {
+GLPool.prototype._cacheModel = function (model) {
   this.models.set(model.id, model);
+  this.emitter.emit('model', model);
+}
+
+/*
+ * Cache materials and add a SOL-to-cache map to the SOL.
+ */
+GLPool.prototype.cacheMtrlsFromSol = function (sol) {
+  var pool = this;
+
+  sol._materials = Array(sol.mtrls.length);
+
+  for (var mi = 0; mi < sol.mtrls.length; ++mi) {
+    var solMtrl = sol.mtrls[mi];
+    var mtrl = pool.getMtrl(solMtrl.f);
+
+    if (!mtrl) {
+      mtrl = Mtrl.fromSolMtrl(solMtrl);
+      pool._cacheMtrl(mtrl);
+    }
+
+    sol._materials[mi] = mtrl;
+  }
+}
+
+/*
+ * Cache models and add a SOL-to-cache map to the SOL.
+ */
+GLPool.prototype.cacheModelsFromSol = function (sol) {
+  var pool = this;
+
+  sol._models = Array(sol.bodies.length);
+
+  for (var bi = 0; bi < sol.bodies.length; ++bi) {
+    var id = BodyModel.getIdFromSolBody(sol, bi);
+    var model = pool.getModel(id);
+
+    if (!model) {
+      model = BodyModel.fromSolBody(sol, bi);
+      pool._cacheModel(model);
+    }
+
+    sol._models[bi] = model;
+  }
+}
+
+/*
+ * Cache shaders and add a SOL-to-cache map to the SOL.
+ */
+GLPool.prototype.cacheShadersFromSol = function (sol) {
+  var pool = this;
+
+  sol._shaders = Array(sol.mtrls.length);
+
+  for (var mi = 0; mi < sol.mtrls.length; ++mi) {
+    var solMtrl = sol.mtrls[mi];
+    var flags = Shader.getFlagsFromSolMtrl(solMtrl);
+    var shader = pool.getShader(flags);
+
+    if (!shader) {
+      shader = Shader.fromSolMtrl(solMtrl);
+      pool._cacheShader(shader);
+    }
+
+    sol._shaders[mi] = shader;
+  }
+}
+
+/*
+ * Cache resources from the SOL.
+ */
+GLPool.prototype.cacheSol = function (sol) {
+  this.cacheShadersFromSol(sol);
+  this.cacheMtrlsFromSol(sol);
+  this.cacheModelsFromSol(sol);
 }
