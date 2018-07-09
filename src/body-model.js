@@ -140,7 +140,7 @@ function drawMeshInstanced (state, mesh, count) {
 function indexGeomByMtrl (geoms, geom) {
   var mi = geom.mi;
 
-  if (!geoms[mi]) {
+  if (geoms[mi] === undefined) {
     geoms[mi] = [];
   }
 
@@ -148,7 +148,7 @@ function indexGeomByMtrl (geoms, geom) {
 }
 
 function getBodyGeomsByMtrl (sol, body) {
-  var geoms = [];
+  var geoms = Array(sol.mtrls.length);
 
   var li, gi;
 
@@ -209,12 +209,13 @@ BodyModel.prototype.getMeshesFromSol = function (sol, body) {
     vertsTotal++;
   }
 
-  getBodyGeomsByMtrl(sol, body).forEach(function (geoms, mi) {
-    var solMtrl = sol.mv[mi];
+  geomsByMtrl.forEach(function (geoms, mi) {
+    var mtrl = sol._materials[mi];
+    var shader = sol._shaders[mi];
 
     var mesh = {
-      mtrl: Mtrl.fromSolMtrl(solMtrl),
-      shader: Shader.fromSolMtrl(solMtrl),
+      mtrl: mtrl,
+      shader: shader,
       elemBase: elemsTotal,
       elemCount: 0
     };

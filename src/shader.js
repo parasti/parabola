@@ -4,55 +4,59 @@ var Solid = require('neverball-solid');
 
 module.exports = Shader;
 
-function Shader () {
+function Shader (flags) {
   if (!(this instanceof Shader)) {
-    return new Shader();
+    return new Shader(flags);
   }
 
   this.program = null;
   this.vertexShader = '';
   this.fragmentShader = '';
   this.uniformLocations = {};
-  this.flags = 0;
+  this.flags = (flags || 0);
+
+  this.buildShaders();
 }
 
 Shader.LIT = 0x1;
 Shader.ENVIRONMENT = 0x2;
 
-Shader.prototype.getDefs = function () {
+Shader.prototype.buildShaders = function () {
+  var defs = getDefsFromFlags(this.flags);
+
+  this.vertexShader = defs + require('./glsl.js').defaultVertexShader;
+  this.fragmentShader = defs + require('./glsl.js').defaultFragmentShader;
+}
+
+function getDefsFromFlags (flags) {
   var defs = '';
 
-  if (this.flags & Shader.LIT) {
+  if (flags & Shader.LIT) {
     defs += '#define M_LIT 1\n';
   }
-  if (this.flags & Shader.ENVIRONMENT) {
+  if (flags & Shader.ENVIRONMENT) {
     defs += '#define M_ENVIRONMENT 1\n';
   }
 
   return defs;
 };
 
-Shader.prototype.getFlagsFromMtrl = function (mtrl) {
-  var shader = this;
+Shader.getFlagsFromSolMtrl = function (solMtrl) {
+  var flags = 0;
 
-  if (mtrl.fl & Solid.MTRL_LIT) {
-    shader.flags |= Shader.LIT;
+  if (solMtrl.fl & Solid.MTRL_LIT) {
+    flags |= Shader.LIT;
   }
-  if (mtrl.fl & Solid.MTRL_ENVIRONMENT) {
-    shader.flags |= Shader.ENVIRONMENT;
+  if (solMtrl.fl & Solid.MTRL_ENVIRONMENT) {
+    flags |= Shader.ENVIRONMENT;
   }
-};
+
+  return flags;
+}
 
 Shader.fromSolMtrl = function (mtrl) {
-  var shader = Shader();
-
-  shader.getFlagsFromMtrl(mtrl);
-
-  var defs = shader.getDefs();
-
-  shader.vertexShader = defs + require('./glsl.js').defaultVertexShader;
-  shader.fragmentShader = defs + require('./glsl.js').defaultFragmentShader;
-
+  var flags = Shader.getFlagsFromSolMtrl(mtrl);
+  var shader = Shader(flags);
   return shader;
 };
 

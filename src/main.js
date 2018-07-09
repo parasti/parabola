@@ -8,9 +8,10 @@ var screenfull = require('screenfull');
 var data = require('./data.js');
 
 var GLState = require('./gl-state.js');
-var GLCache = require('./gl-cache.js');
+var GLPool = require('./gl-pool.js');
 var Scene = require('./scene.js');
 var BallModel = require('./ball-model.js');
+var SolidModel = require('./solid-model.js');
 
 var getDeltaTime = (function () {
   var lastTime = 0.0;
@@ -38,18 +39,24 @@ function loadBall (gl, state, name = 'basic-ball') {
 function init () {
   var canvas = document.getElementById('canvas');
   var state = GLState(canvas);
-  var cache = GLCache();
+  var pool = GLPool();
   var scene = Scene();
   var gl = state.gl;
   var solFile = null;
 
+  function createModelObjects (model) {
+    model.createObjects(state);
+  }
+
   scene.view.setProjection(gl.canvas.width, gl.canvas.height, 50);
 
   data.fetchSolid('map-fwp/adventure.sol').then(function (sol) {
-    solFile = sol;
-    scene.setModel(state, 'level', sol);
+    var model = SolidModel.fromSol(sol, pool);
+    scene.setModel(state, 'level', model);
     scene.view.setFromSol(sol, 1.0);
-  });
+    solFile = sol;
+    return model;
+  }).then(createModelObjects);
 
   var modelPaths = {
     coin: 'ball/snowglobe/snowglobe-inner.sol',
@@ -61,11 +68,13 @@ function init () {
 
   for (let modelName in modelPaths) {
     data.fetchSolid(modelPaths[modelName]).then(function (sol) {
-      scene.setModel(state, modelName, sol);
-    });
+      var model = SolidModel.fromSol(sol, pool);
+      scene.setModel(state, modelName, model);
+      return model;
+    }).then(createModelObjects);
   }
 
-  loadBall(gl, state, 'snowglobe');
+  //loadBall(gl, state, 'snowglobe');
 
   function step (currTime) {
     var dt = getDeltaTime(currTime);
@@ -122,8 +131,10 @@ function init () {
 
     data.loadSolid(this.files[0]).then(function (sol) {
       solFile = sol;
-      scene.setModel(state, 'level', solFile);
-    });
+      var model = SolidModel.fromSol(sol, pool);
+      scene.setModel(state, 'level', model);
+      return model;
+    }).then(createModelObjects);
   });
 
   var fullscreen = document.getElementById('fullscreen');

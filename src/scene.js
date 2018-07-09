@@ -60,9 +60,7 @@ Scene.prototype._attachModelInstances = function (modelName) {
   }
 }
 
-Scene.prototype.setModel = function (state, modelName, sol) { // TODO support unloading (sol = null)
-  var model = SolidModel.fromSol(sol);
-  model.createObjects(state);
+Scene.prototype.setModel = function (state, modelName, model) { // TODO support unloading (sol = null)
   this.models[modelName] = model;
 
   // TODO should this be done dynamically as part of draw()?
