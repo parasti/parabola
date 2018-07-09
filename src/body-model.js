@@ -24,11 +24,11 @@ function BodyModel () {
 
   this.vao = null;
 
-  this.id = 'default:' + (_modelIndex++).toString();
+  this.id = 'default_' + (_modelIndex++).toString();
 }
 
 BodyModel.getIdFromSolBody = function (sol, bodyIndex) {
-  return sol.crc.toString(16) + ':' + bodyIndex.toString();
+  return sol.crc.toString(16) + '_' + bodyIndex.toString();
 }
 
 BodyModel.fromSolBody = function (sol, bodyIndex) {
