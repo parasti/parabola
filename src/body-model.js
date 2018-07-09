@@ -24,11 +24,18 @@ function BodyModel () {
 
   this.vao = null;
 
-  this.id = _modelIndex++;
+  this.id = 'default:' + (_modelIndex++).toString();
 }
 
-BodyModel.fromSolBody = function (sol, solBody) {
+BodyModel.getIdFromSolBody = function (sol, bodyIndex) {
+  return sol.crc.toString(16) + ':' + bodyIndex.toString();
+}
+
+BodyModel.fromSolBody = function (sol, bodyIndex) {
+  var solBody = sol.bodies[bodyIndex];
   var model = BodyModel();
+
+  model.id = BodyModel.getIdFromSolBody(sol, bodyIndex);
 
   model.getMeshesFromSol(sol, solBody);
 

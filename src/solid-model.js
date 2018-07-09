@@ -51,11 +51,13 @@ function _cacheModels (pool, sol) {
   sol._models = Array(sol.bodies.length);
 
   for (var bi = 0; bi < sol.bodies.length; ++bi) {
-    var solBody = sol.bodies[bi];
+    var id = BodyModel.getIdFromSolBody(sol, bi);
+    var model = pool.getModel(id);
 
-    var model = BodyModel.fromSolBody(sol, solBody);
-    pool.cacheModel(model);
-
+    if (!model) {
+      model = BodyModel.fromSolBody(sol, bi);
+      pool.cacheModel(model);
+    }
     sol._models[bi] = model;
   }
 }

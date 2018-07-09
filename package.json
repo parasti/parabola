@@ -16,6 +16,7 @@
   "author": "Jānis Rūcis",
   "license": "GPL-3.0",
   "dependencies": {
+    "crc": "^3.5.0",
     "gl-matrix": "^2.6.1",
     "glslify": "^6.1.0",
     "nano-ecs": "^2.2.1",

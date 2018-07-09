@@ -13,7 +13,7 @@ function GLPool () {
 
   this.materials = makeCache({});
   this.shaders = makeCache([]);
-  this.models = makeCache([]);
+  this.models = makeCache({});
 }
 
 function makeCache (pool) {
