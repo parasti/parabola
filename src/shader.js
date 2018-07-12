@@ -26,7 +26,7 @@ Shader.prototype.buildShaders = function () {
 
   this.vertexShader = defs + require('./glsl.js').defaultVertexShader;
   this.fragmentShader = defs + require('./glsl.js').defaultFragmentShader;
-}
+};
 
 function getDefsFromFlags (flags) {
   var defs = '';
@@ -39,7 +39,7 @@ function getDefsFromFlags (flags) {
   }
 
   return defs;
-};
+}
 
 Shader.getFlagsFromSolMtrl = function (solMtrl) {
   var flags = 0;
@@ -52,7 +52,7 @@ Shader.getFlagsFromSolMtrl = function (solMtrl) {
   }
 
   return flags;
-}
+};
 
 Shader.fromSolMtrl = function (mtrl) {
   var flags = Shader.getFlagsFromSolMtrl(mtrl);

@@ -2,9 +2,6 @@
 
 module.exports = BodyModel;
 
-var Mtrl = require('./mtrl.js');
-var Shader = require('./shader.js');
-
 var _modelIndex = 0;
 
 function BodyModel () {
@@ -29,7 +26,7 @@ function BodyModel () {
 
 BodyModel.getIdFromSolBody = function (sol, bodyIndex) {
   return sol.crc.toString(16) + '_' + bodyIndex.toString();
-}
+};
 
 BodyModel.fromSolBody = function (sol, bodyIndex) {
   var solBody = sol.bodies[bodyIndex];
@@ -100,22 +97,36 @@ BodyModel.prototype.createObjects = function (state) {
 
 BodyModel.prototype.drawInstanced = function (state, count) {
   var model = this;
-  var gl = state.gl;
 
   if (model.vao) {
+    // TODO: do this at mesh level
     state.bindVertexArray(model.vao);
 
     for (var i = 0; i < model.meshes.length; ++i) {
-      drawMeshInstanced(state, model.meshes[i], count);
+      var mesh = model.meshes[i];
+      mesh.drawInstanced(state, count);
     }
-
-    state.bindVertexArray(null);
   }
 };
 
-function drawMeshInstanced (state, mesh, count) {
+function Mesh () {
+  if (!(this instanceof Mesh)) {
+    return new Mesh();
+  }
+
+  this.mtrl = null;
+  this.shader = null;
+
+  // Location in the element array.
+
+  this.elemBase = 0;
+  this.elemCount = 0;
+}
+
+Mesh.prototype.drawInstanced = function (state, count) {
   var gl = state.gl;
 
+  var mesh = this;
   var mtrl = mesh.mtrl;
   var shader = mesh.shader;
 
@@ -130,7 +141,7 @@ function drawMeshInstanced (state, mesh, count) {
 
   // PSA: glDrawElements offset is in bytes.
   state.drawElementsInstanced(gl.TRIANGLES, mesh.elemCount, gl.UNSIGNED_SHORT, mesh.elemBase * 2, count);
-}
+};
 
 /*
  * Body mesh creation.
@@ -212,12 +223,12 @@ BodyModel.prototype.getMeshesFromSol = function (sol, body) {
     var mtrl = sol._materials[mi];
     var shader = sol._shaders[mi];
 
-    var mesh = {
-      mtrl: mtrl,
-      shader: shader,
-      elemBase: elemsTotal,
-      elemCount: 0
-    };
+    var mesh = Mesh();
+
+    mesh.mtrl = mtrl;
+    mesh.shader = shader;
+    mesh.elemBase = elemsTotal;
+    mesh.elemCount = 0;
 
     var offsToVert = [];
 

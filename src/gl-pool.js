@@ -31,35 +31,35 @@ function makeCache (store) {
     get: function (key) {
       return this.store[key];
     }
-  }
+  };
 }
 
 GLPool.prototype.getMtrl = function (name) {
   return this.materials.get(name);
-}
+};
 
 GLPool.prototype.getShader = function (flags) {
   return this.shaders.get(flags);
-}
+};
 
 GLPool.prototype.getModel = function (id) {
   return this.models.get(id);
-}
+};
 
 GLPool.prototype._cacheMtrl = function (mtrl) {
   this.materials.set(mtrl.name, mtrl);
   this.emitter.emit('mtrl', mtrl);
-}
+};
 
 GLPool.prototype._cacheShader = function (shader) {
   this.shaders.set(shader.flags, shader);
   this.emitter.emit('shader', shader);
-}
+};
 
 GLPool.prototype._cacheModel = function (model) {
   this.models.set(model.id, model);
   this.emitter.emit('model', model);
-}
+};
 
 /*
  * Cache materials and add a SOL-to-cache map to the SOL.
@@ -80,7 +80,7 @@ GLPool.prototype.cacheMtrlsFromSol = function (sol) {
 
     sol._materials[mi] = mtrl;
   }
-}
+};
 
 /*
  * Cache models and add a SOL-to-cache map to the SOL.
@@ -101,7 +101,7 @@ GLPool.prototype.cacheModelsFromSol = function (sol) {
 
     sol._models[bi] = model;
   }
-}
+};
 
 /*
  * Cache shaders and add a SOL-to-cache map to the SOL.
@@ -123,7 +123,7 @@ GLPool.prototype.cacheShadersFromSol = function (sol) {
 
     sol._shaders[mi] = shader;
   }
-}
+};
 
 /*
  * Cache resources from the SOL.
@@ -132,4 +132,4 @@ GLPool.prototype.cacheSol = function (sol) {
   this.cacheShadersFromSol(sol);
   this.cacheMtrlsFromSol(sol);
   this.cacheModelsFromSol(sol);
-}
+};

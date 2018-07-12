@@ -3,7 +3,6 @@
 var mat4 = require('gl-matrix').mat4;
 
 var SceneNode = require('./scene-node.js');
-var SolidModel = require('./solid-model.js');
 var View = require('./view.js');
 
 module.exports = Scene;
@@ -58,7 +57,7 @@ Scene.prototype._attachModelInstances = function (modelName) {
       levelModel.attachModelToEnts(entModel, modelName);
     }
   }
-}
+};
 
 Scene.prototype.setModel = function (state, modelName, model) { // TODO support unloading (sol = null)
   this.models[modelName] = model;

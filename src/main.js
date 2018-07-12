@@ -80,7 +80,7 @@ function init () {
     });
   }
 
-  //loadBall(gl, state, 'snowglobe');
+  // loadBall(gl, state, 'snowglobe');
 
   function step (currTime) {
     window.requestAnimationFrame(step);

@@ -175,4 +175,4 @@ SolidModel.prototype.attachModelToEnts = function (model, tag) {
     var instance = model.sceneRoot.createInstance();
     instance.setParent(ents[i].sceneGraph.node);
   }
-}
+};
