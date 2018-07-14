@@ -5,6 +5,8 @@ var mtrlImages = require('./mtrl-images.json');
 
 module.exports = Mtrl;
 
+var _materialIndex = 0;
+
 function Mtrl (name) {
   if (!(this instanceof Mtrl)) {
     return new Mtrl(name);
@@ -27,6 +29,8 @@ function Mtrl (name) {
   this.specular = null;
   this.emission = null;
   this.shininess = null;
+
+  this.id = _materialIndex++;
 }
 
 Mtrl.fromSolMtrl = function (solMtrl) {

@@ -87,6 +87,8 @@ Scene.prototype.step = function (dt) {
 Scene.prototype.draw = function (state) {
   var gl = state.gl;
 
+  var i, n;
+
   /*
    * Make lists of nodes, indexed by model.
    */
@@ -110,9 +112,9 @@ Scene.prototype.draw = function (state) {
     var nodes = sortedNodes.get(model);
     var matrices = new Float32Array(16 * nodes.length);
 
-    for (var j = 0; j < nodes.length; ++j) {
-      var node = nodes[j];
-      var modelViewMat = matrices.subarray(j * 16, (j + 1) * 16);
+    for (i = 0, n = nodes.length; i < n; ++i) {
+      var node = nodes[i];
+      var modelViewMat = matrices.subarray(i * 16, (i + 1) * 16);
 
       mat4.multiply(modelViewMat, this.view.getMatrix(), node.getWorldMatrix());
     }
@@ -120,6 +122,25 @@ Scene.prototype.draw = function (state) {
     gl.bindBuffer(gl.ARRAY_BUFFER, model.instanceVBO);
     gl.bufferData(gl.ARRAY_BUFFER, matrices, gl.DYNAMIC_DRAW);
   }
+
+  // Sort meshes.
+
+  var meshes = [];
+
+  for (model of sortedNodes.keys()) {
+    nodes = sortedNodes.get(model);
+
+    var count = nodes.length;
+    var modelMeshes = model.meshes;
+
+    for (i = 0, n = modelMeshes.length; i < n; ++i) {
+      var mesh = modelMeshes[i];
+      mesh._instanceCount = count;
+      meshes.push(mesh);
+    }
+  }
+
+  meshes.sort(compareMeshes);
 
   // Set some uniforms.
 
@@ -129,12 +150,41 @@ Scene.prototype.draw = function (state) {
 
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-  for (model of sortedNodes.keys()) {
-    nodes = sortedNodes.get(model);
-    model.drawInstanced(state, nodes.length);
+  for (i = 0, n = meshes.length; i < n; ++i) {
+    var mesh = meshes[i];
+    var count = mesh._instanceCount;
+    mesh.drawInstanced(state, count);
   }
 };
 
+function compareMeshes (mesh0, mesh1) {
+  var a = mesh0.sortIndex;
+  var b = mesh1.sortIndex;
+
+  if (a < b) {
+    return -1;
+  }
+  if (a > b) {
+    return +1;
+  }
+
+  // Work around unstable sort on Chrome.
+
+  a = mesh0.mtrl.id;
+  b = mesh1.mtrl.id;
+
+  if (a < b) {
+    return -1;
+  }
+  if (a > b) {
+    return +1;
+  }
+  return 0;
+}
+
+/*
+ * Fill a map with scene nodes keyed by model.
+ */
 function sortNodesByModel (modelNodes, node) {
   if (!node) {
     return modelNodes;

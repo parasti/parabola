@@ -86,6 +86,16 @@ SceneNode.prototype.getModel = function () {
 };
 
 /*
+ * Set node body model.
+ */
+SceneNode.prototype.setModel = function (model) {
+  if (this.master) {
+    throw Error('Can not set model on a node instance');
+  }
+  this.model = model;
+}
+
+/*
  * Test the given node for ancestry.
  */
 SceneNode.prototype.hasAncestor = function (node) {
