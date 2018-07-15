@@ -20,12 +20,9 @@ function SceneNode (parent) {
   // Pre-allocate a separate matrix in case we get parented.
   this._worldMatrix = mat4.create();
 
-  // Instances use the localMatrix and model of a master node.
+  // Instances use the localMatrix of a master node.
   this.master = null;
   this.instances = [];
-
-  // Associated body model.
-  this.model = null;
 
   if (parent !== undefined) {
     this.setParent(parent);
@@ -61,8 +58,12 @@ SceneNode.prototype.setLocalMatrix = (function () {
       throw Error('Can not set the local matrix of a node instance');
     }
 
-    vec3.set(s_, s, s, s);
-    mat4.fromRotationTranslationScale(this.localMatrix, e, p, s_);
+    if (s.length) {
+      mat4.fromRotationTranslationScale(this.localMatrix, e, p, s);
+    } else {
+      vec3.set(s_, s, s, s);
+      mat4.fromRotationTranslationScale(this.localMatrix, e, p, s_);
+    }
     this._markDirty();
   };
 })();
@@ -74,26 +75,6 @@ SceneNode.prototype.getWorldMatrix = function () {
   this._update();
   return this.worldMatrix;
 };
-
-/*
- * Return node body model.
- */
-SceneNode.prototype.getModel = function () {
-  if (this.master) {
-    return this.master.getModel();
-  }
-  return this.model;
-};
-
-/*
- * Set node body model.
- */
-SceneNode.prototype.setModel = function (model) {
-  if (this.master) {
-    throw Error('Can not set model on a node instance');
-  }
-  this.model = model;
-}
 
 /*
  * Test the given node for ancestry.
@@ -151,12 +132,26 @@ SceneNode.prototype._setMaster = function (node) {
 };
 
 /*
+ * Find the one true master.
+ */
+SceneNode.prototype.getMaster = function () {
+  if (this.master) {
+    return this.master;
+  }
+  if (this.parent) {
+    return this.parent.getMaster();
+  }
+  return null;
+}
+
+/*
  * Create an instance of this node.
  */
 SceneNode.prototype.createInstance = function () {
   var node = SceneNode();
+  var master = this.getMaster() || this;
 
-  node._setMaster(this);
+  node._setMaster(master);
 
   // Create instances of all children and parent them to this node.
 

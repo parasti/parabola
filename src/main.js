@@ -68,7 +68,8 @@ function init () {
     coin5: 'item/coin/coin5.sol',
     coin10: 'item/coin/coin10.sol',
     grow: 'item/grow/grow.sol',
-    shrink: 'item/shrink/shrink.sol'
+    shrink: 'item/shrink/shrink.sol',
+    jump: 'geom/beam/beam.sol'
   };
 
   for (let modelName in modelPaths) {

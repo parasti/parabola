@@ -82,17 +82,35 @@ Scene.prototype.step = function (dt) {
 };
 
 /*
+ *
+ */
+Scene.prototype.getBodyModels = function () {
+  var models = [];
+
+  for (var modelName in this.models) {
+    var solidModel = this.models[modelName];
+
+    if (!solidModel) {
+      continue;
+    }
+
+    for (var bodyModel of solidModel.models) {
+      models.push(bodyModel);
+    }
+  }
+
+  return models;
+}
+
+/*
  * Render everything. TODO rework this.
  */
 Scene.prototype.draw = function (state) {
   var gl = state.gl;
 
-  var i, n;
+  var bodyModels = this.getBodyModels();
 
-  /*
-   * Make lists of nodes, indexed by model.
-   */
-  var sortedNodes = sortNodesByModel(new Map(), this.sceneRoot);
+  var model, i, n;
 
   /*
    * Make arrays of modelview matrices.
@@ -102,14 +120,18 @@ Scene.prototype.draw = function (state) {
    * n is the number of nodes that use this model.
    */
 
-  var bodyModels = sortedNodes.keys();
-
-  for (var model of bodyModels) {
+  for (model of bodyModels) {
     if (!model.instanceVBO) {
       continue;
     }
 
-    var nodes = sortedNodes.get(model);
+    var nodes = model.getInstances();
+
+    if (!nodes.length) {
+      nodes = [model.sceneNode];
+      //continue;
+    }
+
     var matrices = new Float32Array(16 * nodes.length);
 
     for (i = 0, n = nodes.length; i < n; ++i) {
@@ -127,15 +149,15 @@ Scene.prototype.draw = function (state) {
 
   var meshes = [];
 
-  for (model of sortedNodes.keys()) {
-    nodes = sortedNodes.get(model);
+  for (model of bodyModels) {
+    //if (!model.getInstances().length) {
+    //  continue;
+    //}
 
-    var count = nodes.length;
     var modelMeshes = model.meshes;
 
     for (i = 0, n = modelMeshes.length; i < n; ++i) {
       var mesh = modelMeshes[i];
-      mesh._instanceCount = count;
       meshes.push(mesh);
     }
   }
@@ -152,8 +174,9 @@ Scene.prototype.draw = function (state) {
 
   for (i = 0, n = meshes.length; i < n; ++i) {
     var mesh = meshes[i];
-    var count = mesh._instanceCount;
-    mesh.drawInstanced(state, count);
+    var count = mesh.model.getInstances().length || 1;
+
+    mesh.drawInstanced(state, count);      
   }
 };
 
@@ -180,31 +203,4 @@ function compareMeshes (mesh0, mesh1) {
     return +1;
   }
   return 0;
-}
-
-/*
- * Fill a map with scene nodes keyed by model.
- */
-function sortNodesByModel (modelNodes, node) {
-  if (!node) {
-    return modelNodes;
-  }
-
-  for (var i = 0; i < node.children.length; ++i) {
-    sortNodesByModel(modelNodes, node.children[i]);
-  }
-
-  var model = node.getModel();
-
-  if (model === null) {
-    return modelNodes;
-  }
-
-  if (modelNodes.has(model)) {
-    modelNodes.get(model).push(node);
-  } else {
-    modelNodes.set(model, [node]);
-  }
-
-  return modelNodes;
 }

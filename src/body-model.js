@@ -1,5 +1,7 @@
 'use strict';
 
+var SceneNode = require('./scene-node.js');
+
 module.exports = BodyModel;
 
 var _modelIndex = 0;
@@ -22,6 +24,12 @@ function BodyModel () {
   this.vao = null;
 
   this.id = 'default_' + (_modelIndex++).toString();
+
+  this.sceneNode = SceneNode();
+}
+
+BodyModel.prototype.getInstances = function () {
+  return this.sceneNode.instances;
 }
 
 BodyModel.getIdFromSolBody = function (sol, bodyIndex) {

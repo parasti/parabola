@@ -31,7 +31,7 @@ SolidModel.fromSol = function (sol) {
   var ents = solidModel.entities = nanoECS();
   var models = solidModel.models = [];
 
-  var i, ent;
+  var i, n, ent;
 
   // Bodies
 
@@ -44,11 +44,18 @@ SolidModel.fromSol = function (sol) {
     ent.addComponent(EC.Movers);
     ent.addComponent(EC.SceneGraph);
 
-    // FIXME awkward
     var model = sol._models[i];
+
+    // Keep a reference for potential unloading ("we no longer need this").
     models.push(model);
 
-    ent.sceneGraph.setModel(model);
+    // Attach a body-model node to the entity node.
+    //var instance = model.sceneNode.createInstance();
+    //instance.setParent(ent.sceneGraph.node);
+
+    model.sceneNode.setParent(ent.sceneGraph.node);
+
+    // Attach entity node to the solid-model node.
     ent.sceneGraph.setParent(sceneRoot);
 
     // TODO should movers be entities?
@@ -94,6 +101,25 @@ SolidModel.fromSol = function (sol) {
 
     vec3.copy(ent.spatial.position, solItem.p);
     ent.spatial.scale = 0.15; // Neverball default.
+
+    // Update scene node.
+    ent.sceneGraph.setMatrix(ent.spatial.position, ent.spatial.orientation, ent.spatial.scale);
+  }
+
+  // Teleporters.
+
+  for (i = 0, n = sol.jv.length; i < n; ++i) {
+    var solJump = sol.jv[i];
+
+    ent = ents.createEntity().addTag('jump');
+
+    ent.addComponent(EC.Spatial);
+    ent.addComponent(EC.SceneGraph);
+
+    ent.sceneGraph.setParent(sceneRoot);
+
+    vec3.copy(ent.spatial.position, solJump.p);
+    ent.spatial.scale = [solJump.r, 2.0, solJump.r];
 
     // Update scene node.
     ent.sceneGraph.setMatrix(ent.spatial.position, ent.spatial.orientation, ent.spatial.scale);
