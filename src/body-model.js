@@ -30,7 +30,7 @@ function BodyModel () {
 
 BodyModel.prototype.getInstances = function () {
   return this.sceneNode.instances;
-}
+};
 
 BodyModel.getIdFromSolBody = function (sol, bodyIndex) {
   return sol.crc.toString(16) + '_' + bodyIndex.toString();
@@ -109,7 +109,7 @@ BodyModel.prototype.bindArray = function (state) {
   if (model.vao) {
     state.bindVertexArray(model.vao);
   }
-}
+};
 
 /*
  * Mesh is a fully specified draw call.
