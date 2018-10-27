@@ -177,7 +177,7 @@ Mesh.prototype.createSortKey = function () {
   if (flags & Mtrl._BLEND) {
     this.sortIndex |= 0x2;
   }
-}
+};
 
 /*
  * Body mesh creation.

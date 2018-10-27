@@ -24,8 +24,12 @@ function Scene () {
     coin5: null,
     coin10: null,
     grow: null,
-    shrink: null
+    shrink: null,
+    beam: null,
+    jump: null
   };
+
+  this.allModels = [];
 
   this.time = 0.0;
 }
@@ -59,11 +63,19 @@ Scene.prototype._attachModelInstances = function (modelName) {
   }
 };
 
-Scene.prototype.setModel = function (state, modelName, model) { // TODO support unloading (sol = null)
+Scene.prototype._addModel = function (model) {
+  var index = this.allModels.indexOf(model);
+
+  if (index < 0) {
+    this.allModels.push(model);
+  }
+}
+
+Scene.prototype.setModel = function (state, modelName, model) {
+  this._addModel(model);
+
   this.models[modelName] = model;
 
-  // TODO should this be done dynamically as part of draw()?
-  // "Hey, this should have a model, oh, here's a model, let's attach it"
   this._attachModelInstances(modelName);
 };
 
@@ -115,9 +127,11 @@ Scene.prototype.draw = function (state) {
   /*
    * Make arrays of modelview matrices.
    *
-   * 1 array per model,
-   * n matrices per array, where
-   * n is the number of nodes that use this model.
+   * For each model
+   *   instance matrix 0
+   *   instance matrix 1
+   *   ...
+   *   instance matrix N
    */
 
   for (model of bodyModels) {
@@ -176,7 +190,7 @@ Scene.prototype.draw = function (state) {
     var mesh = meshes[i];
     var count = mesh.model.getInstances().length || 1;
 
-    mesh.drawInstanced(state, count);      
+    mesh.drawInstanced(state, count);
   }
 };
 
