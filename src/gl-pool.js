@@ -8,6 +8,20 @@ var BodyModel = require('./body-model.js');
 
 module.exports = GLPool;
 
+/**
+ * Create a pool for easier GL object management and reuse.
+ *
+ * There are three types of resources in Parabola:
+ *
+ * 1) materials (textures)
+ * 2) shaders (programs)
+ * 3) models (VBOs and VAOs)
+ *
+ * Cache a SOL's resources with pool.cacheSol(sol).
+ *
+ * pool.emitter is an EventEmitter that emits 'mtrl', 'shader', 'model'
+ * events for each cached resource.
+ */
 function GLPool () {
   if (!(this instanceof GLPool)) {
     return new GLPool();
@@ -15,9 +29,9 @@ function GLPool () {
 
   this.emitter = new EventEmitter();
 
-  this.materials = makeCache(Object.create(null));
-  this.shaders = makeCache([]);
-  this.models = makeCache(Object.create(null));
+  this.materials = makeCache(Object.create(null)); // Keyed by name (string).
+  this.shaders = makeCache([]); // Keyed by flags (integer).
+  this.models = makeCache(Object.create(null)); // Keyed by an id (string).
 }
 
 function makeCache (store) {
@@ -61,7 +75,7 @@ GLPool.prototype._cacheModel = function (model) {
   this.emitter.emit('model', model);
 };
 
-/*
+/**
  * Cache materials and add a SOL-to-cache map to the SOL.
  */
 GLPool.prototype.cacheMtrlsFromSol = function (sol) {
@@ -82,7 +96,7 @@ GLPool.prototype.cacheMtrlsFromSol = function (sol) {
   }
 };
 
-/*
+/**
  * Cache models and add a SOL-to-cache map to the SOL.
  */
 GLPool.prototype.cacheModelsFromSol = function (sol) {
@@ -103,7 +117,7 @@ GLPool.prototype.cacheModelsFromSol = function (sol) {
   }
 };
 
-/*
+/**
  * Cache shaders and add a SOL-to-cache map to the SOL.
  */
 GLPool.prototype.cacheShadersFromSol = function (sol) {
@@ -125,7 +139,7 @@ GLPool.prototype.cacheShadersFromSol = function (sol) {
   }
 };
 
-/*
+/**
  * Cache resources from the SOL.
  */
 GLPool.prototype.cacheSol = function (sol) {
