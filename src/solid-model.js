@@ -130,12 +130,18 @@ SolidModel.fromSol = function (sol) {
   for (i = 0; i < sol.uv.length; ++i) {
     var solBall = sol.uv[i];
 
-    ent = ents.createEntity().addTag('ball');
+    ent = ents.createEntity().addTag('ball').addTag('ballSolid');
 
     ent.addComponent(EC.Spatial);
+    ent.addComponent(EC.SceneGraph);
+
+    ent.sceneGraph.setParent(sceneRoot);
 
     ent.spatial.scale = solBall.r;
     vec3.copy(ent.spatial.position, solBall.p);
+
+    // Update scene node.
+    ent.sceneGraph.setMatrix(ent.spatial.position, ent.spatial.orientation, ent.spatial.scale);
   }
 
   // Billboards

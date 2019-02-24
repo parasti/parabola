@@ -64,12 +64,13 @@ function init () {
   });
 
   var modelPaths = {
-    coin: 'ball/snowglobe/snowglobe-inner.sol',
+    coin: 'item/coin/coin.sol',
     coin5: 'item/coin/coin5.sol',
     coin10: 'item/coin/coin10.sol',
     grow: 'item/grow/grow.sol',
     shrink: 'item/shrink/shrink.sol',
-    jump: 'geom/beam/beam.sol'
+    jump: 'geom/beam/beam.sol',
+    ballSolid: 'ball/basic-ball/basic-ball-solid.sol'
   };
 
   for (let modelName in modelPaths) {
