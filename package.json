@@ -18,14 +18,14 @@
   "dependencies": {
     "crc": "^3.5.0",
     "gl-matrix": "^2.6.1",
-    "glslify": "^6.1.0",
+    "glslify": "^7.0.0",
     "nano-ecs": "^2.2.1",
     "neverball-solid": "^1.0.0",
-    "screenfull": "^3.3.1"
+    "screenfull": "^3.3.3"
   },
   "devDependencies": {
     "browserify": "^14.4.0",
-    "budo": "^11.3.2",
+    "budo": "^11.6.1",
     "semistandard": "^11.0.0"
   }
 }
