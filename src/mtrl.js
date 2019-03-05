@@ -49,6 +49,9 @@ Mtrl.fromSolMtrl = function (solMtrl) {
   return mtrl;
 };
 
+/*
+ * Take Neverball mtrl flags and translate them into GL state changes.
+ */
 function decomposeFlags (fl) {
   var flags = fl | Mtrl._DEPTH_TEST;
 
