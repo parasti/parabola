@@ -1,9 +1,5 @@
 'use strict';
 
-document.addEventListener('DOMContentLoaded', function () {
-  init();
-});
-
 var screenfull = require('screenfull');
 var data = require('./data.js');
 
@@ -27,14 +23,6 @@ var getDeltaTime = (function () {
     return dt;
   };
 })();
-
-function loadBall (gl, state, name = 'basic-ball') {
-  var basePath = 'ball/' + name + '/' + name;
-
-  BallModel.fetch(basePath).then(function (model) {
-    // state.setModel(gl, 'ball', model);
-  });
-}
 
 function init () {
   var canvas = document.getElementById('canvas');
@@ -131,40 +119,17 @@ function init () {
     }
   });
 
-  var fileInput = document.getElementById('fileInput');
-  fileInput.addEventListener('change', function () {
-    if (!this.files.length) {
-      return;
-    }
-
-    data.loadSolid(this.files[0]).then(function (sol) {
-      solFile = sol;
-      pool.cacheSol(sol);
-      var model = SolidModel.fromSol(sol);
-      scene.setModel(state, 'level', model);
-      return model;
-    });
-  });
-
   var fullscreen = document.getElementById('fullscreen');
   fullscreen.addEventListener('click', function () {
     if (screenfull.enabled) {
-      screenfull.request(canvas);
+      screenfull.request();
     }
   });
 
   if (screenfull.enabled) {
-    screenfull.onchange(function () {
-      if (screenfull.isFullscreen) {
-        canvas.width = window.screen.width;
-        canvas.height = window.screen.height;
-      } else {
-        canvas.width = 800;
-        canvas.height = 600;
-      }
-      // TODO
-      gl.viewport(0, 0, canvas.clientWidth, canvas.clientHeight);
-      scene.view.setProjection(canvas.clientWidth, canvas.clientHeight, 50);
+    screenfull.on('change', function () {
+      gl.viewport(0, 0, canvas.width, canvas.height);
+      scene.view.setProjection(canvas.width, canvas.height, 50);
     });
   }
 
@@ -204,10 +169,6 @@ function init () {
   textureInput.addEventListener('change', function (e) {
     state.enableTextures = this.checked;
   });
-
-  var ballNameElem = document.getElementById('ballName');
-  var ballButton = document.getElementById('loadBall');
-  ballButton.addEventListener('click', function (e) {
-    loadBall(gl, state, ballNameElem.value);
-  });
 }
+
+init();

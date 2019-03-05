@@ -4,25 +4,25 @@
 <head>
   <meta charset="utf-8">
   <title>Parabola</title>
-  <script src="parabola.js"></script>
 </head>
 
 <body>
-  <div id="content">
+  <div id="main">
     <canvas id="canvas" width="800" height="600"></canvas>
-    <div>
-      <input id="fileInput" type="file" accept=".sol">
-      <label for="viewPosition">Fly-by</label>
-      <input id="viewPosition" type="range" min="-1" max="1" step="0.005" value="1" autofocus>
-      <a href="#" id="fullscreen">Fullscreen</a>
-      <label for="textures">Textures</label>
-      <input id="textures" type="checkbox" checked>
-    </div>
-    <div>
-      <input type="text" id="ballName">
-      <button id="loadBall">Load ball</button>
+    <div id="overlay">
+      <div>
+        <a href="#" id="fullscreen">Fullscreen</a>
+      </div>
+      <div>
+        <label for="viewPosition">Fly-by <input id="viewPosition" type="range" min="-1" max="1" step="0.005" value="1"
+            autofocus></label>
+      </div>
+      <div>
+        <label for="textures">Textures <input id="textures" type="checkbox" checked></label>
+      </div>
     </div>
   </div>
+  <script src="parabola.js"></script>
 </body>
 
 </html>
