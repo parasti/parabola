@@ -112,22 +112,38 @@ function init () {
   canvas.addEventListener('click', togglePointerLock);
   document.addEventListener('pointerlockchange', pointerLockChange);
 
-  var viewPosition = document.getElementById('viewPosition');
-  viewPosition.addEventListener('input', function () {
-    if (solFile) {
-      scene.view.setFromSol(solFile, this.value);
-    }
-  });
+  var setViewPositionInput = document.getElementById('set-view-position');
 
-  var fullscreen = document.getElementById('fullscreen');
-  fullscreen.addEventListener('click', function () {
-    if (screenfull.enabled) {
-      screenfull.request();
-    }
-  });
+  if (setViewPositionInput) {
+    setViewPositionInput.addEventListener('input', function () {
+      if (solFile) {
+        scene.view.setFromSol(solFile, this.value);
+      }
+    });
+  }
+
+  var toggleFullscreenInput = document.getElementById('toggle-fullscreen');
+
+  if (toggleFullscreenInput) {
+    toggleFullscreenInput.addEventListener('change', function () {
+      if (screenfull.enabled) {
+        screenfull.toggle(document.getElementById('main'));
+      }
+    });
+  }
 
   if (screenfull.enabled) {
     screenfull.on('change', function () {
+      if (toggleFullscreenInput) {
+        toggleFullscreenInput.checked = screenfull.isFullscreen;
+      }
+      if (screenfull.isFullscreen) {
+        canvas.width = window.screen.width;
+        canvas.height = window.screen.height;
+      } else {
+        canvas.width = 800;
+        canvas.height = 600;
+      }
       gl.viewport(0, 0, canvas.width, canvas.height);
       scene.view.setProjection(canvas.width, canvas.height, 50);
     });
@@ -165,10 +181,13 @@ function init () {
     e.preventDefault();
   }, { passive: false });
 
-  var textureInput = document.getElementById('textures');
-  textureInput.addEventListener('change', function (e) {
-    state.enableTextures = this.checked;
-  });
+  var toggleTexturesInput = document.getElementById('toggle-textures');
+
+  if (toggleTexturesInput) {
+    toggleTexturesInput.addEventListener('change', function (e) {
+      state.enableTextures = this.checked;
+    });
+  }
 }
 
 init();
