@@ -17,12 +17,22 @@
     background-color: rgba(127, 127, 127, 0.4);
     color: white;
   }
+
+  body.no-js #overlay {
+    display: none;
+  }
   </style>
 </head>
 
-<body>
+<body class="no-js">
+  <script>
+    document.body.classList.remove('no-js');
+  </script>
+
   <div id="main">
-    <canvas id="canvas" width="800" height="600"></canvas>
+    <canvas id="canvas" width="800" height="600">
+      Parabola is a WebGL port of <a href="https://neverball.org">Neverball</a>. As such, it requires a browser with JavaScript and an HTML5 canvas.
+    </canvas>
     <div id="overlay">
         <div class="overlay-input"><label>Fullscreen <input id="toggle-fullscreen" type="checkbox"></label></div>
         <div class="overlay-input"><label for="set-view-position">Fly-by</label><input id="set-view-position" type="range" min="-1" max="1" step="0.005" value="1"></label></div>
