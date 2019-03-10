@@ -1,6 +1,7 @@
 'use strict';
 
 var vec3 = require('gl-matrix').vec3;
+var vec4 = require('gl-matrix').vec4;
 var quat = require('gl-matrix').quat;
 var mat4 = require('gl-matrix').mat4;
 var toRadian = require('gl-matrix').glMatrix.toRadian;
@@ -61,6 +62,13 @@ EC.Movers = function movers () {
 EC.Item = function item () {
   this.value = 0;
 };
+
+/*
+ * Color
+ */
+EC.Color = function color () {
+  this.color = [1.0, 1.0, 1.0, 1.0];
+}
 
 /*
  * Billboard

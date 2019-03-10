@@ -4,6 +4,7 @@ var mat4 = require('gl-matrix').mat4;
 
 var SceneNode = require('./scene-node.js');
 var View = require('./view.js');
+var Mesh = require('./mesh.js');
 
 module.exports = Scene;
 
@@ -160,6 +161,20 @@ Scene.prototype.draw = function (state) {
   }
 
   // Sort meshes.
+  /*
+   * Massive TODO. Depth sorting is kind of a big topic:
+   *  - opaque meshes should be drawn first.
+   *  - opaque meshes should be sorted front-to-back to allow for early-Z rejection.
+   *  - transparent meshes should be sorted back-to-front for correct visuals.
+   *  - due to instanced rendering, a single transparent mesh can be drawn
+   *    in multiple places with a single draw call. How do we sort that within
+   *    the draw call as well as within the list of all transparent-instanced meshes?
+   *    This potentially means splitting a draw call into batches (depth layers?) and
+   *    sorting those against all other transparent-instanced batches. Which might mean
+   *    that perfect sorting + instancing is less feasible than I hoped. Either we give up
+   *    on perfectly sorted visuals or we give up on instancing transparent meshes.
+   */
+
 
   var meshes = [];
 
@@ -176,7 +191,7 @@ Scene.prototype.draw = function (state) {
     }
   }
 
-  meshes.sort(compareMeshes);
+  meshes.sort(Mesh.compare);
 
   // Set some uniforms.
 
@@ -193,28 +208,3 @@ Scene.prototype.draw = function (state) {
     mesh.drawInstanced(state, count);
   }
 };
-
-function compareMeshes (mesh0, mesh1) {
-  var a = mesh0.sortIndex;
-  var b = mesh1.sortIndex;
-
-  if (a < b) {
-    return -1;
-  }
-  if (a > b) {
-    return +1;
-  }
-
-  // Work around unstable sort on Chrome.
-
-  a = mesh0.mtrl.id;
-  b = mesh1.mtrl.id;
-
-  if (a < b) {
-    return -1;
-  }
-  if (a > b) {
-    return +1;
-  }
-  return 0;
-}
