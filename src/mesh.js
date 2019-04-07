@@ -1,7 +1,7 @@
 module.exports = Mesh;
 
 /*
- * Mesh is a fully specified draw call.
+ * Mesh is a fully specified draw call. That's it.
  */
 function Mesh () {
   if (!(this instanceof Mesh)) {
@@ -15,6 +15,7 @@ function Mesh () {
   this.shader = null;
 
   // VBO/VAO
+  // TODO: this is literally only used to bind a VAO. We don't need an entire model for that.
   this.model = null;
 
   // Location in the element array.

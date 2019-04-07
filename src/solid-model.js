@@ -11,7 +11,7 @@ var SceneNode = require('./scene-node.js');
 
 module.exports = SolidModel;
 
-function SolidModel () {
+function SolidModel() {
   if (!(this instanceof SolidModel)) {
     return new SolidModel();
   }
@@ -146,6 +146,11 @@ SolidModel.fromSol = function (sol) {
 
   // Billboards
 
+  // TODO:
+  // 1) create a "body" model with billboard geometry
+  // 2) attach model instances to the billboard entity scene node
+  // 3) render model with billboard material (how?)
+
   for (i = 0; i < sol.rv.length; ++i) {
     var solBill = sol.rv[i];
 
@@ -153,6 +158,7 @@ SolidModel.fromSol = function (sol) {
 
     ent.addComponent(EC.Spatial);
     ent.addComponent(EC.Billboard);
+    ent.addComponent(EC.SceneGraph);
 
     vec3.copy(ent.spatial.position, solBill.p);
 
@@ -165,13 +171,22 @@ SolidModel.fromSol = function (sol) {
 /*
  * Update systems.
  */
-const systemComponents = [EC.Spatial, EC.Movers, EC.SceneGraph];
+
+// (Preallocate to minimize allocation during frame.)
+const MOVER_SYSTEM = [EC.Movers, EC.Spatial];
+const BILLBOARD_SYSTEM = [EC.Billboard, EC.Spatial];
+const SCENEGRAPH_SYSTEM = [EC.Spatial, EC.SceneGraph];
 
 SolidModel.prototype.step = function (dt) {
-  var ents = this.entities.queryComponents(systemComponents);
+  var ents, ent, i, n;
 
-  for (var i = 0; i < ents.length; ++i) {
-    var ent = ents[i];
+  /*
+   * Mover system: get spatial position/orientation from the mover component.
+   */
+  ents = this.entities.queryComponents(MOVER_SYSTEM);
+
+  for (i = 0, n = ents.length; i < n; ++i) {
+    ent = ents[i];
 
     // Update movers.
 
@@ -190,9 +205,26 @@ SolidModel.prototype.step = function (dt) {
     // TODO do this only on actual update
     moverTranslate.getPosition(ent.spatial.position);
     moverRotate.getOrientation(ent.spatial.orientation);
+  }
 
-    // Update scene node.
+  /*
+   * Billboard system: get spatial orientation/scale from the billboard component.
+   */
+  ents = this.entities.queryComponents(BILLBOARD_SYSTEM);
 
+  for (i = 0, n = ents.length; i < n; ++i) {
+    ent = ents[i];
+
+    // TODO ent.billboard.getForegroundTransform(ent.spatial.orientation, ent.spatial.scale);
+  }
+
+  /*
+   * Scene graph system: get scene node matrix from the spatial compontent.
+   */
+  ents = this.entities.queryComponents(SCENEGRAPH_SYSTEM);
+
+  for (i = 0, n = ents.length; i < n; ++i) {
+    ent = ents[i];
     ent.sceneGraph.setMatrix(ent.spatial.position, ent.spatial.orientation, ent.spatial.scale);
   }
 };
