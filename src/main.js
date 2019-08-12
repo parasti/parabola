@@ -42,7 +42,7 @@ function init () {
 
   scene.view.setProjection(gl.canvas.width, gl.canvas.height, 50);
 
-  data.fetchSolid('map-fwp/adventure.sol').then(function (sol) {
+  data.fetchSolid('ball/atom/atom-outer.sol').then(function (sol) {
     pool.cacheSol(sol);
     var model = SolidModel.fromSol(sol);
     scene.setModel(state, 'level', model);
@@ -52,13 +52,13 @@ function init () {
   });
 
   var modelPaths = {
-    coin: 'item/coin/coin.sol',
-    coin5: 'item/coin/coin5.sol',
-    coin10: 'item/coin/coin10.sol',
-    grow: 'item/grow/grow.sol',
-    shrink: 'item/shrink/shrink.sol',
-    jump: 'geom/beam/beam.sol',
-    ballSolid: 'ball/basic-ball/basic-ball-solid.sol'
+    // coin: 'item/coin/coin.sol',
+    // coin5: 'item/coin/coin5.sol',
+    // coin10: 'item/coin/coin10.sol',
+    // grow: 'item/grow/grow.sol',
+    // shrink: 'item/shrink/shrink.sol',
+    // jump: 'geom/beam/beam.sol',
+    // ballSolid: 'ball/basic-ball/basic-ball-solid.sol'
   };
 
   for (let modelName in modelPaths) {

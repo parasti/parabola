@@ -3,6 +3,7 @@
 var vec3 = require('gl-matrix').vec3;
 var vec4 = require('gl-matrix').vec4;
 var quat = require('gl-matrix').quat;
+var mat3 = require('gl-matrix').mat3;
 var mat4 = require('gl-matrix').mat4;
 var toRadian = require('gl-matrix').glMatrix.toRadian;
 
@@ -19,7 +20,7 @@ var EC = module.exports = {};
 /*
  * Scene graph node.
  */
-EC.SceneGraph = function sceneGraph () {
+EC.SceneGraph = function sceneGraph() {
   this.node = SceneNode();
 };
 
@@ -42,7 +43,7 @@ EC.SceneGraph.prototype.setMatrix = function (p, e, s) {
 /*
  * Spatial transform
  */
-EC.Spatial = function spatial () {
+EC.Spatial = function spatial() {
   this.position = vec3.create();
   this.orientation = quat.create();
   this.scale = 1;
@@ -51,7 +52,7 @@ EC.Spatial = function spatial () {
 /*
  * Path walkers
  */
-EC.Movers = function movers () {
+EC.Movers = function movers() {
   this.translate = null;
   this.rotate = null;
 };
@@ -59,23 +60,21 @@ EC.Movers = function movers () {
 /*
  * Item
  */
-EC.Item = function item () {
+EC.Item = function item() {
   this.value = 0;
 };
 
 /*
  * Color
  */
-EC.Color = function color () {
+EC.Color = function color() {
   this.color = [1.0, 1.0, 1.0, 1.0];
 }
 
 /*
  * Billboard
  */
-EC.Billboard = function billboard () {
-  this.mtrl = null;
-
+EC.Billboard = function billboard() {
   this.time = 1.0;
   this.dist = 0.0;
 
@@ -90,8 +89,6 @@ EC.Billboard = function billboard () {
 };
 
 EC.Billboard.prototype.fromSolBill = function (sol, solBill) {
-  this.mtrl = sol.mv[solBill.mi];
-
   this.time = solBill.t;
   this.dist = solBill.d;
 
@@ -105,33 +102,39 @@ EC.Billboard.prototype.fromSolBill = function (sol, solBill) {
   this.flags = solBill.fl;
 };
 
-EC.Billboard.prototype.getForegroundTransform = function (M, globalTime) {
-  // sol_bill
+EC.Billboard.prototype.getForegroundTransform = (function () {
+  var Q = quat.create();
+  var M = mat3.create();
 
-  var T = this.time * globalTime;
-  var S = Math.sin(T);
+  return function (out_orientation, out_scale, scene) {
+    // sol_bill
 
-  var w = this.w[0] + this.w[1] * T + this.w[2] * S;
-  var h = this.h[0] + this.h[1] * T + this.h[2] * S;
+    var T = this.time * scene.time;
+    var S = Math.sin(T);
 
-  var rx = this.rx[0] + this.rx[1] * T + this.rx[2] * S;
-  var ry = this.ry[0] + this.ry[1] * T + this.ry[2] * S;
-  var rz = this.rz[0] + this.rz[1] * T + this.rz[2] * S;
+    var w = this.w[0] + this.w[1] * T + this.w[2] * S;
+    var h = this.h[0] + this.h[1] * T + this.h[2] * S;
 
-  // Preserve passed transform.
-  // mat4.identity(M);
+    var rx = this.rx[0] + this.rx[1] * T + this.rx[2] * S;
+    var ry = this.ry[0] + this.ry[1] * T + this.ry[2] * S;
+    var rz = this.rz[0] + this.rz[1] * T + this.rz[2] * S;
 
-  // TODO multiply by view basis.
-  // or... can be done by the caller.
+    if ((this.flags & Solid.BILL_NOFACE)) {
+      quat.identity(Q);
+    } else {
+      mat3.fromMat4(M, scene.view.getBasis());
+      quat.fromMat3(Q, M);
+      quat.normalize(Q, Q);
+    }
 
-  if (rx) mat4.rotateX(M, M, rx / 180.0 * Math.PI);
-  if (ry) mat4.rotateY(M, M, ry / 180.0 * Math.PI);
-  if (rz) mat4.rotateZ(M, M, rz / 180.0 * Math.PI);
+    if (Math.abs(rx) > 0.0) quat.rotateX(Q, Q, rx * Math.PI / 180.0);
+    if (Math.abs(ry) > 0.0) quat.rotateY(Q, Q, ry * Math.PI / 180.0);
+    if (Math.abs(rz) > 0.0) quat.rotateZ(Q, Q, rz * Math.PI / 180.0);
 
-  mat4.scale(M, M, [w, h, 1.0]);
-
-  return M;
-};
+    quat.copy(out_orientation, Q);
+    vec3.set(out_scale, w, h, 1.0);
+  };
+}());
 
 EC.Billboard.prototype.getBackgroundTransform = function (M, globalTime) {
   var T = this.time > 0 ? globalTime % this.time - this.time / 2 : 0;

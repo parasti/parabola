@@ -174,15 +174,15 @@ BallModel.prototype.draw = function (gl, state, parentMatrix) {
   this.passOuter(gl, state, parentMatrix);
 };
 
-BallModel.prototype.step = function (dt) {
+BallModel.prototype.step = function (dt, scene = null) {
   if (this.solidModel) {
-    this.solidModel.step(dt);
+    this.solidModel.step(dt, scene);
   }
   if (this.innerModel) {
-    this.innerModel.step(dt);
+    this.innerModel.step(dt, scene);
   }
   if (this.outerModel) {
-    this.outerModel.step(dt);
+    this.outerModel.step(dt, scene);
   }
 };
 

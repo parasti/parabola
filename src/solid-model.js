@@ -9,6 +9,8 @@ var Solid = require('neverball-solid');
 var EC = require('./entity-components.js');
 var SceneNode = require('./scene-node.js');
 
+var BodyModel = require('./body-model.js');
+
 module.exports = SolidModel;
 
 function SolidModel() {
@@ -46,7 +48,7 @@ SolidModel.fromSol = function (sol) {
 
     var model = sol._models[i];
 
-    // Keep a reference for potential unloading ("we no longer need this").
+    // Add body-model to solid-model body-model (yup) list.
     models.push(model);
 
     // Attach a body-model node to the entity node.
@@ -146,23 +148,33 @@ SolidModel.fromSol = function (sol) {
 
   // Billboards
 
-  // TODO:
-  // 1) create a "body" model with billboard geometry
-  // 2) attach model instances to the billboard entity scene node
-  // 3) render model with billboard material (how?)
-
-  for (i = 0; i < sol.rv.length; ++i) {
+  for (i = 0, n = sol.rv.length; i < n; ++i) {
     var solBill = sol.rv[i];
 
     ent = ents.createEntity().addTag('billboard');
 
     ent.addComponent(EC.Spatial);
-    ent.addComponent(EC.Billboard);
     ent.addComponent(EC.SceneGraph);
-
-    vec3.copy(ent.spatial.position, solBill.p);
+    ent.addComponent(EC.Billboard);
 
     ent.billboard.fromSolBill(sol, solBill);
+
+    // Get cached billboard model
+    var model = sol._billboardModels[i];
+
+    // Add body-model to solid-model body-model (yup) list.
+    models.push(model);
+
+    //Parent model scene-node to the entity scene-node.
+    model.sceneNode.setParent(ent.sceneGraph.node);;
+
+    vec3.copy(ent.spatial.position, solBill.p);
+    ent.spatial.scale = [1.0, 1.0, 1.0];
+
+    //ent.billboard.fromSolBill(sol, solBill);
+
+    // Parent entity scene-node to the solid-model scene-node.
+    ent.sceneGraph.node.setParent(sceneRoot);
   }
 
   return solidModel;
@@ -177,7 +189,7 @@ const MOVER_SYSTEM = [EC.Movers, EC.Spatial];
 const BILLBOARD_SYSTEM = [EC.Billboard, EC.Spatial];
 const SCENEGRAPH_SYSTEM = [EC.Spatial, EC.SceneGraph];
 
-SolidModel.prototype.step = function (dt) {
+SolidModel.prototype.step = function (dt, scene = null) {
   var ents, ent, i, n;
 
   /*
@@ -215,7 +227,7 @@ SolidModel.prototype.step = function (dt) {
   for (i = 0, n = ents.length; i < n; ++i) {
     ent = ents[i];
 
-    // TODO ent.billboard.getForegroundTransform(ent.spatial.orientation, ent.spatial.scale);
+    ent.billboard.getForegroundTransform(ent.spatial.orientation, ent.spatial.scale, scene);
   }
 
   /*

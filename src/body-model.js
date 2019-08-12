@@ -7,25 +7,39 @@ module.exports = BodyModel;
 
 var _modelIndex = 0;
 
+/**
+ * BodyModel is vertex data + a bunch of draw calls (meshes) + transform matrices (scene node).
+ */
 function BodyModel () {
   if (!(this instanceof BodyModel)) {
     return new BodyModel();
   }
 
+  // Also known as draw calls.
   this.meshes = null;
 
+  // Vertex data and store.
   this.verts = null;
   this.vertsVBO = null;
 
+  // Element data and store.
   this.elems = null;
   this.elemsVBO = null;
 
+  // Model-view matrix store. 1 matrix per scene-node instance.
   this.instanceVBO = null;
 
+  // All of the above, but activated with one GL call.
   this.vao = null;
 
+  // Globally unique name for this model.
+  // Used to avoid loading the same SOL body twice. Or something. I forget.
   this.id = 'default_' + (_modelIndex++).toString();
 
+  // Model-view matrices are managed by the scene graph.
+  // We can set a parent node on this scene-node.
+  // We can also create instances of this scene-node and
+  // set parents on those instead.
   this.sceneNode = SceneNode();
 }
 
@@ -47,6 +61,60 @@ BodyModel.fromSolBody = function (sol, bodyIndex) {
 
   return model;
 };
+
+BodyModel.fromSolBill = function (sol, billIndex) {
+  const stride = 8;
+
+  var bill = sol.rv[billIndex];
+
+  var model = BodyModel();
+  var verts = model.verts = new Float32Array(4 * stride); // 4 vertices
+  var elems = model.elems = new Uint16Array(2 * 3); // 2 triangles
+  var meshes = model.meshes = [];
+
+  function addBillVert(i, x, y, s, t) {
+    // position
+    verts[i * stride + 0] = x;
+    verts[i * stride + 1] = y;
+    verts[i * stride + 2] = 0.0;
+    // normal
+    verts[i * stride + 3] = 0.0;
+    verts[i * stride + 4] = 0.0;
+    verts[i * stride + 5] = 1.0;
+    // texcoords
+    verts[i * stride + 6] = s;
+    verts[i * stride + 7] = t;
+  }
+
+  addBillVert(0, -0.5, -0.5, 0.0, 0.0);
+  addBillVert(1, +0.5, -0.5, 1.0, 0.0);
+  addBillVert(2, -0.5, +0.5, 0.0, 1.0);
+  addBillVert(3, +0.5, +0.5, 1.0, 1.0);
+
+  // GL_TRIANGLES
+
+  elems[0] = 0;
+  elems[1] = 1;
+  elems[2] = 2;
+
+  elems[3] = 1;
+  elems[4] = 3;
+  elems[5] = 2;
+
+  // TODO create/get mesh for billboard
+
+  var mesh = Mesh();
+
+  mesh.mtrl = sol._materials[bill.mi];
+  mesh.shader = sol._shaders[bill.mi];
+  mesh.model = model;
+  mesh.elemBase = 0;
+  mesh.elemCount = 6;
+
+  meshes.push(mesh);
+
+  return model;
+}
 
 BodyModel.prototype.createObjects = function (state) {
   var model = this;

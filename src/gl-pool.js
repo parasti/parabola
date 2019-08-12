@@ -115,6 +115,15 @@ GLPool.prototype.cacheModelsFromSol = function (sol) {
 
     sol._models[bi] = model;
   }
+
+  // TODO
+  sol._billboardModels = Array(sol.bills.length);
+
+  for (var i = 0, n = sol.bills.length; i < n; ++i) {
+    model = BodyModel.fromSolBill(sol, i);
+    pool._cacheModel(model);
+    sol._billboardModels[i] = model;
+  }
 };
 
 /**

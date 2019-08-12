@@ -81,24 +81,31 @@ Scene.prototype.setModel = function (state, modelName, model) {
 };
 
 Scene.prototype.step = function (dt) {
-  this.time += dt;
+  var scene = this;
+  var view = this.view;
 
-  for (var name in this.models) {
-    var model = this.models[name];
+  scene.time += dt;
+
+  for (var name in scene.models) {
+    var model = scene.models[name];
 
     if (model) {
-      model.step(dt);
+      model.step(dt, scene);
     }
   }
 
-  this.view.step(dt);
+  view.step(dt);
 };
 
 /*
- *
+ * TODO
  */
 Scene.prototype.getBodyModels = function () {
   var models = [];
+
+  if (!this.models.level) {
+    return models;
+  }
 
   for (var modelName in this.models) {
     var solidModel = this.models[modelName];
