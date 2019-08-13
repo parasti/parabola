@@ -136,37 +136,32 @@ EC.Billboard.prototype.getForegroundTransform = (function () {
   };
 }());
 
-EC.Billboard.prototype.getBackgroundTransform = function (M, globalTime) {
-  var T = this.time > 0 ? globalTime % this.time - this.time / 2 : 0;
+EC.Billboard.prototype.getBackgroundTransform = (function () {
+  var P = vec3.create();
+  var Q = quat.create();
 
-  var w = this.w[0] + this.w[1] * T + this.w[2] * T * T;
-  var h = this.h[0] + this.h[1] * T + this.h[2] * T * T;
+  return function (out_position, out_orientation, out_scale, scene) {
+    var T = this.time > 0.0 ? (scene.time % this.time) - (this.time / 2.0) : 0.0;
 
-  // TODO Render only billboards facing the viewer.
+    var w = this.w[0] + this.w[1] * T + this.w[2] * T * T;
+    var h = this.h[0] + this.h[1] * T + this.h[2] * T * T;
 
-  if (w > 0 && h > 0) {
     var rx = this.rx[0] + this.rx[1] * T + this.rx[2] * T * T;
     var ry = this.ry[0] + this.ry[1] * T + this.ry[2] * T * T;
     var rz = this.rz[0] + this.rz[1] * T + this.rz[2] * T * T;
 
-    if (ry) mat4.rotateY(M, M, toRadian(ry));
-    if (rx) mat4.rotateX(M, M, toRadian(rx));
+    quat.identity(Q);
 
-    mat4.translate(M, M, [0, 0, -this.dist]);
+    if (ry) quat.rotateY(Q, Q, ry * Math.PI / 180.0);
+    if (rx) quat.rotateX(Q, Q, rx * Math.PI / 180.0);
 
-    if (this.flags & Solid.BILL_FLAT) {
-      mat4.rotateX(M, M, toRadian(-rx - 90));
-      mat4.rotateZ(M, M, toRadian(-ry));
-    }
+    vec3.set(P, 0, 0, -this.dist);
+    vec3.transformQuat(P, P, Q);
 
-    if (this.flags & Solid.BILL_EDGE) {
-      mat4.rotateX(M, M, toRadian(-rx));
-    }
+    if (rz) quat.rotateZ(Q, Q, rz * Math.PI / 180.0);
 
-    if (rz) mat4.rotateZ(M, M, toRadian(rz));
-
-    mat4.scale(M, M, [w, h, 1.0]);
-  }
-
-  return M;
-};
+    vec3.copy(out_position, P);
+    quat.copy(out_orientation, Q);
+    vec3.set(out_scale, w, h, 1.0);
+  };
+})();

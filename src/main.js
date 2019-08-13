@@ -42,7 +42,7 @@ function init () {
 
   scene.view.setProjection(gl.canvas.width, gl.canvas.height, 50);
 
-  data.fetchSolid('ball/atom/atom-outer.sol').then(function (sol) {
+  data.fetchSolid('map-back/alien.sol').then(function (sol) {
     pool.cacheSol(sol);
     var model = SolidModel.fromSol(sol);
     scene.setModel(state, 'level', model);
