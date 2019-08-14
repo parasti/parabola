@@ -134,7 +134,7 @@ EC.Billboard.prototype.getForegroundTransform = (function () {
     quat.copy(out_orientation, Q);
     vec3.set(out_scale, w, h, 1.0);
   };
-}());
+})();
 
 EC.Billboard.prototype.getBackgroundTransform = (function () {
   var P = vec3.create();
@@ -157,6 +157,15 @@ EC.Billboard.prototype.getBackgroundTransform = (function () {
 
     vec3.set(P, 0, 0, -this.dist);
     vec3.transformQuat(P, P, Q);
+
+    if (this.flags & Solid.BILL_FLAT) {
+      quat.rotateX(Q, Q, (-rx - 90.0) * Math.PI / 180.0);
+      quat.rotateZ(Q, Q, -ry * Math.PI / 180.0);
+    }
+
+    if (this.flags & Solid.BILL_EDGE) {
+      quat.rotateX(Q, Q, -rx * Math.PI / 180.0);
+    }
 
     if (rz) quat.rotateZ(Q, Q, rz * Math.PI / 180.0);
 

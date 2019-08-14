@@ -86,10 +86,19 @@ BodyModel.fromSolBill = function (sol, billIndex) {
     verts[i * stride + 7] = t;
   }
 
-  addBillVert(0, -0.5, -0.5, 0.0, 0.0);
-  addBillVert(1, +0.5, -0.5, 1.0, 0.0);
-  addBillVert(2, -0.5, +0.5, 0.0, 1.0);
-  addBillVert(3, +0.5, +0.5, 1.0, 1.0);
+  // TODO
+  // BILL_EDGE
+  if (bill.fl & 0x1) {
+    addBillVert(0, -0.5, 0.0, 0.0, 0.0);
+    addBillVert(1, +0.5, 0.0, 1.0, 0.0);
+    addBillVert(2, -0.5, 1.0, 0.0, 1.0);
+    addBillVert(3, +0.5, 1.0, 1.0, 1.0);
+  } else {
+    addBillVert(0, -0.5, -0.5, 0.0, 0.0);
+    addBillVert(1, +0.5, -0.5, 1.0, 0.0);
+    addBillVert(2, -0.5, +0.5, 0.0, 1.0);
+    addBillVert(3, +0.5, +0.5, 1.0, 1.0);
+  }
 
   // GL_TRIANGLES
 
@@ -110,6 +119,7 @@ BodyModel.fromSolBill = function (sol, billIndex) {
   mesh.model = model;
   mesh.elemBase = 0;
   mesh.elemCount = 6;
+  mesh.sortIndex = billIndex; // sort in order of appearance
 
   meshes.push(mesh);
 
