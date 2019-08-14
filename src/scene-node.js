@@ -47,7 +47,7 @@ SceneNode.prototype._markDirty = function () {
 };
 
 /*
- * Set local matrix from given position vector, rotation quaternion and scale.
+ * Set local matrix given a position vector, rotation quaternion and scale.
  */
 SceneNode.prototype.setLocalMatrix = (function () {
   // Preallocate.

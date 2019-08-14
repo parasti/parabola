@@ -46,6 +46,11 @@ function init () {
     sol.mv[0].f = 'back/land';
     pool.cacheSol(sol);
     var model = SolidModel.fromSol(sol);
+    var SceneNode = require('./scene-node.js');
+    var fakeRoot = SceneNode();
+    fakeRoot.setLocalMatrix([0, 0, 0], [0, 0, 0, 1], 256.0); // BACK_DIST
+    model.sceneRoot.setParent(fakeRoot);
+    model.sceneRoot = fakeRoot;
     scene.setModel(state, 'level', model);
     scene.view.setFromSol(sol, 1.0);
     solFile = sol;
@@ -53,7 +58,7 @@ function init () {
   });
 
   var modelPaths = {
-    // coin: 'item/coin/coin.sol',
+    coin: 'map-back/clouds.sol',
     // coin5: 'item/coin/coin5.sol',
     // coin10: 'item/coin/coin10.sol',
     // grow: 'item/grow/grow.sol',
