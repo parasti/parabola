@@ -42,7 +42,8 @@ function init () {
 
   scene.view.setProjection(gl.canvas.width, gl.canvas.height, 50);
 
-  data.fetchSolid('map-back/clouds.sol').then(function (sol) {
+  data.fetchSolid('geom/back/back.sol').then(function (sol) {
+    sol.mv[0].f = 'back/land';
     pool.cacheSol(sol);
     var model = SolidModel.fromSol(sol);
     scene.setModel(state, 'level', model);
