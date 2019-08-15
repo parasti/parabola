@@ -46,7 +46,7 @@ function init () {
 
   data.fetchSolid('geom/back/back.sol').then(function (sol) {
     // Insert a background-gradient material into the SOL.
-    sol.mv[0].f = 'back/alien';
+    sol.mv[0].f = 'back/city';
     // Cache it manually to keep our flag changes from being overwritten.
     var gradMtrl = Mtrl.fromSolMtrl(sol.mv[0]);
     gradMtrl.flags &= ~Mtrl._DEPTH_TEST;
@@ -55,11 +55,8 @@ function init () {
 
     pool.cacheSol(sol);
     var model = SolidModel.fromSol(sol);
-    var SceneNode = require('./scene-node.js');
-    var fakeRoot = SceneNode();
-    fakeRoot.setLocalMatrix([0, 0, 0], [0, 0, 0, 1], 256.0); // BACK_DIST
-    model.sceneRoot.setParent(fakeRoot);
-    model.sceneRoot = fakeRoot;
+    var q = require('gl-matrix').quat.create();
+    model.sceneRoot.setLocalMatrix([0, 0, 0], q, [-256.0, 256.0, -256.0]); // BACK_DIST
     scene.setModel(state, 'level', model);
     scene.view.setFromSol(sol, 1.0);
     solFile = sol;
@@ -67,7 +64,7 @@ function init () {
   });
 
   var modelPaths = {
-    coin: 'map-back/alien.sol',
+    coin: 'map-back/city.sol',
     // coin5: 'item/coin/coin5.sol',
     // coin10: 'item/coin/coin10.sol',
     // grow: 'item/grow/grow.sol',
