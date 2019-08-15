@@ -9,6 +9,8 @@ var Scene = require('./scene.js');
 var BallModel = require('./ball-model.js');
 var SolidModel = require('./solid-model.js');
 
+var Mtrl = require('./mtrl.js');
+
 var getDeltaTime = (function () {
   var lastTime = 0.0;
 
@@ -43,7 +45,14 @@ function init () {
   scene.view.setProjection(gl.canvas.width, gl.canvas.height, 50);
 
   data.fetchSolid('geom/back/back.sol').then(function (sol) {
-    sol.mv[0].f = 'back/land';
+    // Insert a background-gradient material into the SOL.
+    sol.mv[0].f = 'back/alien';
+    // Cache it manually to keep our flag changes from being overwritten.
+    var gradMtrl = Mtrl.fromSolMtrl(sol.mv[0]);
+    gradMtrl.flags &= ~Mtrl._DEPTH_TEST;
+    gradMtrl.flags &= ~Mtrl._DEPTH_WRITE;
+    pool._cacheMtrl(gradMtrl);
+
     pool.cacheSol(sol);
     var model = SolidModel.fromSol(sol);
     var SceneNode = require('./scene-node.js');
@@ -58,7 +67,7 @@ function init () {
   });
 
   var modelPaths = {
-    coin: 'map-back/clouds.sol',
+    coin: 'map-back/alien.sol',
     // coin5: 'item/coin/coin5.sol',
     // coin10: 'item/coin/coin10.sol',
     // grow: 'item/grow/grow.sol',
