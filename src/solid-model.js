@@ -13,7 +13,7 @@ var BodyModel = require('./body-model.js');
 
 module.exports = SolidModel;
 
-function SolidModel() {
+function SolidModel () {
   if (!(this instanceof SolidModel)) {
     return new SolidModel();
   }
@@ -52,8 +52,8 @@ SolidModel.fromSol = function (sol) {
     models.push(model);
 
     // Attach a body-model node to the entity node.
-    //var instance = model.sceneNode.createInstance();
-    //instance.setParent(ent.sceneGraph.node);
+    // var instance = model.sceneNode.createInstance();
+    // instance.setParent(ent.sceneGraph.node);
 
     model.sceneNode.setParent(ent.sceneGraph.node);
 
@@ -165,13 +165,13 @@ SolidModel.fromSol = function (sol) {
     // Add body-model to solid-model body-model (yup) list.
     models.push(model);
 
-    //Parent model scene-node to the entity scene-node.
-    model.sceneNode.setParent(ent.sceneGraph.node);;
+    // Parent model scene-node to the entity scene-node.
+    model.sceneNode.setParent(ent.sceneGraph.node);
 
     vec3.copy(ent.spatial.position, solBill.p);
     ent.spatial.scale = [1.0, 1.0, 1.0];
 
-    //ent.billboard.fromSolBill(sol, solBill);
+    // ent.billboard.fromSolBill(sol, solBill);
 
     // Parent entity scene-node to the solid-model scene-node.
     ent.sceneGraph.node.setParent(sceneRoot);
@@ -227,7 +227,7 @@ SolidModel.prototype.step = function (dt, scene = null) {
   for (i = 0, n = ents.length; i < n; ++i) {
     ent = ents[i];
 
-    //ent.billboard.getForegroundTransform(ent.spatial.orientation, ent.spatial.scale, scene);
+    // ent.billboard.getForegroundTransform(ent.spatial.orientation, ent.spatial.scale, scene);
     ent.billboard.getBackgroundTransform(ent.spatial.position, ent.spatial.orientation, ent.spatial.scale, scene);
   }
 

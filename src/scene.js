@@ -70,7 +70,7 @@ Scene.prototype._addModel = function (model) {
   if (index < 0) {
     this.allModels.push(model);
   }
-}
+};
 
 Scene.prototype.setModel = function (state, modelName, model) {
   this._addModel(model);
@@ -120,7 +120,7 @@ Scene.prototype.getBodyModels = function () {
   }
 
   return models;
-}
+};
 
 /*
  * Render everything. TODO rework this.
@@ -151,7 +151,7 @@ Scene.prototype.draw = function (state) {
 
     if (!nodes.length) {
       nodes = [model.sceneNode];
-      //continue;
+      // continue;
     }
 
     var matrices = new Float32Array(16 * nodes.length);
@@ -182,13 +182,12 @@ Scene.prototype.draw = function (state) {
    *    on perfectly sorted visuals or we give up on instancing transparent meshes.
    */
 
-
   var meshes = [];
 
   for (model of bodyModels) {
-    //if (!model.getInstances().length) {
+    // if (!model.getInstances().length) {
     //  continue;
-    //}
+    // }
 
     var modelMeshes = model.meshes;
 

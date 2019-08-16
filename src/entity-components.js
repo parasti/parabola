@@ -20,7 +20,7 @@ var EC = module.exports = {};
 /*
  * Scene graph node.
  */
-EC.SceneGraph = function sceneGraph() {
+EC.SceneGraph = function sceneGraph () {
   this.node = SceneNode();
 };
 
@@ -43,7 +43,7 @@ EC.SceneGraph.prototype.setMatrix = function (p, e, s) {
 /*
  * Spatial transform
  */
-EC.Spatial = function spatial() {
+EC.Spatial = function spatial () {
   this.position = vec3.create();
   this.orientation = quat.create();
   this.scale = 1;
@@ -52,7 +52,7 @@ EC.Spatial = function spatial() {
 /*
  * Path walkers
  */
-EC.Movers = function movers() {
+EC.Movers = function movers () {
   this.translate = null;
   this.rotate = null;
 };
@@ -60,21 +60,21 @@ EC.Movers = function movers() {
 /*
  * Item
  */
-EC.Item = function item() {
+EC.Item = function item () {
   this.value = 0;
 };
 
 /*
  * Color
  */
-EC.Color = function color() {
+EC.Color = function color () {
   this.color = [1.0, 1.0, 1.0, 1.0];
-}
+};
 
 /*
  * Billboard
  */
-EC.Billboard = function billboard() {
+EC.Billboard = function billboard () {
   this.time = 1.0;
   this.dist = 0.0;
 

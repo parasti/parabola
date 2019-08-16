@@ -92,4 +92,4 @@ Mesh.compare = function (mesh0, mesh1) {
     return +1;
   }
   return 0;
-}
+};

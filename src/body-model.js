@@ -72,7 +72,7 @@ BodyModel.fromSolBill = function (sol, billIndex) {
   var elems = model.elems = new Uint16Array(2 * 3); // 2 triangles
   var meshes = model.meshes = [];
 
-  function addBillVert(i, x, y, s, t) {
+  function addBillVert (i, x, y, s, t) {
     // position
     verts[i * stride + 0] = x;
     verts[i * stride + 1] = y;
@@ -124,7 +124,7 @@ BodyModel.fromSolBill = function (sol, billIndex) {
   meshes.push(mesh);
 
   return model;
-}
+};
 
 BodyModel.prototype.createObjects = function (state) {
   var model = this;

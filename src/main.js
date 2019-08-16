@@ -6,9 +6,7 @@ var data = require('./data.js');
 var GLState = require('./gl-state.js');
 var GLPool = require('./gl-pool.js');
 var Scene = require('./scene.js');
-var BallModel = require('./ball-model.js');
 var SolidModel = require('./solid-model.js');
-
 var Mtrl = require('./mtrl.js');
 
 var getDeltaTime = (function () {
@@ -25,6 +23,28 @@ var getDeltaTime = (function () {
     return dt;
   };
 })();
+
+function createGradientModel (pool, sol, gradFile) {
+  // Insert a gradient material in-place.
+  sol.mv[0].f = gradFile;
+
+  // Cache it manually to keep our flag changes from being overwritten.
+  var gradMtrl = Mtrl.fromSolMtrl(sol.mv[0]);
+  gradMtrl.flags &= ~Mtrl._DEPTH_TEST;
+  gradMtrl.flags &= ~Mtrl._DEPTH_WRITE;
+  pool._cacheMtrl(gradMtrl);
+
+  // Cache the rest of the resources.
+  pool.cacheSol(sol);
+
+  // Create a model.
+  var model = SolidModel.fromSol(sol);
+
+  // Scale it.
+  model.sceneRoot.setLocalMatrix([0, 0, 0], [0, 0, 0, 1], [-256.0, 256.0, -256.0]); // BACK_DIST
+
+  return model;
+}
 
 function init () {
   var canvas = document.getElementById('canvas');
@@ -45,26 +65,15 @@ function init () {
   scene.view.setProjection(gl.canvas.width, gl.canvas.height, 50);
 
   data.fetchSolid('geom/back/back.sol').then(function (sol) {
-    // Insert a background-gradient material into the SOL.
-    sol.mv[0].f = 'back/city';
-    // Cache it manually to keep our flag changes from being overwritten.
-    var gradMtrl = Mtrl.fromSolMtrl(sol.mv[0]);
-    gradMtrl.flags &= ~Mtrl._DEPTH_TEST;
-    gradMtrl.flags &= ~Mtrl._DEPTH_WRITE;
-    pool._cacheMtrl(gradMtrl);
-
-    pool.cacheSol(sol);
-    var model = SolidModel.fromSol(sol);
-    var q = require('gl-matrix').quat.create();
-    model.sceneRoot.setLocalMatrix([0, 0, 0], q, [-256.0, 256.0, -256.0]); // BACK_DIST
+    var model = createGradientModel(pool, sol, 'back/alien');
+    // TODO 'level' serves as scene root, which it shouldn't.
     scene.setModel(state, 'level', model);
-    scene.view.setFromSol(sol, 1.0);
-    solFile = sol;
     return model;
   });
 
   var modelPaths = {
-    coin: 'map-back/city.sol',
+    background: 'map-back/alien.sol'
+    // coin: 'item/coin/coin.sol',
     // coin5: 'item/coin/coin5.sol',
     // coin10: 'item/coin/coin10.sol',
     // grow: 'item/grow/grow.sol',

@@ -142,7 +142,7 @@ SceneNode.prototype.getMaster = function () {
     return this.parent.getMaster();
   }
   return null;
-}
+};
 
 /*
  * Create an instance of this node.
