@@ -62,8 +62,6 @@ function init () {
   pool.emitter.on('model', createObjects);
   pool.emitter.on('shader', createObjects);
 
-  scene.view.setProjection(gl.canvas.width, gl.canvas.height, 50);
-
   data.fetchSolid('geom/back/back.sol').then(function (sol) {
     var model = createGradientModel(pool, sol, 'back/alien');
     // TODO 'level' serves as scene root, which it shouldn't.
@@ -93,16 +91,34 @@ function init () {
 
   // loadBall(gl, state, 'snowglobe');
 
-  function step (currTime) {
-    window.requestAnimationFrame(step);
+  gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+  scene.view.setProjection(gl.canvas.width, gl.canvas.height, 50);
+
+  /*
+   * Basic requestAnimationFrame loop.
+   */
+  function animationFrame (currTime) {
+    window.requestAnimationFrame(animationFrame);
 
     var dt = getDeltaTime(currTime);
+
+    if (dt < 1.0) {
+      step(dt);
+    }
+  }
+  window.requestAnimationFrame(animationFrame);
+
+  /*
+   * requestAnimationFrame-independent parts.
+   */
+  function step (dt) {
+    // TODO handle canvas size changes
+    scene.view.setProjection(gl.canvas.clientWidth, gl.canvas.clientHeight, 50);
 
     scene.view.mouseLook(0, 0);
     scene.step(dt);
     scene.draw(state);
   }
-  window.requestAnimationFrame(step);
 
   function mouseMove (e) {
     scene.view.mouseLook(e.movementX, e.movementY);

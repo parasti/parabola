@@ -10,7 +10,16 @@
     position: relative;
   }
 
+  #canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+  }
+
   #overlay {
+    display: none;
     position: absolute;
     top: 5px;
     left: 5px;
@@ -31,7 +40,7 @@
   </script>
 
   <div id="main">
-    <canvas id="canvas" width="800" height="600">
+    <canvas id="canvas" width="800" height="800">
       Parabola is a WebGL port of <a href="https://neverball.org">Neverball</a>. As such, it requires a browser with JavaScript and an HTML5 canvas.
     </canvas>
     <div id="overlay">
