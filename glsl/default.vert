@@ -1,6 +1,4 @@
 uniform mat4 ProjectionMatrix;
-uniform mat4 ModelViewMatrix;
-uniform mat3 NormalMatrix;
 
 attribute vec3 aPosition;
 attribute vec3 aNormal;
