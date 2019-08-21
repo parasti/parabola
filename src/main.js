@@ -102,8 +102,7 @@ function init () {
 
   // loadBall(gl, state, 'snowglobe');
 
-  gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-  scene.view.setProjection(gl.canvas.width, gl.canvas.height, 50);
+  gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
 
   /*
    * Basic requestAnimationFrame loop.
@@ -125,7 +124,6 @@ function init () {
   function step (dt) {
     // TODO handle canvas size changes
     scene.view.setProjection(gl.canvas.clientWidth, gl.canvas.clientHeight, 50);
-
     scene.view.mouseLook(0, 0);
     scene.step(dt);
     scene.draw(state);
