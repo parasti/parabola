@@ -5,6 +5,19 @@ var mat4 = require('gl-matrix').mat4;
 
 module.exports = SceneNode;
 
+/**
+ * This is a scene graph. A scene graph can serve many
+ * purposes, but this one does one thing and one thing only:
+ * it calculates the modelview matrices of its nodes. You
+ * can create a hierarchy of a bunch of nodes, set their
+ * local tranforms whichever way you like, and then ask any
+ * of them about their complete modelview matrix.
+ *
+ * As an extension of this, any node can be "instanced".
+ * Such a node or "instance" has no local transform, instead
+ * it uses the local transform of its "master" node. An
+ * instance can then be placed elsewhere in the node hierarchy.
+ */
 function SceneNode (parent) {
   if (!(this instanceof SceneNode)) {
     return new SceneNode(parent);
@@ -12,6 +25,8 @@ function SceneNode (parent) {
 
   this.parent = null;
   this.children = [];
+
+  // Does the world matrix need to be updated?
   this.dirty = true;
 
   this.localMatrix = mat4.create();
@@ -68,7 +83,7 @@ SceneNode.prototype.setLocalMatrix = (function () {
   };
 })();
 
-/*
+/**
  * Update and return the world matrix of this node.
  */
 SceneNode.prototype.getWorldMatrix = function () {
@@ -76,7 +91,7 @@ SceneNode.prototype.getWorldMatrix = function () {
   return this.worldMatrix;
 };
 
-/*
+/**
  * Test the given node for ancestry.
  */
 SceneNode.prototype.hasAncestor = function (node) {
@@ -87,7 +102,7 @@ SceneNode.prototype.hasAncestor = function (node) {
   }
 };
 
-/*
+/**
  * Set node parent.
  */
 SceneNode.prototype.setParent = function (node) {
@@ -115,7 +130,7 @@ SceneNode.prototype.setParent = function (node) {
   }
 };
 
-/*
+/**
  * Use the localMatrix of the given node.
  */
 SceneNode.prototype._setMaster = function (node) {
@@ -131,7 +146,7 @@ SceneNode.prototype._setMaster = function (node) {
   }
 };
 
-/*
+/**
  * Find the one true master.
  */
 SceneNode.prototype.getMaster = function () {
@@ -144,8 +159,8 @@ SceneNode.prototype.getMaster = function () {
   return null;
 };
 
-/*
- * Create an instance of this node.
+/**
+ * Create an instance of this node tree.
  */
 SceneNode.prototype.createInstance = function () {
   var node = SceneNode();
@@ -163,7 +178,7 @@ SceneNode.prototype.createInstance = function () {
   return node;
 };
 
-/*
+/**
  * Unlink node from its parent and master nodes.
  */
 SceneNode.prototype.unlink = function () {
@@ -171,7 +186,7 @@ SceneNode.prototype.unlink = function () {
   this.setParent(null);
 };
 
-/*
+/**
  * Add unique object to list.
  */
 function addToList (list, obj) {
@@ -181,7 +196,7 @@ function addToList (list, obj) {
   }
 }
 
-/*
+/**
  * Remove matching object from list.
  */
 function removeFromList (list, obj) {
@@ -191,7 +206,7 @@ function removeFromList (list, obj) {
   }
 }
 
-/*
+/**
  * Return the effective local matrix of this node.
  */
 SceneNode.prototype._getLocalMatrix = function () {
@@ -202,7 +217,7 @@ SceneNode.prototype._getLocalMatrix = function () {
   }
 };
 
-/*
+/**
  * Update world matrices of this and any parent/master nodes.
  */
 SceneNode.prototype._update = function () {
