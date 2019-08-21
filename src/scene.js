@@ -14,9 +14,14 @@ function Scene () {
   }
 
   this.sceneRoot = SceneNode();
-  this.view = View();
 
+  this.view = View();
+  this.time = 0.0;
+
+  // Named SolidModel slots (a SolidModel can be in multiple slots).
   this.models = {
+    gradient: null,
+    background: null,
     level: null,
     ballInner: null,
     ballSolid: null,
@@ -30,11 +35,17 @@ function Scene () {
     jump: null
   };
 
+  // List of all SolidModels.
   this.allModels = [];
-
-  this.time = 0.0;
 }
 
+/**
+ * Insert entity model scene-node into the level model scene-graph.
+ *
+ * TODO this is messy.
+ * Level model ends up with a contaminated scene graph.
+ * Should it be instanced first?
+ */
 Scene.prototype._attachModelInstances = function (modelName) {
   var levelModel, entModel;
 
@@ -52,7 +63,8 @@ Scene.prototype._attachModelInstances = function (modelName) {
 
     // Set level model as the root of the entire scene.
     // TODO why here?
-    levelModel.sceneRoot.setParent(this.sceneRoot);
+    // TODO the draw routine just ignores this.sceneRoot anyway.
+    // levelModel.sceneRoot.setParent(this.sceneRoot);
   } else {
     // Just loaded entity model. Attach instances of it to level model.
     levelModel = this.models.level;
@@ -64,6 +76,9 @@ Scene.prototype._attachModelInstances = function (modelName) {
   }
 };
 
+/**
+ * Add SolidModel to our list if not yet added.
+ */
 Scene.prototype._addModel = function (model) {
   var index = this.allModels.indexOf(model);
 
@@ -72,6 +87,11 @@ Scene.prototype._addModel = function (model) {
   }
 };
 
+/*
+ * Add a named SolidModel to the scene.
+ * TODO this does two things: maintains a list + adds the model to the rendered scene.
+ * TODO Maybe it should do only one of those.
+ */
 Scene.prototype.setModel = function (state, modelName, model) {
   this._addModel(model);
 
@@ -98,7 +118,7 @@ Scene.prototype.step = function (dt) {
 };
 
 /*
- * TODO
+ * Get BodyModels from all the named SolidModels.
  */
 Scene.prototype.getBodyModels = function () {
   var models = [];
