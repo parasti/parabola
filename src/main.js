@@ -46,6 +46,15 @@ function createGradientModel (pool, sol, gradFile) {
   return model;
 }
 
+const backgrounds = [
+  { grad: 'back/alien', file: 'map-back/alien.sol' },
+  { grad: 'back/city', file: 'map-back/city.sol' },
+  { grad: 'back/land', file: 'map-back/clouds.sol' },
+  { grad: 'back/space', file: 'map-back/jupiter.sol' },
+  { grad: 'back/ocean', file: 'map-back/ocean.sol' },
+  { grad: 'back/volcano', file: 'map-back/volcano.sol' },
+]
+
 function init () {
   var canvas = document.getElementById('canvas');
   var state = GLState(canvas);
@@ -53,6 +62,8 @@ function init () {
   var scene = Scene();
   var gl = state.gl;
   var solFile = null;
+
+  var background = backgrounds[Math.floor(Math.random() * (backgrounds.length))];
 
   function createObjects (res) {
     res.createObjects(state);
@@ -63,14 +74,14 @@ function init () {
   pool.emitter.on('shader', createObjects);
 
   data.fetchSolid('geom/back/back.sol').then(function (sol) {
-    var model = createGradientModel(pool, sol, 'back/alien');
+    var model = createGradientModel(pool, sol, background.grad);
     // TODO 'level' serves as scene root, which it shouldn't.
     scene.setModel(state, 'level', model);
     return model;
   });
 
   var modelPaths = {
-    background: 'map-back/alien.sol'
+    background: background.file
     // coin: 'item/coin/coin.sol',
     // coin5: 'item/coin/coin5.sol',
     // coin10: 'item/coin/coin10.sol',
