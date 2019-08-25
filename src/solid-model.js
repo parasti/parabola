@@ -11,12 +11,12 @@ module.exports = SolidModel;
 
 var solidModelIndex = 0;
 
-function SolidModel () {
+function SolidModel (id) {
   if (!(this instanceof SolidModel)) {
-    return new SolidModel();
+    return new SolidModel(id);
   }
 
-  this.id = 'solid-model:' + (solidModelIndex++);
+  this.id = id || 'SolidModel:' + (solidModelIndex++);
   this.sceneRoot = null;
   this.models = null;
 }
@@ -25,7 +25,7 @@ function SolidModel () {
  * Load entities from SOL.
  */
 SolidModel.fromSol = function (sol, entities) {
-  var solidModel = SolidModel();
+  var solidModel = SolidModel('SolidModel:' + sol.id);
 
   var sceneRoot = solidModel.sceneRoot = SceneNode();
   var ents = entities;
@@ -33,9 +33,6 @@ SolidModel.fromSol = function (sol, entities) {
   var model = null;
 
   var i, n, ent;
-
-  // Identity
-  solidModel.id = 'solid-model:' + sol.id;
 
   // Bodies
 

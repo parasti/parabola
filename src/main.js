@@ -152,6 +152,29 @@ function init () {
     scene.draw(state);
   }
 
+  var modelListElem = document.getElementById('model-list');
+
+  scene.emitter.on('model-added', function (model) {
+    var li = document.createElement('li');
+
+    li.textContent = model.id;
+    li.dataset.modelId = model.id;
+
+    modelListElem.appendChild(li);
+  });
+
+  scene.emitter.on('model-assigned', function (model, slotName) {
+    for (var i = 0, n = modelListElem.children.length; i < n; ++i) {
+      var li = modelListElem.children[i];
+
+      if (li.dataset.modelId === model.id) {
+        li.dataset.slotName = slotName;
+        li.textContent += ' (' + slotName + ')';
+        break;
+      }
+    }
+  });
+
   function mouseMove (e) {
     scene.view.mouseLook(e.movementX, e.movementY);
   }

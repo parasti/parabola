@@ -1,6 +1,7 @@
 'use strict';
 
 var nanoECS = require('nano-ecs');
+var EventEmitter = require('events');
 var mat4 = require('gl-matrix').mat4;
 
 var SceneNode = require('./scene-node.js');
@@ -42,6 +43,9 @@ function Scene () {
 
   // Entity manager.
   this.entities = nanoECS();
+
+  // Events.
+  this.emitter = new EventEmitter();
 }
 
 /**
@@ -101,6 +105,7 @@ Scene.prototype._addModel = function (model) {
 
   if (index < 0) {
     this.allModels.push(model);
+    this.emitter.emit('model-added', model);
   }
 };
 
@@ -113,6 +118,7 @@ Scene.prototype.setModel = function (state, modelName, model) {
   this._addModel(model);
 
   this.models[modelName] = model;
+  this.emitter.emit('model-assigned', model, modelName);
 
   this._attachModelInstances(modelName);
 };
