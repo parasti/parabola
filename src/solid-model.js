@@ -242,8 +242,8 @@ SolidModel.prototype.step = function (dt, scene = null) {
   }
 };
 
-/*
- * Attach model instances to tagged entities.
+/**
+ * Parent SolidModel scene-node instances to scene-nodes of tagged entities.
  */
 SolidModel.prototype.attachModelToEnts = function (model, tag) {
   var ents = this.entities.queryTag(tag);
