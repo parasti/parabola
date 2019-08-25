@@ -249,14 +249,10 @@ function init () {
         toggleFullscreenInput.checked = screenfull.isFullscreen;
       }
       if (screenfull.isFullscreen) {
-        canvas.width = window.screen.width;
-        canvas.height = window.screen.height;
+        // TODO add body class
       } else {
-        canvas.width = 800;
-        canvas.height = 600;
+        // TODO remove body class
       }
-      gl.viewport(0, 0, canvas.width, canvas.height);
-      scene.view.setProjection(canvas.width, canvas.height, 50);
     });
   }
 
