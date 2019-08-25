@@ -55,6 +55,20 @@ Parabola.createGradientModel = function (pool, entities, sol, gradFile) {
   return model;
 };
 
+/**
+ * Mark all billboards as background billboards.
+ */
+Parabola.createBackgroundModel = function (pool, entities, sol) {
+  for (var i = 0, n = sol.bills.length; i < n; ++i) {
+    var bill = sol.bills[i];
+    bill.fl |= 0x1000; // Hypothetical BILL_BACK.
+  }
+
+  pool.cacheSol(sol);
+  var model = SolidModel.fromSol(sol, entities);
+  return model;
+}
+
 Parabola.BACKGROUNDS = [
   { sol: 'map-back/alien.sol', gradient: 'back/alien' },
   { sol: 'map-back/city.sol', gradient: 'back/city' },
@@ -88,16 +102,21 @@ function init () {
     return model;
   });
 
+  data.fetchSolid(background.sol).then(function (sol) {
+    var model = Parabola.createBackgroundModel(pool, scene.entities, sol);
+    scene.setModel(state, 'background', model);
+    return model;
+  });
+
   var modelPaths = {
-    background: background.sol,
-    level: 'map-easy/easy.sol',
+    level: 'map-fwp/adventure.sol',
     coin: 'item/coin/coin.sol',
-    // coin5: 'item/coin/coin5.sol',
-    // coin10: 'item/coin/coin10.sol',
-    // grow: 'item/grow/grow.sol',
-    // shrink: 'item/shrink/shrink.sol',
-    // jump: 'geom/beam/beam.sol',
-    // ballSolid: 'ball/basic-ball/basic-ball-solid.sol'
+    coin5: 'item/coin/coin5.sol',
+    coin10: 'item/coin/coin10.sol',
+    grow: 'item/grow/grow.sol',
+    shrink: 'item/shrink/shrink.sol',
+    jump: 'geom/beam/beam.sol',
+    ballSolid: 'ball/basic-ball/basic-ball-solid.sol'
   };
 
   for (let modelName in modelPaths) {

@@ -294,8 +294,7 @@ Scene.prototype.updateSystems = function (dt) {
   for (i = 0, n = ents.length; i < n; ++i) {
     ent = ents[i];
 
-    // ent.billboard.getForegroundTransform(ent.spatial.orientation, ent.spatial.scale, scene);
-    ent.billboard.getBackgroundTransform(ent.spatial.position, ent.spatial.orientation, ent.spatial.scale, this);
+    ent.billboard.getTransform(ent.spatial.position, ent.spatial.orientation, ent.spatial.scale, this);
   }
 
   /*

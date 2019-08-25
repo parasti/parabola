@@ -99,6 +99,14 @@ EC.Billboard.prototype.fromSolBill = function (sol, solBill) {
   this.flags = solBill.fl;
 };
 
+EC.Billboard.prototype.getTransform = function (out_position, out_orientation, out_scale, scene) {
+  if (this.flags & 0x1000) { // Hypothetical BILL_BACK.
+    this.getBackgroundTransform(out_position, out_orientation, out_scale, scene);
+  } else {
+    this.getForegroundTransform(out_orientation, out_scale, scene);
+  }
+}
+
 EC.Billboard.prototype.getForegroundTransform = (function () {
   var Q = quat.create();
   var M = mat3.create();
