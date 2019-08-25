@@ -100,10 +100,6 @@ function init () {
     });
   }
 
-  // loadBall(gl, state, 'snowglobe');
-
-  gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-
   /*
    * Basic requestAnimationFrame loop.
    */
@@ -121,9 +117,27 @@ function init () {
   /*
    * requestAnimationFrame-independent parts.
    */
+  var currWidth = 0, currHeight = 0;
   function step (dt) {
-    // TODO handle canvas size changes
-    scene.view.setProjection(gl.canvas.clientWidth, gl.canvas.clientHeight, 50);
+    if (currWidth !== gl.canvas.clientWidth && currHeight !== gl.canvas.clientHeight) {
+      var w = gl.canvas.clientWidth;
+      var h = gl.canvas.clientHeight;
+
+      // Update projection matrix with CSS dimensions.
+      scene.view.setProjection(w, h, 50);
+
+      // Resize drawing buffer to CSS dimensions.
+      gl.canvas.width = w;
+      gl.canvas.height = h;
+
+      // Update viewport.
+      gl.viewport(0, 0, w, h);
+
+      // Save values.
+      currWidth = w;
+      currHeight = h;
+    }
+
     scene.view.mouseLook(0, 0);
     scene.step(dt);
     scene.draw(state);
