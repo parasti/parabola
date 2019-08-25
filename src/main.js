@@ -147,7 +147,7 @@ function init () {
    */
   var currWidth = 0, currHeight = 0;
   function step (dt) {
-    if (currWidth !== gl.canvas.clientWidth && currHeight !== gl.canvas.clientHeight) {
+    if (currWidth !== gl.canvas.clientWidth || currHeight !== gl.canvas.clientHeight) {
       var w = gl.canvas.clientWidth;
       var h = gl.canvas.clientHeight;
 
