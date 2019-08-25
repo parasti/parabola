@@ -33,7 +33,7 @@ var getDeltaTime = (function () {
  * given gradient material/image into it, and sets up
  * an appropriate transform matrix.
  */
-Parabola.createGradientModel = function (pool, sol, gradFile) {
+Parabola.createGradientModel = function (pool, entities, sol, gradFile) {
   // Insert a gradient material in-place.
   sol.mv[0].f = gradFile;
 
@@ -47,13 +47,13 @@ Parabola.createGradientModel = function (pool, sol, gradFile) {
   pool.cacheSol(sol);
 
   // Create a model.
-  var model = SolidModel.fromSol(sol);
+  var model = SolidModel.fromSol(sol, entities);
 
   // Scale it.
   model.sceneRoot.setLocalMatrix([0, 0, 0], [0, 0, 0, 1], [-256.0, 256.0, -256.0]); // BACK_DIST
 
   return model;
-}
+};
 
 Parabola.BACKGROUNDS = [
   { sol: 'map-back/alien.sol', gradient: 'back/alien' },
@@ -61,8 +61,8 @@ Parabola.BACKGROUNDS = [
   { sol: 'map-back/clouds.sol', gradient: 'back/land' },
   { sol: 'map-back/jupiter.sol', gradient: 'back/space' },
   { sol: 'map-back/ocean.sol', gradient: 'back/ocean' },
-  { sol: 'map-back/volcano.sol', gradient: 'back/volcano' },
-]
+  { sol: 'map-back/volcano.sol', gradient: 'back/volcano' }
+];
 
 function init () {
   var canvas = document.getElementById('canvas');
@@ -83,7 +83,7 @@ function init () {
   pool.emitter.on('shader', createObjects);
 
   data.fetchSolid('geom/back/back.sol').then(function (sol) {
-    var model = Parabola.createGradientModel(pool, sol, background.gradient);
+    var model = Parabola.createGradientModel(pool, scene.entities, sol, background.gradient);
     scene.setModel(state, 'gradient', model);
     return model;
   });
@@ -103,7 +103,7 @@ function init () {
   for (let modelName in modelPaths) {
     data.fetchSolid(modelPaths[modelName]).then(function (sol) {
       pool.cacheSol(sol);
-      var model = SolidModel.fromSol(sol);
+      var model = SolidModel.fromSol(sol, scene.entities);
       scene.setModel(state, modelName, model);
       return model;
     });

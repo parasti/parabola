@@ -1,10 +1,12 @@
 'use strict';
 
+var nanoECS = require('nano-ecs');
 var mat4 = require('gl-matrix').mat4;
 
 var SceneNode = require('./scene-node.js');
 var View = require('./view.js');
 var Mesh = require('./mesh.js');
+var EC = require('./entity-components.js');
 
 module.exports = Scene;
 
@@ -37,7 +39,22 @@ function Scene () {
 
   // List of all SolidModels.
   this.allModels = [];
+
+  // Entity manager.
+  this.entities = nanoECS();
 }
+
+/**
+ * Parent SolidModel scene-node instances to scene-nodes of tagged entities.
+ */
+Scene.prototype.attachModelToEnts = function (model, tag) {
+  var ents = this.entities.queryTag(tag);
+
+  for (var i = 0, n = ents.length; i < n; ++i) {
+    var instance = model.sceneRoot.createInstance();
+    instance.setParent(ents[i].sceneGraph.node);
+  }
+};
 
 /**
  * Insert entity model scene-node into the level model scene-graph.
@@ -57,7 +74,7 @@ Scene.prototype._attachModelInstances = function (modelName) {
       entModel = this.models[name];
 
       if (levelModel && entModel && entModel !== levelModel) {
-        levelModel.attachModelToEnts(entModel, name);
+        this.attachModelToEnts(entModel, name);
       }
     }
 
@@ -71,7 +88,7 @@ Scene.prototype._attachModelInstances = function (modelName) {
     entModel = this.models[modelName];
 
     if (levelModel && entModel) {
-      levelModel.attachModelToEnts(entModel, modelName);
+      this.attachModelToEnts(entModel, modelName);
     }
   }
 };
@@ -106,13 +123,7 @@ Scene.prototype.step = function (dt) {
 
   scene.time += dt;
 
-  for (var name in scene.models) {
-    var model = scene.models[name];
-
-    if (model) {
-      model.step(dt, scene);
-    }
-  }
+  this.updateSystems(dt);
 
   view.step(dt);
 };
@@ -146,7 +157,7 @@ Scene.prototype.draw = function (state) {
 
   var bodyModels = this.getBodyModels();
 
-  var model, i, n;
+  var model, mesh, i, n;
 
   /*
    * Make arrays of modelview matrices.
@@ -208,7 +219,7 @@ Scene.prototype.draw = function (state) {
     var modelMeshes = model.meshes;
 
     for (i = 0, n = modelMeshes.length; i < n; ++i) {
-      var mesh = modelMeshes[i];
+      mesh = modelMeshes[i];
       meshes.push(mesh);
     }
   }
@@ -224,9 +235,70 @@ Scene.prototype.draw = function (state) {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
   for (i = 0, n = meshes.length; i < n; ++i) {
-    var mesh = meshes[i];
+    mesh = meshes[i];
+
     var count = mesh.model.getInstances().length || 1;
 
     mesh.drawInstanced(state, count);
+  }
+};
+
+const MOVER_SYSTEM = [EC.Movers, EC.Spatial];
+const BILLBOARD_SYSTEM = [EC.Billboard, EC.Spatial];
+const SCENEGRAPH_SYSTEM = [EC.Spatial, EC.SceneGraph];
+
+/**
+ * Update entity systems.
+ */
+Scene.prototype.updateSystems = function (dt) {
+  var ents, ent, i, n;
+
+  /*
+   * Mover system: get spatial position/orientation from the mover component.
+   */
+  ents = this.entities.queryComponents(MOVER_SYSTEM);
+
+  for (i = 0, n = ents.length; i < n; ++i) {
+    ent = ents[i];
+
+    // Update movers.
+
+    var moverTranslate = ent.movers.translate;
+    var moverRotate = ent.movers.rotate;
+
+    if (moverTranslate === moverRotate) {
+      moverTranslate.step(dt);
+    } else {
+      moverTranslate.step(dt);
+      moverRotate.step(dt);
+    }
+
+    // Update positions.
+
+    // TODO do this only on actual update
+    moverTranslate.getPosition(ent.spatial.position);
+    moverRotate.getOrientation(ent.spatial.orientation);
+  }
+
+  /*
+   * Billboard system: get spatial orientation/scale from the billboard component.
+   */
+  ents = this.entities.queryComponents(BILLBOARD_SYSTEM);
+
+  for (i = 0, n = ents.length; i < n; ++i) {
+    ent = ents[i];
+
+    // ent.billboard.getForegroundTransform(ent.spatial.orientation, ent.spatial.scale, scene);
+    ent.billboard.getBackgroundTransform(ent.spatial.position, ent.spatial.orientation, ent.spatial.scale, this);
+  }
+
+  /*
+   * Scene graph system: get scene node matrix from the spatial compontent.
+   */
+  ents = this.entities.queryComponents(SCENEGRAPH_SYSTEM);
+
+  for (i = 0, n = ents.length; i < n; ++i) {
+    ent = ents[i];
+    ent.sceneGraph.setMatrix(ent.spatial.position, ent.spatial.orientation, ent.spatial.scale);
   }
 };

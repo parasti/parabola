@@ -2,14 +2,10 @@
 
 var vec3 = require('gl-matrix').vec3;
 
-var nanoECS = require('nano-ecs');
-
 var Mover = require('./mover.js');
 var Solid = require('neverball-solid');
 var EC = require('./entity-components.js');
 var SceneNode = require('./scene-node.js');
-
-var BodyModel = require('./body-model.js');
 
 module.exports = SolidModel;
 
@@ -19,19 +15,19 @@ function SolidModel () {
   }
 
   this.sceneRoot = null;
-  this.entities = null;
   this.models = null;
 }
 
 /*
  * Load entities from SOL.
  */
-SolidModel.fromSol = function (sol) {
+SolidModel.fromSol = function (sol, entities) {
   var solidModel = SolidModel();
 
   var sceneRoot = solidModel.sceneRoot = SceneNode();
-  var ents = solidModel.entities = nanoECS();
+  var ents = entities;
   var models = solidModel.models = [];
+  var model = null;
 
   var i, n, ent;
 
@@ -46,7 +42,7 @@ SolidModel.fromSol = function (sol) {
     ent.addComponent(EC.Movers);
     ent.addComponent(EC.SceneGraph);
 
-    var model = sol._models[i];
+    model = sol._models[i];
 
     // Add body-model to solid-model body-model (yup) list.
     models.push(model);
@@ -160,7 +156,7 @@ SolidModel.fromSol = function (sol) {
     ent.billboard.fromSolBill(sol, solBill);
 
     // Get cached billboard model
-    var model = sol._billboardModels[i];
+    model = sol._billboardModels[i];
 
     // Add body-model to solid-model body-model (yup) list.
     models.push(model);
@@ -178,78 +174,4 @@ SolidModel.fromSol = function (sol) {
   }
 
   return solidModel;
-};
-
-/*
- * Update systems.
- */
-
-// (Preallocate to minimize allocation during frame.)
-const MOVER_SYSTEM = [EC.Movers, EC.Spatial];
-const BILLBOARD_SYSTEM = [EC.Billboard, EC.Spatial];
-const SCENEGRAPH_SYSTEM = [EC.Spatial, EC.SceneGraph];
-
-SolidModel.prototype.step = function (dt, scene = null) {
-  var ents, ent, i, n;
-
-  /*
-   * Mover system: get spatial position/orientation from the mover component.
-   */
-  ents = this.entities.queryComponents(MOVER_SYSTEM);
-
-  for (i = 0, n = ents.length; i < n; ++i) {
-    ent = ents[i];
-
-    // Update movers.
-
-    var moverTranslate = ent.movers.translate;
-    var moverRotate = ent.movers.rotate;
-
-    if (moverTranslate === moverRotate) {
-      moverTranslate.step(dt);
-    } else {
-      moverTranslate.step(dt);
-      moverRotate.step(dt);
-    }
-
-    // Update positions.
-
-    // TODO do this only on actual update
-    moverTranslate.getPosition(ent.spatial.position);
-    moverRotate.getOrientation(ent.spatial.orientation);
-  }
-
-  /*
-   * Billboard system: get spatial orientation/scale from the billboard component.
-   */
-  ents = this.entities.queryComponents(BILLBOARD_SYSTEM);
-
-  for (i = 0, n = ents.length; i < n; ++i) {
-    ent = ents[i];
-
-    // ent.billboard.getForegroundTransform(ent.spatial.orientation, ent.spatial.scale, scene);
-    ent.billboard.getBackgroundTransform(ent.spatial.position, ent.spatial.orientation, ent.spatial.scale, scene);
-  }
-
-  /*
-   * Scene graph system: get scene node matrix from the spatial compontent.
-   */
-  ents = this.entities.queryComponents(SCENEGRAPH_SYSTEM);
-
-  for (i = 0, n = ents.length; i < n; ++i) {
-    ent = ents[i];
-    ent.sceneGraph.setMatrix(ent.spatial.position, ent.spatial.orientation, ent.spatial.scale);
-  }
-};
-
-/**
- * Parent SolidModel scene-node instances to scene-nodes of tagged entities.
- */
-SolidModel.prototype.attachModelToEnts = function (model, tag) {
-  var ents = this.entities.queryTag(tag);
-
-  for (var i = 0, n = ents.length; i < n; ++i) {
-    var instance = model.sceneRoot.createInstance();
-    instance.setParent(ents[i].sceneGraph.node);
-  }
 };
