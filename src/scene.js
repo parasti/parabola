@@ -123,10 +123,6 @@ Scene.prototype.step = function (dt) {
 Scene.prototype.getBodyModels = function () {
   var models = [];
 
-  if (!this.models.level) {
-    return models;
-  }
-
   for (var modelName in this.models) {
     var solidModel = this.models[modelName];
 

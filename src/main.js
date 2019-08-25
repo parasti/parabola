@@ -1,5 +1,7 @@
 'use strict';
 
+var Parabola = module.exports = {};
+
 var screenfull = require('screenfull');
 var data = require('./data.js');
 
@@ -24,7 +26,14 @@ var getDeltaTime = (function () {
   };
 })();
 
-function createGradientModel (pool, sol, gradFile) {
+/**
+ * Create a SolidModel to serve as background gradient.
+ *
+ * This takes a 'map-back/back.sol' SOL file, inserts the
+ * given gradient material/image into it, and sets up
+ * an appropriate transform matrix.
+ */
+Parabola.createGradientModel = function (pool, sol, gradFile) {
   // Insert a gradient material in-place.
   sol.mv[0].f = gradFile;
 
@@ -46,13 +55,13 @@ function createGradientModel (pool, sol, gradFile) {
   return model;
 }
 
-const backgrounds = [
-  { grad: 'back/alien', file: 'map-back/alien.sol' },
-  { grad: 'back/city', file: 'map-back/city.sol' },
-  { grad: 'back/land', file: 'map-back/clouds.sol' },
-  { grad: 'back/space', file: 'map-back/jupiter.sol' },
-  { grad: 'back/ocean', file: 'map-back/ocean.sol' },
-  { grad: 'back/volcano', file: 'map-back/volcano.sol' },
+Parabola.BACKGROUNDS = [
+  { sol: 'map-back/alien.sol', gradient: 'back/alien' },
+  { sol: 'map-back/city.sol', gradient: 'back/city' },
+  { sol: 'map-back/clouds.sol', gradient: 'back/land' },
+  { sol: 'map-back/jupiter.sol', gradient: 'back/space' },
+  { sol: 'map-back/ocean.sol', gradient: 'back/ocean' },
+  { sol: 'map-back/volcano.sol', gradient: 'back/volcano' },
 ]
 
 function init () {
@@ -63,7 +72,7 @@ function init () {
   var gl = state.gl;
   var solFile = null;
 
-  var background = backgrounds[Math.floor(Math.random() * (backgrounds.length))];
+  var background = Parabola.BACKGROUNDS[Math.floor(Math.random() * (Parabola.BACKGROUNDS.length))];
 
   function createObjects (res) {
     res.createObjects(state);
@@ -74,15 +83,15 @@ function init () {
   pool.emitter.on('shader', createObjects);
 
   data.fetchSolid('geom/back/back.sol').then(function (sol) {
-    var model = createGradientModel(pool, sol, background.grad);
-    // TODO 'level' serves as scene root, which it shouldn't.
-    scene.setModel(state, 'level', model);
+    var model = Parabola.createGradientModel(pool, sol, background.gradient);
+    scene.setModel(state, 'gradient', model);
     return model;
   });
 
   var modelPaths = {
-    background: background.file
-    // coin: 'item/coin/coin.sol',
+    background: background.sol,
+    level: 'map-easy/easy.sol',
+    coin: 'item/coin/coin.sol',
     // coin5: 'item/coin/coin5.sol',
     // coin10: 'item/coin/coin10.sol',
     // grow: 'item/grow/grow.sol',
