@@ -9,11 +9,14 @@ var SceneNode = require('./scene-node.js');
 
 module.exports = SolidModel;
 
+var solidModelIndex = 0;
+
 function SolidModel () {
   if (!(this instanceof SolidModel)) {
     return new SolidModel();
   }
 
+  this.id = 'solid-model:' + (solidModelIndex++);
   this.sceneRoot = null;
   this.models = null;
 }
@@ -30,6 +33,9 @@ SolidModel.fromSol = function (sol, entities) {
   var model = null;
 
   var i, n, ent;
+
+  // Identity
+  solidModel.id = 'solid-model:' + sol.id;
 
   // Bodies
 

@@ -29,7 +29,11 @@ data.fetchImage = function (path) {
 };
 
 data.fetchSolid = function (path) {
-  return data.fetchBinaryFile(path).then(SolidWithCrc);
+  return data.fetchBinaryFile(path).then(function (buffer) {
+    var sol = SolidWithCrc(buffer);
+    sol.id = path;
+    return sol;
+  });
 };
 
 data.loadFile = function (file) {
