@@ -142,21 +142,19 @@ function init () {
   }
   window.requestAnimationFrame(animationFrame);
 
-  /*
-   * requestAnimationFrame-independent parts.
-   */
-  var currWidth = 0, currHeight = 0;
+  var currWidth = 0;
+  var currHeight = 0;
   function step (dt) {
-    if (currWidth !== gl.canvas.clientWidth || currHeight !== gl.canvas.clientHeight) {
-      var w = gl.canvas.clientWidth;
-      var h = gl.canvas.clientHeight;
+    if (currWidth !== canvas.clientWidth || currHeight !== canvas.clientHeight) {
+      var w = canvas.clientWidth;
+      var h = canvas.clientHeight;
 
       // Update projection matrix with CSS dimensions.
       scene.view.setProjection(w, h, 50);
 
       // Resize drawing buffer to CSS dimensions.
-      gl.canvas.width = w;
-      gl.canvas.height = h;
+      canvas.width = w;
+      canvas.height = h;
 
       // Update viewport.
       gl.viewport(0, 0, w, h);
