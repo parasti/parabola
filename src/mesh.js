@@ -22,8 +22,8 @@ function Mesh () {
   this.elemBase = 0;
   this.elemCount = 0;
 
-  // Mesh sort key.
-  this.sortIndex = 0;
+  // Mesh sort order/draw order.
+  this.sortOrder = 0;
 }
 
 Mesh.prototype.drawInstanced = function (state, count) {
@@ -57,21 +57,50 @@ var Mtrl = require('./mtrl.js');
 /*
  * TODO
  */
-Mesh.prototype.createSortKey = function () {
-  var mtrl = this.mtrl;
+Mesh.prototype.createSortOrder = function () {
+  var mesh = this;
+  var mtrl = mesh.mtrl;
   var flags = mtrl.flags;
 
-  if (flags & Mtrl.DECAL) {
-    this.sortIndex |= 0x1;
-  }
-  if (flags & Mtrl._BLEND) {
-    this.sortIndex |= 0x2;
-  }
+  this.setLayer(Mesh.LAYER_FOREGROUND);
+  this.setBlend((flags & Mtrl._DEPTH_WRITE) ? Mesh.BLEND_OPAQUE : Mesh.BLEND_TRANSPARENT);
 };
 
+Mesh.LAYER_GRADIENT = 0;
+Mesh.LAYER_BACKGROUND = 1;
+Mesh.LAYER_FOREGROUND = 2;
+
+Mesh.BLEND_OPAQUE = 0;
+Mesh.BLEND_TRANSPARENT = 1;
+
+Mesh.prototype.setSortBits = function (firstBit, bitLength, value) {
+  if (firstBit < 0 || firstBit > 31) {
+    throw new Error('Invalid first bit');
+  }
+
+  if (bitLength < 1 || firstBit + bitLength > 32) {
+    throw new Error ('Invalid bit length');
+  }
+
+  var bitShift = 31 - (firstBit + bitLength);
+  var bitMask = Math.pow(2, bitLength) - 1;
+
+  console.log('bits ' + (bitShift + bitLength) + ':' + (bitShift + 1) + ' = ' + value);
+
+  this.sortOrder = (this.sortOrder & ~(bitMask << bitShift)) | (value & bitMask) << bitShift;
+}
+
+Mesh.prototype.setLayer = function (layer) {
+  this.setSortBits(15, 2, layer);
+}
+
+Mesh.prototype.setBlend = function (blend) {
+  this.setSortBits(17, 1, blend);
+}
+
 Mesh.compare = function (mesh0, mesh1) {
-  var a = mesh0.sortIndex;
-  var b = mesh1.sortIndex;
+  var a = mesh0.sortOrder;
+  var b = mesh1.sortOrder;
 
   if (a < b) {
     return -1;

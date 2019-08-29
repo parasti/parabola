@@ -10,6 +10,7 @@ var GLPool = require('./gl-pool.js');
 var Scene = require('./scene.js');
 var SolidModel = require('./solid-model.js');
 var Mtrl = require('./mtrl.js');
+var Mesh = require('./mesh.js');
 
 var getDeltaTime = (function () {
   var lastTime = 0.0;
@@ -50,7 +51,11 @@ Parabola.createGradientModel = function (pool, entities, sol, gradFile) {
   var model = SolidModel.fromSol(sol, entities);
 
   // Scale it.
-  model.sceneRoot.setLocalMatrix([0, 0, 0], [0, 0, 0, 1], [-256.0, 256.0, -256.0]); // BACK_DIST
+  const BACK_DIST = 256.0;
+  model.sceneRoot.setLocalMatrix([0, 0, 0], [0, 0, 0, 1], [-BACK_DIST, BACK_DIST, -BACK_DIST]);
+
+  // TODO: set mesh sorting.
+  model.setMeshLayer(Mesh.LAYER_GRADIENT);
 
   return model;
 };
@@ -64,8 +69,13 @@ Parabola.createBackgroundModel = function (pool, entities, sol) {
     bill.fl |= 0x1000; // Hypothetical BILL_BACK.
   }
 
+  for (i = 0; i < sol.mtrls.length; ++i) {
+    var mtrl = sol.mtrls[i];
+  }
+
   pool.cacheSol(sol);
   var model = SolidModel.fromSol(sol, entities);
+  model.setMeshLayer(Mesh.LAYER_BACKGROUND);
   return model;
 }
 
@@ -111,11 +121,11 @@ function init () {
   var modelPaths = {
     level: 'map-fwp/adventure.sol',
     coin: 'item/coin/coin.sol',
-    coin5: 'item/coin/coin5.sol',
-    coin10: 'item/coin/coin10.sol',
-    grow: 'item/grow/grow.sol',
-    shrink: 'item/shrink/shrink.sol',
-    jump: 'geom/beam/beam.sol',
+    // coin5: 'item/coin/coin5.sol',
+    // coin10: 'item/coin/coin10.sol',
+    // grow: 'item/grow/grow.sol',
+    // shrink: 'item/shrink/shrink.sol',
+    // jump: 'geom/beam/beam.sol',
     ballSolid: 'ball/basic-ball/basic-ball-solid.sol'
   };
 

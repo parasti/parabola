@@ -30,7 +30,7 @@ function Mtrl (name) {
   this.emission = null;
   this.shininess = null;
 
-  this.id = _materialIndex++;
+  this.id = 'Mtrl:' + _materialIndex++;
 }
 
 Mtrl.fromSolMtrl = function (solMtrl) {

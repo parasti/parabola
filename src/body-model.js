@@ -119,7 +119,12 @@ BodyModel.fromSolBill = function (sol, billIndex) {
   mesh.model = model;
   mesh.elemBase = 0;
   mesh.elemCount = 6;
-  mesh.sortIndex = billIndex; // sort in order of appearance
+
+  // Sort background billboards by order of appearance, and nothing else.
+  if (bill.fl & 0x1000) { // Hypothetical BILL_BACK.
+    mesh.setLayer(Mesh.LAYER_BACKGROUND);
+    mesh.setSortBits(17, 14, billIndex);
+  }
 
   meshes.push(mesh);
 
@@ -190,11 +195,10 @@ BodyModel.prototype.bindArray = function (state) {
   }
 };
 
-/*
- * Body mesh creation.
+/**
+ * Add a geom (triangle) to the list, indexed by used material.
  */
-
-function indexGeomByMtrl (geoms, geom) {
+function addGeomByMtrl (geoms, geom) {
   var mi = geom.mi;
 
   if (geoms[mi] === undefined) {
@@ -204,6 +208,9 @@ function indexGeomByMtrl (geoms, geom) {
   geoms[mi].push(geom);
 }
 
+/**
+ * Get a list of geoms (triangles) for a body, indexed by material.
+ */
 function getBodyGeomsByMtrl (sol, body) {
   var geoms = Array(sol.mtrls.length);
 
@@ -211,39 +218,43 @@ function getBodyGeomsByMtrl (sol, body) {
 
   // OBJ geometry.
   for (gi = 0; gi < body.gc; ++gi) {
-    indexGeomByMtrl(geoms, sol.gv[sol.iv[body.g0 + gi]]);
+    addGeomByMtrl(geoms, sol.gv[sol.iv[body.g0 + gi]]);
   }
 
   // Lump geometry.
   for (li = 0; li < body.lc; ++li) {
     var lump = sol.lv[body.l0 + li];
+
     for (gi = 0; gi < lump.gc; ++gi) {
-      indexGeomByMtrl(geoms, sol.gv[sol.iv[lump.g0 + gi]]);
+      addGeomByMtrl(geoms, sol.gv[sol.iv[lump.g0 + gi]]);
     }
   }
 
   return geoms;
 }
 
-function getVertAttribs (sol, vert, offs) {
+/**
+ * Collect interleaved vertex attributes from SOL data structures.
+ */
+function getVertAttribs (buff, sol, offs) {
   var p = sol.vv[offs.vi];
   var n = sol.sv[offs.si].n;
   var t = sol.tv[offs.ti];
 
-  vert[0] = p[0];
-  vert[1] = p[1];
-  vert[2] = p[2];
+  buff[0] = p[0];
+  buff[1] = p[1];
+  buff[2] = p[2];
 
-  vert[3] = n[0];
-  vert[4] = n[1];
-  vert[5] = n[2];
+  buff[3] = n[0];
+  buff[4] = n[1];
+  buff[5] = n[2];
 
-  vert[6] = t[0];
-  vert[7] = t[1];
+  buff[6] = t[0];
+  buff[7] = t[1];
 }
 
-/*
- * Create a list of meshes from a SOL body, mesh per each used material.
+/**
+ * Create meshes for a SOL body, one mesh per material.
  */
 BodyModel.prototype.getMeshesFromSol = function (sol, body) {
   var model = this;
@@ -253,21 +264,27 @@ BodyModel.prototype.getMeshesFromSol = function (sol, body) {
   var geomsByMtrl = getBodyGeomsByMtrl(sol, body);
   var geomsTotal = geomsByMtrl.reduce((total, geoms) => (total + geoms.length), 0);
 
+  // Vertex store.
   var verts = new Float32Array(geomsTotal * 3 * stride);
+  // Added vertices.
   var vertsTotal = 0;
 
+  // Element store.
   var elems = new Uint16Array(geomsTotal * 3);
+  // Added elements.
   var elemsTotal = 0;
 
   var meshes = [];
 
+  // Add a single SOL vertex to the vertex store.
   function addVert (sol, offs) {
     var pos = vertsTotal * stride;
     var vert = verts.subarray(pos, pos + stride);
-    getVertAttribs(sol, vert, offs);
+    getVertAttribs(vert, sol, offs);
     vertsTotal++;
   }
 
+  // Create a mesh (draw call) for each material, using forEach to iterate over a sparse array.
   geomsByMtrl.forEach(function (geoms, mi) {
     var mtrl = sol._materials[mi];
     var shader = sol._shaders[mi];
@@ -280,7 +297,7 @@ BodyModel.prototype.getMeshesFromSol = function (sol, body) {
     mesh.elemBase = elemsTotal;
     mesh.elemCount = 0;
 
-    mesh.createSortKey();
+    mesh.createSortOrder();
 
     var offsToVert = [];
 

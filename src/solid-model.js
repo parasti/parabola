@@ -178,3 +178,18 @@ SolidModel.fromSol = function (sol, entities) {
 
   return solidModel;
 };
+
+SolidModel.prototype.setMeshLayer = function (layer) {
+  var bodyModels = this.models;
+
+  for (var i = 0, n = bodyModels.length; i < n; ++i) {
+    var bodyModel = bodyModels[i];
+    var meshes = bodyModel.meshes;
+
+    for (var j = 0, m = meshes.length; j < m; ++j) {
+      var mesh = meshes[j];
+
+      mesh.setLayer(layer);
+    }
+  }
+}
