@@ -49,8 +49,99 @@ Mtrl.fromSolMtrl = function (solMtrl) {
   return mtrl;
 };
 
-/*
- * Take Neverball mtrl flags and translate them into GL state changes.
+/**
+ * A word on why there are more flags than there are in Neverball:
+ *
+ * In Neverball, a frame is rendered via a series of hard-coded
+ * rendering passes. The code sets up GL state for some part of
+ * the scene and renders that part, then another, and so on.
+ * When that part is from a SOL file, the GL state is controlled
+ * by the materials of that SOL file - but not entirely. A number
+ * of state changes only exist in the code, and are impossible
+ * via material flags.
+ *
+ * Given that our frame rendering is (by necessity) very different
+ * from that of Neverball, a natural opportunity arises to turn these
+ * special-cased state changes into general-purpose material flags.
+ *
+ * These extra flags are indicated by a leading underscore.
+ */
+
+/**
+ * Enable depth testing.
+ *
+ * In Neverball, depth testing is controlled by a sol_draw parameter.
+ */
+Mtrl._DEPTH_TEST = (1 << 14);
+/**
+ * Enable depth writing.
+ *
+ * In Neverball, depth writes are controlled by a sol_draw parameter.
+ */
+Mtrl._DEPTH_WRITE = (1 << 13);
+/**
+ * Enable blending.
+ *
+ * In Neverball, blending is always enabled.
+ */
+Mtrl._BLEND = (1 << 12);
+/**
+ * Shader flag. Does nothing during rendering.
+ */
+Mtrl.LIT = (1 << 11);
+/**
+ * TODO
+ */
+Mtrl.PARTICLE = (1 << 10);
+/**
+ * TODO
+ */
+Mtrl.ALPHA_TEST = (1 << 9);
+/**
+ * TODO
+ * Approximately:
+ * 1) render material into stencil buffer
+ * 2) render scene with stencil buffer enabled
+ * 3) render material normally
+ * 4) render scene normally
+ */
+Mtrl.REFLECTIVE = (1 << 8);
+/**
+ * This flag (or the absence of it) is decomposed into Mtrl._DEPTH_WRITE and Mtrl._BLEND.
+ */
+Mtrl.TRANSPARENT = (1 << 7);
+/**
+ * TODO
+ */
+Mtrl.SHADOWED = (1 << 6);
+/**
+ * Enable polygon offset.
+ */
+Mtrl.DECAL = (1 << 5);
+/**
+ * Shader flag. Does nothing during rendering.
+ */
+Mtrl.ENVIRONMENT = (1 << 4);
+/**
+ * Disable back face culling.
+ */
+Mtrl.TWO_SIDED = (1 << 3);
+/**
+ * Enable additive blending.
+ */
+Mtrl.ADDITIVE = (1 << 2);
+/**
+ * Texture parameter. Does nothing during rendering.
+ */
+Mtrl.CLAMP_S = (1 << 1);
+/**
+ * Texture parameter. Does nothing during rendering.
+ */
+Mtrl.CLAMP_T = (1 << 0);
+
+/**
+ * Break Neverball mtrl flags down into a finer set of flags
+ * that map one-to-one with GL state changes.
  */
 function decomposeFlags (fl) {
   var flags = fl | Mtrl._DEPTH_TEST;
@@ -63,34 +154,8 @@ function decomposeFlags (fl) {
     flags |= Mtrl._DEPTH_WRITE;
   }
 
-  // TODO:
-  // Mtrl.PARTICLE (TODO entirely)
-  // Mtrl.REFLECTIVE (combo material: stencil pass, transparent pass)
-  // Mtrl.SHADOWED (separate shader + some state)
-  // Mtrl.CLAMP_S (tex param)
-  // Mtrl.CLAMP_T (tex param)
-
   return flags;
 }
-
-// Decomposed flags.
-Mtrl._DEPTH_TEST = (1 << 14);
-Mtrl._DEPTH_WRITE = (1 << 13);
-Mtrl._BLEND = (1 << 12);
-
-// Neverball flags.
-Mtrl.LIT = (1 << 11);
-Mtrl.PARTICLE = (1 << 10);
-Mtrl.ALPHA_TEST = (1 << 9);
-Mtrl.REFLECTIVE = (1 << 8);
-Mtrl.TRANSPARENT = (1 << 7);
-Mtrl.SHADOWED = (1 << 6);
-Mtrl.DECAL = (1 << 5);
-Mtrl.ENVIRONMENT = (1 << 4);
-Mtrl.TWO_SIDED = (1 << 3);
-Mtrl.ADDITIVE = (1 << 2);
-Mtrl.CLAMP_S = (1 << 1);
-Mtrl.CLAMP_T = (1 << 0);
 
 /*
  * Create a GL texture from the given image.
