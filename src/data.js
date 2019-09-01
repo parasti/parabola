@@ -1,4 +1,4 @@
-var Solid = require('neverball-solid');
+var Solid = require('./solid.js');
 
 var crc32 = require('crc/lib/crc32');
 

@@ -11,6 +11,7 @@ var Scene = require('./scene.js');
 var SolidModel = require('./solid-model.js');
 var Mtrl = require('./mtrl.js');
 var Mesh = require('./mesh.js');
+var Solid = require('./solid.js');
 
 var getDeltaTime = (function () {
   var lastTime = 0.0;
@@ -66,11 +67,7 @@ Parabola.createGradientModel = function (pool, entities, sol, gradFile) {
 Parabola.createBackgroundModel = function (pool, entities, sol) {
   for (var i = 0, n = sol.bills.length; i < n; ++i) {
     var bill = sol.bills[i];
-    bill.fl |= 0x1000; // Hypothetical BILL_BACK.
-  }
-
-  for (i = 0; i < sol.mtrls.length; ++i) {
-    var mtrl = sol.mtrls[i];
+    bill.fl |= Solid.BILL_BACK;
   }
 
   pool.cacheSol(sol);

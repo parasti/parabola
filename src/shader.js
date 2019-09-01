@@ -1,6 +1,6 @@
 'use strict';
 
-var Solid = require('neverball-solid');
+var Solid = require('./solid.js');
 
 module.exports = Shader;
 

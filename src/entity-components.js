@@ -4,7 +4,7 @@ var vec3 = require('gl-matrix').vec3;
 var quat = require('gl-matrix').quat;
 var mat3 = require('gl-matrix').mat3;
 
-var Solid = require('neverball-solid');
+var Solid = require('./solid.js');
 var SceneNode = require('./scene-node.js');
 
 var EC = module.exports = {};
@@ -100,7 +100,7 @@ EC.Billboard.prototype.fromSolBill = function (sol, solBill) {
 };
 
 EC.Billboard.prototype.getTransform = function (out_position, out_orientation, out_scale, scene) {
-  if (this.flags & 0x1000) { // Hypothetical BILL_BACK.
+  if (this.flags & Solid.BILL_BACK) {
     this.getBackgroundTransform(out_position, out_orientation, out_scale, scene);
   } else {
     this.getForegroundTransform(out_orientation, out_scale, scene);

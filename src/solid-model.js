@@ -3,7 +3,7 @@
 var vec3 = require('gl-matrix').vec3;
 
 var Mover = require('./mover.js');
-var Solid = require('neverball-solid');
+var Solid = require('./solid.js');
 var EC = require('./entity-components.js');
 var SceneNode = require('./scene-node.js');
 

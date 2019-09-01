@@ -2,6 +2,7 @@
 
 var SceneNode = require('./scene-node.js');
 var Mesh = require('./mesh.js');
+var Solid = require('./solid.js');
 
 module.exports = BodyModel;
 
@@ -121,9 +122,11 @@ BodyModel.fromSolBill = function (sol, billIndex) {
   mesh.elemCount = 6;
 
   // Sort background billboards by order of appearance, and nothing else.
-  if (bill.fl & 0x1000) { // Hypothetical BILL_BACK.
+  if (bill.fl & Solid.BILL_BACK) {
     mesh.setLayer(Mesh.LAYER_BACKGROUND);
     mesh.setSortBits(17, 14, billIndex);
+  } else {
+    mesh.createSortOrder();
   }
 
   meshes.push(mesh);
