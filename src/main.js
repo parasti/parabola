@@ -41,8 +41,8 @@ Parabola.createGradientModel = function (pool, entities, sol, gradFile) {
 
   // Cache it manually to keep our flag changes from being overwritten.
   var gradMtrl = Mtrl.fromSolMtrl(sol.mv[0]);
-  gradMtrl.flags &= ~Mtrl._DEPTH_TEST;
-  gradMtrl.flags &= ~Mtrl._DEPTH_WRITE;
+  gradMtrl.flags &= ~Mtrl.DEPTH_TEST;
+  gradMtrl.flags &= ~Mtrl.DEPTH_WRITE;
   pool._cacheMtrl(gradMtrl);
 
   // Cache the rest of the resources.
@@ -116,7 +116,7 @@ function init () {
   });
 
   var modelPaths = {
-    level: 'map-fwp/adventure.sol',
+    level: 'map-easy/easy.sol',
     coin: 'item/coin/coin.sol',
     // coin5: 'item/coin/coin5.sol',
     // coin10: 'item/coin/coin10.sol',

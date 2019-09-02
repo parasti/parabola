@@ -2,6 +2,7 @@
 
 var data = require('./data.js');
 var mtrlImages = require('./mtrl-images.json');
+var Solid = require('./solid.js');
 
 module.exports = Mtrl;
 
@@ -36,9 +37,10 @@ function Mtrl (name) {
 Mtrl.fromSolMtrl = function (solMtrl) {
   var mtrl = Mtrl(solMtrl.f);
 
+  // TODO: this should be a separate thing.
   mtrl.fetchImage();
 
-  mtrl.flags = decomposeFlags(solMtrl.fl);
+  mtrl.flags = Mtrl.getFlagsFromSolMtrl(solMtrl);
 
   mtrl.diffuse = solMtrl.d;
   mtrl.ambient = solMtrl.a;
@@ -49,109 +51,47 @@ Mtrl.fromSolMtrl = function (solMtrl) {
   return mtrl;
 };
 
-/**
- * A word on why there are more flags than there are in Neverball:
- *
- * In Neverball, a frame is rendered via a series of hard-coded
- * rendering passes. The code sets up GL state for some part of
- * the scene and renders that part, then another, and so on.
- * When that part is from a SOL file, the GL state is controlled
- * by the materials of that SOL file - but not entirely. A number
- * of state changes only exist in the code, and are impossible
- * via material flags.
- *
- * Given that our frame rendering is (by necessity) very different
- * from that of Neverball, a natural opportunity arises to turn these
- * special-cased state changes into general-purpose material flags.
- *
- * These extra flags are indicated by a leading underscore.
- */
+Mtrl.DEPTH_WRITE = (1 << 0);
+Mtrl.DEPTH_TEST = (1 << 1);
+Mtrl.BLEND = (1 << 2);
+Mtrl.ADDITIVE = (1 << 3);
+Mtrl.POLYGON_OFFSET = (1 << 4);
+Mtrl.CULL_FACE = (1 << 5);
+Mtrl.CLAMP_T = (1 << 6); // TODO: move this elsewhere.
+Mtrl.CLAMP_S = (1 << 7); // TODO: move this elsewhere.
 
 /**
- * Enable depth testing.
- *
- * In Neverball, depth testing is controlled by a sol_draw parameter.
+ * Break down SOL material flags into GL state changes.
  */
-Mtrl._DEPTH_TEST = (1 << 14);
-/**
- * Enable depth writing.
- *
- * In Neverball, depth writes are controlled by a sol_draw parameter.
- */
-Mtrl._DEPTH_WRITE = (1 << 13);
-/**
- * Enable blending.
- *
- * In Neverball, blending is always enabled.
- */
-Mtrl._BLEND = (1 << 12);
-/**
- * Shader flag. Does nothing during rendering.
- */
-Mtrl.LIT = (1 << 11);
-/**
- * TODO
- */
-Mtrl.PARTICLE = (1 << 10);
-/**
- * TODO
- */
-Mtrl.ALPHA_TEST = (1 << 9);
-/**
- * TODO
- * Approximately:
- * 1) render material into stencil buffer
- * 2) render scene with stencil buffer enabled
- * 3) render material normally
- * 4) render scene normally
- */
-Mtrl.REFLECTIVE = (1 << 8);
-/**
- * This flag (or the absence of it) is decomposed into Mtrl._DEPTH_WRITE and Mtrl._BLEND.
- */
-Mtrl.TRANSPARENT = (1 << 7);
-/**
- * TODO
- */
-Mtrl.SHADOWED = (1 << 6);
-/**
- * Enable polygon offset.
- */
-Mtrl.DECAL = (1 << 5);
-/**
- * Shader flag. Does nothing during rendering.
- */
-Mtrl.ENVIRONMENT = (1 << 4);
-/**
- * Disable back face culling.
- */
-Mtrl.TWO_SIDED = (1 << 3);
-/**
- * Enable additive blending.
- */
-Mtrl.ADDITIVE = (1 << 2);
-/**
- * Texture parameter. Does nothing during rendering.
- */
-Mtrl.CLAMP_S = (1 << 1);
-/**
- * Texture parameter. Does nothing during rendering.
- */
-Mtrl.CLAMP_T = (1 << 0);
+Mtrl.getFlagsFromSolMtrl = function (solMtrl) {
+  var flags = Mtrl.DEPTH_TEST;
 
-/**
- * Break Neverball mtrl flags down into a finer set of flags
- * that map one-to-one with GL state changes.
- */
-function decomposeFlags (fl) {
-  var flags = fl | Mtrl._DEPTH_TEST;
+  if (!(solMtrl.fl & Solid.MTRL_TRANSPARENT)) {
+    flags |= Mtrl.DEPTH_WRITE;
+  }
 
-  if (flags & Mtrl.TRANSPARENT) {
-    flags |= Mtrl._BLEND;
-    flags &= ~Mtrl._DEPTH_WRITE;
-  } else {
-    flags &= ~Mtrl._BLEND;
-    flags |= Mtrl._DEPTH_WRITE;
+  if ((solMtrl.fl & Solid.MTRL_TRANSPARENT) || (solMtrl.fl & Solid.MTRL_ADDITIVE)) {
+    flags |= Mtrl.BLEND;
+  }
+
+  if (solMtrl.fl & Solid.MTRL_ADDITIVE) {
+    flags |= Mtrl.ADDITIVE;
+  }
+
+  if (solMtrl.fl & Solid.MTRL_DECAL) {
+    flags |= Mtrl.POLYGON_OFFSET;
+  }
+
+  if (!(solMtrl.fl & Solid.TWO_SIDED)) {
+    flags |= Mtrl.CULL_FACE;
+  }
+
+  if (solMtrl.fl & Solid.MTRL_CLAMP_T) {
+    flags |= Mtrl.CLAMP_T;
+  }
+
+  if (solMtrl.fl & Solid.MTRL_CLAMP_S) {
+    flags |= Mtrl.CLAMP_S;
   }
 
   return flags;
@@ -205,22 +145,22 @@ Mtrl.prototype.draw = function (state) {
   uniforms.uEmissive.value = mtrl.emission;
   uniforms.uShininess.value = mtrl.shininess;
 
-  if (mtrl.flags & Mtrl._BLEND) {
-    gl.enable(gl.BLEND);
-  } else {
-    gl.disable(gl.BLEND);
-  }
-
-  if (mtrl.flags & Mtrl._DEPTH_WRITE) {
+  if (mtrl.flags & Mtrl.DEPTH_WRITE) {
     gl.depthMask(true);
   } else {
     gl.depthMask(false);
   }
 
-  if (mtrl.flags & Mtrl._DEPTH_TEST) {
+  if (mtrl.flags & Mtrl.DEPTH_TEST) {
     gl.enable(gl.DEPTH_TEST);
   } else {
     gl.disable(gl.DEPTH_TEST);
+  }
+
+  if (mtrl.flags & Mtrl.BLEND) {
+    gl.enable(gl.BLEND);
+  } else {
+    gl.disable(gl.BLEND);
   }
 
   if (mtrl.flags & Mtrl.ADDITIVE) {
@@ -229,18 +169,18 @@ Mtrl.prototype.draw = function (state) {
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
   }
 
-  if (mtrl.flags & Mtrl.TWO_SIDED) {
-    gl.disable(gl.CULL_FACE);
-  } else {
-    gl.enable(gl.CULL_FACE);
-  }
-
-  if (mtrl.flags & Mtrl.DECAL) {
+  if (mtrl.flags & Mtrl.POLYGON_OFFSET) {
     gl.enable(gl.POLYGON_OFFSET_FILL);
     gl.polygonOffset(-1.0, -2.0);
   } else {
     gl.polygonOffset(0.0, 0.0);
     gl.disable(gl.POLYGON_OFFSET_FILL);
+  }
+
+  if (mtrl.flags & Mtrl.CULL_FACE) {
+    gl.enable(gl.CULL_FACE);
+  } else {
+    gl.disable(gl.CULL_FACE);
   }
 };
 
