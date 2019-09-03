@@ -131,7 +131,7 @@ SolidModel.fromSol = function (sol, entities) {
   for (i = 0; i < sol.uv.length; ++i) {
     var solBall = sol.uv[i];
 
-    ent = ents.createEntity().addTag('ball').addTag('ballSolid');
+    ent = ents.createEntity().addTag('ball').addTag('ballSolid').addTag('ballInner');
 
     ent.addComponent(EC.Spatial);
     ent.addComponent(EC.SceneGraph);
