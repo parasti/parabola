@@ -53,7 +53,7 @@ Parabola.createGradientModel = function (pool, entities, sol, gradFile) {
 
   // Scale it.
   const BACK_DIST = 256.0;
-  model.sceneRoot.setLocalMatrix([0, 0, 0], [0, 0, 0, 1], [-BACK_DIST, BACK_DIST, -BACK_DIST]);
+  model.sceneNode.setLocalMatrix([0, 0, 0], [0, 0, 0, 1], [-BACK_DIST, BACK_DIST, -BACK_DIST]);
 
   // TODO: set mesh sorting.
   model.setMeshLayer(Mesh.LAYER_GRADIENT);

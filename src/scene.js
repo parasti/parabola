@@ -55,7 +55,7 @@ Scene.prototype.attachModelToEnts = function (model, tag) {
   var ents = this.entities.queryTag(tag);
 
   for (var i = 0, n = ents.length; i < n; ++i) {
-    var instance = model.sceneRoot.createInstance();
+    var instance = model.sceneNode.createInstance();
     instance.setParent(ents[i].sceneGraph.node);
   }
 };
@@ -85,7 +85,7 @@ Scene.prototype._attachModelInstances = function (modelName) {
     // Set level model as the root of the entire scene.
     // TODO why here?
     // TODO the draw routine just ignores this.sceneRoot anyway.
-    // levelModel.sceneRoot.setParent(this.sceneRoot);
+    // levelModel.sceneNode.setParent(this.sceneRoot);
   } else {
     // Just loaded entity model. Attach instances of it to level model.
     levelModel = this.models.level;

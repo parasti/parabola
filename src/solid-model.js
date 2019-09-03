@@ -17,7 +17,7 @@ function SolidModel (id) {
   }
 
   this.id = id || 'SolidModel:' + (solidModelIndex++);
-  this.sceneRoot = null;
+  this.sceneNode = SceneNode();
   this.models = null;
 }
 
@@ -27,7 +27,7 @@ function SolidModel (id) {
 SolidModel.fromSol = function (sol, entities) {
   var solidModel = SolidModel('SolidModel:' + sol.id);
 
-  var sceneRoot = solidModel.sceneRoot = SceneNode();
+  var modelNode = solidModel.sceneNode;
   var ents = entities;
   var models = solidModel.models = [];
   var model = null;
@@ -57,7 +57,7 @@ SolidModel.fromSol = function (sol, entities) {
     model.sceneNode.setParent(ent.sceneGraph.node);
 
     // Attach entity node to the solid-model node.
-    ent.sceneGraph.setParent(sceneRoot);
+    ent.sceneGraph.setParent(modelNode);
 
     // TODO should movers be entities?
     var movers = Mover.fromSolBody(sol, solBody);
@@ -96,7 +96,7 @@ SolidModel.fromSol = function (sol, entities) {
     ent.addComponent(EC.Spatial);
     ent.addComponent(EC.SceneGraph);
 
-    ent.sceneGraph.setParent(sceneRoot);
+    ent.sceneGraph.setParent(modelNode);
 
     ent.item.value = solItem.n;
 
@@ -117,7 +117,7 @@ SolidModel.fromSol = function (sol, entities) {
     ent.addComponent(EC.Spatial);
     ent.addComponent(EC.SceneGraph);
 
-    ent.sceneGraph.setParent(sceneRoot);
+    ent.sceneGraph.setParent(modelNode);
 
     vec3.copy(ent.spatial.position, solJump.p);
     ent.spatial.scale = [solJump.r, 2.0, solJump.r];
@@ -136,7 +136,7 @@ SolidModel.fromSol = function (sol, entities) {
     ent.addComponent(EC.Spatial);
     ent.addComponent(EC.SceneGraph);
 
-    ent.sceneGraph.setParent(sceneRoot);
+    ent.sceneGraph.setParent(modelNode);
 
     ent.spatial.scale = solBall.r;
     vec3.copy(ent.spatial.position, solBall.p);
@@ -173,7 +173,7 @@ SolidModel.fromSol = function (sol, entities) {
     // ent.billboard.fromSolBill(sol, solBill);
 
     // Parent entity scene-node to the solid-model scene-node.
-    ent.sceneGraph.node.setParent(sceneRoot);
+    ent.sceneGraph.node.setParent(modelNode);
   }
 
   return solidModel;
