@@ -63,7 +63,7 @@ Mesh.prototype.createSortOrder = function () {
   var flags = mtrl.flags;
 
   this.setLayer(Mesh.LAYER_FOREGROUND);
-  this.setBlend((flags & Mtrl._DEPTH_WRITE) ? Mesh.BLEND_OPAQUE : Mesh.BLEND_TRANSPARENT);
+  this.setBlend((flags & Mtrl.DEPTH_WRITE) ? Mesh.BLEND_OPAQUE : Mesh.BLEND_TRANSPARENT);
 };
 
 Mesh.LAYER_GRADIENT = 0;
@@ -84,8 +84,6 @@ Mesh.prototype.setSortBits = function (firstBit, bitLength, value) {
 
   var bitShift = 31 - (firstBit + bitLength);
   var bitMask = Math.pow(2, bitLength) - 1;
-
-  console.log('bits ' + (bitShift + bitLength) + ':' + (bitShift + 1) + ' = ' + value);
 
   this.sortOrder = (this.sortOrder & ~(bitMask << bitShift)) | (value & bitMask) << bitShift;
 }
