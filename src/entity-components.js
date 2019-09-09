@@ -25,10 +25,6 @@ EC.SceneGraph.prototype.setParent = function (node) {
   this.node.setParent(node);
 };
 
-EC.SceneGraph.prototype.setModel = function (model) {
-  this.node.setModel(model);
-};
-
 EC.SceneGraph.prototype.setMatrix = function (p, e, s) {
   var node = this.node;
 
@@ -36,6 +32,27 @@ EC.SceneGraph.prototype.setMatrix = function (p, e, s) {
     node.setLocalMatrix(p, e, s);
   }
 };
+
+/**
+ * Model data.
+ */
+EC.SceneModel = function sceneModel (entity) {
+  this.slot = '';
+}
+
+EC.SceneModel.prototype.setSlot = function (modelSlot) {
+  if (this.slot) {
+    this.entity.removeTag(this.slot);
+  }
+
+  this.slot = modelSlot;
+
+  this.entity.addTag(modelSlot);
+
+  // TODO: what if this entity already had a model attached to it?
+  // TODO: updateSystems() will have to handle it.
+  this.entity.addTag('needsModel');
+}
 
 /*
  * Spatial transform

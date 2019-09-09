@@ -1,7 +1,5 @@
 var Solid = require('./solid.js');
 
-var crc32 = require('crc/lib/crc32');
-
 var data = module.exports;
 
 data.fetchBinaryFile = function (path) {
@@ -30,7 +28,7 @@ data.fetchImage = function (path) {
 
 data.fetchSolid = function (path) {
   return data.fetchBinaryFile(path).then(function (buffer) {
-    var sol = SolidWithCrc(buffer);
+    var sol = Solid(buffer);
     sol.id = path;
     return sol;
   });
@@ -47,11 +45,5 @@ data.loadFile = function (file) {
 };
 
 data.loadSolid = function (file) {
-  return data.loadFile(file).then(SolidWithCrc);
+  return data.loadFile(file).then(Solid);
 };
-
-function SolidWithCrc (buffer) {
-  var sol = Solid(buffer);
-  sol.crc = crc32(buffer);
-  return sol;
-}

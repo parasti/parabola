@@ -49,7 +49,7 @@ BodyModel.prototype.getInstances = function () {
 };
 
 BodyModel.getIdFromSolBody = function (sol, bodyIndex) {
-  return sol.crc.toString(16) + '_' + bodyIndex.toString();
+  return 'BodyModel:' + bodyIndex.toString() + '@' + sol.id;
 };
 
 BodyModel.fromSolBody = function (sol, bodyIndex) {
@@ -151,6 +151,10 @@ BodyModel.prototype.createObjects = function (state) {
   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, model.elems, gl.STATIC_DRAW);
 
   model.instanceVBO = gl.createBuffer();
+  /*
+   * Matrix data depends on the number of model instances,
+   * which is not yet known at this point.
+   */
 
   // Create and set up the VAO.
 
@@ -164,6 +168,17 @@ BodyModel.prototype.createObjects = function (state) {
   gl.vertexAttribPointer(state.aNormalID, 3, gl.FLOAT, false, 8 * 4, 12);
   gl.vertexAttribPointer(state.aTexCoordID, 2, gl.FLOAT, false, 8 * 4, 24);
 
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, model.elemsVBO);
+
+  gl.enableVertexAttribArray(state.aPositionID);
+  gl.enableVertexAttribArray(state.aNormalID);
+  gl.enableVertexAttribArray(state.aTexCoordID);
+
+  gl.enableVertexAttribArray(state.aModelViewMatrixID + 0);
+  gl.enableVertexAttribArray(state.aModelViewMatrixID + 1);
+  gl.enableVertexAttribArray(state.aModelViewMatrixID + 2);
+  gl.enableVertexAttribArray(state.aModelViewMatrixID + 3);
+
   gl.bindBuffer(gl.ARRAY_BUFFER, model.instanceVBO);
 
   gl.vertexAttribPointer(state.aModelViewMatrixID + 0, 4, gl.FLOAT, false, 16 * 4, 0);
@@ -175,17 +190,6 @@ BodyModel.prototype.createObjects = function (state) {
   state.vertexAttribDivisor(state.aModelViewMatrixID + 1, 1);
   state.vertexAttribDivisor(state.aModelViewMatrixID + 2, 1);
   state.vertexAttribDivisor(state.aModelViewMatrixID + 3, 1);
-
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, model.elemsVBO);
-
-  gl.enableVertexAttribArray(state.aPositionID);
-  gl.enableVertexAttribArray(state.aNormalID);
-  gl.enableVertexAttribArray(state.aTexCoordID);
-
-  gl.enableVertexAttribArray(state.aModelViewMatrixID + 0);
-  gl.enableVertexAttribArray(state.aModelViewMatrixID + 1);
-  gl.enableVertexAttribArray(state.aModelViewMatrixID + 2);
-  gl.enableVertexAttribArray(state.aModelViewMatrixID + 3);
 
   state.bindVertexArray(null);
 };

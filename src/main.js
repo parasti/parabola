@@ -116,7 +116,7 @@ function init () {
   });
 
   var modelPaths = {
-    level: 'map-easy/easy.sol',
+    level: 'map-fwp/adventure.sol',
     coin: 'item/coin/coin.sol',
     // coin5: 'item/coin/coin5.sol',
     // coin10: 'item/coin/coin10.sol',
@@ -189,14 +189,21 @@ function init () {
     modelListElem.appendChild(li);
   });
 
-  scene.emitter.on('model-assigned', function (model, slotName) {
+  scene.emitter.on('model-assigned', function (slotName, model) {
     for (var i = 0, n = modelListElem.children.length; i < n; ++i) {
       var li = modelListElem.children[i];
 
-      if (li.dataset.modelId === model.id) {
-        li.dataset.slotName = slotName;
-        li.textContent += ' (' + slotName + ')';
-        break;
+      if (model) {
+        if (li.dataset.modelId === model.id) {
+          li.dataset.slotName = slotName;
+          li.textContent += ' (' + slotName + ')';
+          break;
+        }
+      } else {
+        if (li.dataset.slotName === slotName) {
+          li.textContent = li.textContent.replace(' (' + slotName + ')', '');
+          break;
+        }
       }
     }
   });

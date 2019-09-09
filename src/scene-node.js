@@ -179,12 +179,36 @@ SceneNode.prototype.createInstance = function () {
 };
 
 /**
- * Unlink node from its parent and master nodes.
+ * Remove a node and its children from the scene graph.
  */
-SceneNode.prototype.unlink = function () {
+SceneNode.prototype.remove = function () {
   this._setMaster(null);
   this.setParent(null);
+
+  for (var i = 0, n = this.children.length; i < n; ++i) {
+    this.children[i].remove();
+  }
 };
+
+/**
+ * Recursively find the given node and remove it.
+ */
+SceneNode.prototype.removeNode = function (node) {
+  if (!node) {
+    return;
+  }
+  if (!node.hasAncestor(this)) {
+    return;
+  }
+
+  if (this === node) {
+    this.remove();
+  } else {
+    for (var i = 0, n = this.children.length; i < n; ++i) {
+      this.children[i].removeNode(node);
+    }
+  }
+}
 
 /**
  * Add unique object to list.
@@ -233,3 +257,27 @@ SceneNode.prototype._update = function () {
     this.dirty = false;
   }
 };
+
+SceneNode.prototype.dump = function (depth = 0) {
+  var str = this.parent ? 'node' : 'root node';
+
+  if (this.master) {
+    str += ' instance';
+  }
+
+  if (this.children.length) {
+    str += ', ' + this.children.length + ' children';
+  }
+
+  if (this.instances.length) {
+    str += ', ' + this.instances.length + ' instances';
+  }
+
+  str = ' '.repeat(depth * 2) + str;
+
+  console.log(str);
+
+  for (var i = 0; i < this.children.length; ++i) {
+    this.children[i].dump(depth + 1);
+  }
+}

@@ -39,20 +39,18 @@ SolidModel.fromSol = function (sol, entities) {
   for (i = 0; i < sol.bv.length; ++i) {
     var solBody = sol.bv[i];
 
-    ent = ents.createEntity().addTag('body');
+    ent = ents.createEntity();
 
     ent.addComponent(EC.Spatial);
     ent.addComponent(EC.Movers);
     ent.addComponent(EC.SceneGraph);
 
+    // Body entities do not get a SceneModel component.
+
     model = sol._models[i];
 
     // Add body-model to solid-model body-model (yup) list.
     models.push(model);
-
-    // Attach a body-model node to the entity node.
-    // var instance = model.sceneNode.createInstance();
-    // instance.setParent(ent.sceneGraph.node);
 
     model.sceneNode.setParent(ent.sceneGraph.node);
 
@@ -72,31 +70,33 @@ SolidModel.fromSol = function (sol, entities) {
 
   for (i = 0; i < sol.hv.length; ++i) {
     var solItem = sol.hv[i];
-
-    ent = ents.createEntity().addTag('item');
+    var itemType = '';
 
     if (solItem.t === Solid.ITEM_GROW) {
-      ent.addTag('grow');
+      itemType = 'grow';
     } else if (solItem.t === Solid.ITEM_SHRINK) {
-      ent.addTag('shrink');
+      itemType = 'shrink';
     } else if (solItem.t === Solid.ITEM_COIN) {
       if (solItem.n >= 10) {
-        ent.addTag('coin10');
+        itemType = 'coin10';
       } else if (solItem.n >= 5) {
-        ent.addTag('coin5');
+        itemType = 'coin5';
       } else {
-        ent.addTag('coin');
+        itemType = 'coin';
       }
     } else {
-      ent.remove();
       continue;
     }
+
+    ent = ents.createEntity();
 
     ent.addComponent(EC.Item);
     ent.addComponent(EC.Spatial);
     ent.addComponent(EC.SceneGraph);
+    ent.addComponent(EC.SceneModel);
 
     ent.sceneGraph.setParent(modelNode);
+    ent.sceneModel.setSlot(itemType);
 
     ent.item.value = solItem.n;
 
@@ -112,12 +112,15 @@ SolidModel.fromSol = function (sol, entities) {
   for (i = 0, n = sol.jv.length; i < n; ++i) {
     var solJump = sol.jv[i];
 
-    ent = ents.createEntity().addTag('jump');
+    ent = ents.createEntity();
 
     ent.addComponent(EC.Spatial);
     ent.addComponent(EC.SceneGraph);
+    ent.addComponent(EC.SceneModel);
 
     ent.sceneGraph.setParent(modelNode);
+    // TODO
+    ent.sceneModel.setSlot('jump');
 
     vec3.copy(ent.spatial.position, solJump.p);
     ent.spatial.scale = [solJump.r, 2.0, solJump.r];
@@ -131,12 +134,14 @@ SolidModel.fromSol = function (sol, entities) {
   for (i = 0; i < sol.uv.length; ++i) {
     var solBall = sol.uv[i];
 
-    ent = ents.createEntity().addTag('ball').addTag('ballSolid').addTag('ballInner');
+    ent = ents.createEntity();
 
     ent.addComponent(EC.Spatial);
     ent.addComponent(EC.SceneGraph);
+    ent.addComponent(EC.SceneModel);
 
     ent.sceneGraph.setParent(modelNode);
+    ent.sceneModel.setSlot('ballSolid');
 
     ent.spatial.scale = solBall.r;
     vec3.copy(ent.spatial.position, solBall.p);
@@ -150,11 +155,15 @@ SolidModel.fromSol = function (sol, entities) {
   for (i = 0, n = sol.rv.length; i < n; ++i) {
     var solBill = sol.rv[i];
 
-    ent = ents.createEntity().addTag('billboard');
+    ent = ents.createEntity();
 
     ent.addComponent(EC.Spatial);
     ent.addComponent(EC.SceneGraph);
     ent.addComponent(EC.Billboard);
+
+    // TODO:
+    // create a SolidModel for billboards?
+    // ent.sceneModel.setSlot('billboard');
 
     ent.billboard.fromSolBill(sol, solBill);
 
@@ -173,7 +182,7 @@ SolidModel.fromSol = function (sol, entities) {
     // ent.billboard.fromSolBill(sol, solBill);
 
     // Parent entity scene-node to the solid-model scene-node.
-    ent.sceneGraph.node.setParent(modelNode);
+    ent.sceneGraph.setParent(modelNode);
   }
 
   return solidModel;
@@ -192,4 +201,10 @@ SolidModel.prototype.setMeshLayer = function (layer) {
       mesh.setLayer(layer);
     }
   }
+}
+
+SolidModel.prototype.attachInstance = function (parent) {
+  var instance = this.sceneNode.createInstance();
+  instance.setParent(parent);
+  return instance;
 }

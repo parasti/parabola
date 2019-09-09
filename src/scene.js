@@ -44,55 +44,90 @@ function Scene () {
   // Entity manager.
   this.entities = nanoECS();
 
+  this._createEntities();
+
   // Events.
   this.emitter = new EventEmitter();
+
+  // TODO
+  this._bodyModels = new Set();
+}
+
+Scene.prototype._createSceneEntity = function (modelSlot) {
+  var ent = this.entities.createEntity();
+
+  ent.addComponent(EC.SceneGraph);
+  ent.addComponent(EC.SceneModel);
+
+  ent.sceneGraph.setParent(this.sceneRoot);
+  ent.sceneModel.setSlot(modelSlot);
+
+  return ent;
+}
+
+Scene.prototype._createEntities = function () {
+  this._createSceneEntity('gradient');
+  this._createSceneEntity('background');
+  this._createSceneEntity('level');
+}
+
+Scene.prototype._addBodyModels = function (solidModel) {
+  if (solidModel) {
+    for (var i = 0, n = solidModel.models.length; i < n; ++i) {
+      this._bodyModels.add(solidModel.models[i]);
+    }
+  }
+}
+
+Scene.prototype._removeBodyModels = function (solidModel) {
+  if (solidModel) {
+    for (var i = 0, n = solidModel.models.length; i < n; ++i) {
+      this._bodyModels.delete(solidModel.models[i]);
+    }
+  }
 }
 
 /**
- * Parent SolidModel scene-node instances to scene-nodes of tagged entities.
+ * Assign a SolidModel to a named slot for use by entities.
  */
-Scene.prototype.attachModelToEnts = function (model, tag) {
-  var ents = this.entities.queryTag(tag);
+Scene.prototype.assignModelSlot = function (modelSlot, solidModel) {
+  this._clearModelSlot(modelSlot);
+  this._addBodyModels(solidModel);
 
-  for (var i = 0, n = ents.length; i < n; ++i) {
-    var instance = model.sceneNode.createInstance();
-    instance.setParent(ents[i].sceneGraph.node);
-  }
-};
+  this.models[modelSlot] = solidModel;
+
+  this.emitter.emit('model-assigned', modelSlot, solidModel);
+}
 
 /**
- * Insert entity model scene-node into the level model scene-graph.
- *
- * TODO this is messy.
- * Level model ends up with a contaminated scene graph.
- * Should it be instanced first?
+ * Clear a named slot and remove all model instances from the scene graph.
  */
-Scene.prototype._attachModelInstances = function (modelName) {
-  var levelModel, entModel;
+Scene.prototype._clearModelSlot = function (modelSlot) {
+  var sceneRoot = this.sceneRoot;
+  var solidModel = this.models[modelSlot];
 
-  if (modelName === 'level') {
-    // Just loaded level model. Attach instances of loaded entity models.
-    levelModel = this.models.level;
+  if (solidModel) {
+    this.models[modelSlot] = null;
 
-    for (var name in this.models) {
-      entModel = this.models[name];
+    this._removeBodyModels(solidModel);
 
-      if (levelModel && entModel && entModel !== levelModel) {
-        this.attachModelToEnts(entModel, name);
-      }
+    // Step 1: remove model instances from the scene graph.
+
+    var instances = solidModel.sceneNode.instances;
+
+    for (var i = 0, n = instances.length; i < n; ++i) {
+      var instance = instances[i];
+      // Remove if reachable from scene root.
+      sceneRoot.removeNode(instance);
     }
 
-    // Set level model as the root of the entire scene.
-    // TODO why here?
-    // TODO the draw routine just ignores this.sceneRoot anyway.
-    // levelModel.sceneNode.setParent(this.sceneRoot);
-  } else {
-    // Just loaded entity model. Attach instances of it to level model.
-    levelModel = this.models.level;
-    entModel = this.models[modelName];
+    // Step 2: tag all the entities that use this slot.
 
-    if (levelModel && entModel) {
-      this.attachModelToEnts(entModel, modelName);
+    var ents = this.entities.queryTag(modelSlot);
+
+    for (var i = 0, n = ents.length; i < n; ++i) {
+      var ent = ents[i];
+      ent.addTag('needsModel');
     }
   }
 };
@@ -111,16 +146,11 @@ Scene.prototype._addModel = function (model) {
 
 /*
  * Add a named SolidModel to the scene.
- * TODO this does two things: maintains a list + adds the model to the rendered scene.
- * TODO Maybe it should do only one of those.
  */
-Scene.prototype.setModel = function (state, modelName, model) {
-  this._addModel(model);
+Scene.prototype.setModel = function (state, modelSlot, solidModel) {
+  this._addModel(solidModel);
 
-  this.models[modelName] = model;
-  this.emitter.emit('model-assigned', model, modelName);
-
-  this._attachModelInstances(modelName);
+  this.assignModelSlot(modelSlot, solidModel);
 };
 
 Scene.prototype.step = function (dt) {
@@ -135,33 +165,14 @@ Scene.prototype.step = function (dt) {
 };
 
 /*
- * Get BodyModels from all the named SolidModels.
- */
-Scene.prototype.getBodyModels = function () {
-  var models = [];
-
-  for (var modelName in this.models) {
-    var solidModel = this.models[modelName];
-
-    if (!solidModel) {
-      continue;
-    }
-
-    for (var bodyModel of solidModel.models) {
-      models.push(bodyModel);
-    }
-  }
-
-  return models;
-};
-
-/*
  * Render everything. TODO rework this.
  */
+var tmpMat = new Float32Array(16);
+
 Scene.prototype.draw = function (state) {
   var gl = state.gl;
 
-  var bodyModels = this.getBodyModels();
+  var bodyModels = this._bodyModels;
 
   var model, mesh, i, n;
 
@@ -182,22 +193,19 @@ Scene.prototype.draw = function (state) {
 
     var nodes = model.getInstances();
 
-    if (!nodes.length) {
-      nodes = [model.sceneNode];
-      // continue;
+    if (nodes.length) {
+      var matrices = new Float32Array(16 * nodes.length);
+
+      for (i = 0, n = nodes.length; i < n; ++i) {
+        var node = nodes[i];
+        var modelViewMat = matrices.subarray(i * 16, (i + 1) * 16);
+
+        mat4.multiply(modelViewMat, this.view.getMatrix(), node.getWorldMatrix());
+      }
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, model.instanceVBO);
+      gl.bufferData(gl.ARRAY_BUFFER, matrices, gl.DYNAMIC_DRAW);
     }
-
-    var matrices = new Float32Array(16 * nodes.length);
-
-    for (i = 0, n = nodes.length; i < n; ++i) {
-      var node = nodes[i];
-      var modelViewMat = matrices.subarray(i * 16, (i + 1) * 16);
-
-      mat4.multiply(modelViewMat, this.view.getMatrix(), node.getWorldMatrix());
-    }
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, model.instanceVBO);
-    gl.bufferData(gl.ARRAY_BUFFER, matrices, gl.DYNAMIC_DRAW);
   }
 
   // Sort meshes.
@@ -218,9 +226,9 @@ Scene.prototype.draw = function (state) {
   var meshes = [];
 
   for (model of bodyModels) {
-    // if (!model.getInstances().length) {
-    //  continue;
-    // }
+    if (!model.getInstances().length) {
+     continue;
+    }
 
     var modelMeshes = model.meshes;
 
@@ -243,7 +251,7 @@ Scene.prototype.draw = function (state) {
   for (i = 0, n = meshes.length; i < n; ++i) {
     mesh = meshes[i];
 
-    var count = mesh.model.getInstances().length || 1;
+    var count = mesh.model.getInstances().length;
 
     mesh.drawInstanced(state, count);
   }
@@ -258,6 +266,29 @@ const SCENEGRAPH_SYSTEM = [EC.Spatial, EC.SceneGraph];
  */
 Scene.prototype.updateSystems = function (dt) {
   var ents, ent, i, n;
+
+  /*
+   * Model slot system: attach SolidModels to entities that need them.
+   */
+  ents = this.entities.queryTag('needsModel');
+
+  for (i = 0, n = ents.length; i < n; ++i) {
+    ent = ents[i];
+
+    var modelSlot = ent.sceneModel.slot;
+    var model = this.models[modelSlot];
+
+    if (model) {
+      model.attachInstance(ent.sceneGraph.node);
+
+      // Here's the weird part: removeTag changes the array we loop over. So, we adjust.
+
+      ent.removeTag('needsModel');
+
+      n = ents.length;
+      i = i - 1;
+    }
+  }
 
   /*
    * Mover system: get spatial position/orientation from the mover component.
