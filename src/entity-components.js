@@ -149,9 +149,9 @@ EC.Billboard.prototype.getForegroundTransform = (function () {
       quat.normalize(Q, Q);
     }
 
-    if (Math.abs(rx) > 0.0) quat.rotateX(Q, Q, rx * Math.PI / 180.0);
-    if (Math.abs(ry) > 0.0) quat.rotateY(Q, Q, ry * Math.PI / 180.0);
-    if (Math.abs(rz) > 0.0) quat.rotateZ(Q, Q, rz * Math.PI / 180.0);
+    if (rx) quat.rotateX(Q, Q, rx * Math.PI / 180.0);
+    if (ry) quat.rotateY(Q, Q, ry * Math.PI / 180.0);
+    if (rz) quat.rotateZ(Q, Q, rz * Math.PI / 180.0);
 
     quat.copy(out_orientation, Q);
     vec3.set(out_scale, w, h, 1.0);
