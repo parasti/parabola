@@ -16,6 +16,9 @@ function BodyModel () {
     return new BodyModel();
   }
 
+  // Globally unique name for this model.
+  this.id = 'default_' + (_modelIndex++).toString();
+
   // Also known as draw calls.
   this.meshes = null;
 
@@ -33,10 +36,6 @@ function BodyModel () {
   // All of the above, but activated with one GL call.
   this.vao = null;
 
-  // Globally unique name for this model.
-  // Used to avoid loading the same SOL body twice. Or something. I forget.
-  this.id = 'default_' + (_modelIndex++).toString();
-
   // Model-view matrices are managed by the scene graph.
   // We can set a parent node on this scene-node.
   // We can also create instances of this scene-node and
@@ -48,8 +47,12 @@ BodyModel.prototype.getInstances = function () {
   return this.sceneNode.instances;
 };
 
+BodyModel.prototype.getInstanceMatrices = function () {
+  return this.sceneNode.getInstanceMatrices();
+};
+
 BodyModel.getIdFromSolBody = function (sol, bodyIndex) {
-  return 'BodyModel:' + bodyIndex.toString() + '@' + sol.id;
+  return 'BodyModel:' + sol.id + '#' + bodyIndex.toString();
 };
 
 BodyModel.fromSolBody = function (sol, bodyIndex) {

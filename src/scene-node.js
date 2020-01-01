@@ -10,13 +10,14 @@ module.exports = SceneNode;
  * purposes, but this one does one thing and one thing only:
  * it calculates the modelview matrices of its nodes. You
  * can create a hierarchy of a bunch of nodes, set their
- * local tranforms whichever way you like, and then ask any
- * of them about their complete modelview matrix.
+ * local matrices whichever way you like, and then ask any
+ * of them about their complete world matrix.
  *
  * As an extension of this, any node can be "instanced".
- * Such a node or "instance" has no local transform, instead
- * it uses the local transform of its "master" node. An
- * instance can then be placed elsewhere in the node hierarchy.
+ * Such a node or "instance" has no local matrix, instead
+ * it becomes a sort-of a puppet and uses the local matrix
+ * of its "master" node. Such an instance can then be inserted
+ * elsewhere in the scene node graph.
  */
 function SceneNode (parent) {
   if (!(this instanceof SceneNode)) {
@@ -38,6 +39,9 @@ function SceneNode (parent) {
   // Instances use the localMatrix of a master node.
   this.master = null;
   this.instances = [];
+
+  // Getting world matrices of instances is a common use case.
+  this.instanceMatrices = [];
 
   if (parent !== undefined) {
     this.setParent(parent);
@@ -90,6 +94,29 @@ SceneNode.prototype.getWorldMatrix = function () {
   this._update();
   return this.worldMatrix;
 };
+
+/**
+ * Get the world matrices of all instances of this node.
+ */
+SceneNode.prototype.getInstanceMatrices = function () {
+  if (this.instances.length) {
+    if (this.instances.length * 16 !== this.instanceMatrices.length) {
+      this.instanceMatrices = new Float32Array(16 * this.instances.length);
+    }
+
+    var instanceMatrices = this.instanceMatrices;
+
+    for (var i = 0, n = this.instances.length; i < n; ++i) {
+      var node = this.instances[i];
+      var worldMatrix = node.getWorldMatrix();
+
+      for (var j = 0, o = worldMatrix.length; j < o; ++j) {
+        instanceMatrices[i * 16 + j] = worldMatrix[j];
+      }
+    }
+  }
+  return this.instanceMatrices;
+}
 
 /**
  * Test the given node for ancestry.

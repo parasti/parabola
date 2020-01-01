@@ -81,6 +81,7 @@ Scene.prototype._addBodyModels = function (solidModel) {
 
 Scene.prototype._removeBodyModels = function (solidModel) {
   if (solidModel) {
+    // FIXME: when a SolidModel is in multiple slots, this removes all of them. Bummer.
     for (var i = 0, n = solidModel.models.length; i < n; ++i) {
       this._bodyModels.delete(solidModel.models[i]);
     }
@@ -173,6 +174,7 @@ Scene.prototype.draw = function (state) {
   var gl = state.gl;
 
   var bodyModels = this._bodyModels;
+  var viewMatrix = this.view.getMatrix();
 
   var model, mesh, i, n;
 
@@ -191,16 +193,45 @@ Scene.prototype.draw = function (state) {
       continue;
     }
 
-    var nodes = model.getInstances();
+    var matrices = model.getInstanceMatrices();
 
-    if (nodes.length) {
-      var matrices = new Float32Array(16 * nodes.length);
+    if (matrices.length) {
+      for (i = 0, n = matrices.length / 16; i < n; ++i) {
+        tmpMat[0] = matrices[i * 16 + 0];
+        tmpMat[1] = matrices[i * 16 + 1];
+        tmpMat[2] = matrices[i * 16 + 2];
+        tmpMat[3] = matrices[i * 16 + 3];
+        tmpMat[4] = matrices[i * 16 + 4];
+        tmpMat[5] = matrices[i * 16 + 5];
+        tmpMat[6] = matrices[i * 16 + 6];
+        tmpMat[7] = matrices[i * 16 + 7];
+        tmpMat[8] = matrices[i * 16 + 8];
+        tmpMat[9] = matrices[i * 16 + 9];
+        tmpMat[10] = matrices[i * 16 + 10];
+        tmpMat[11] = matrices[i * 16 + 11];
+        tmpMat[12] = matrices[i * 16 + 12];
+        tmpMat[13] = matrices[i * 16 + 13];
+        tmpMat[14] = matrices[i * 16 + 14];
+        tmpMat[15] = matrices[i * 16 + 15];
 
-      for (i = 0, n = nodes.length; i < n; ++i) {
-        var node = nodes[i];
-        var modelViewMat = matrices.subarray(i * 16, (i + 1) * 16);
+        mat4.multiply(tmpMat, viewMatrix, tmpMat);
 
-        mat4.multiply(modelViewMat, this.view.getMatrix(), node.getWorldMatrix());
+        matrices[i * 16 + 0] = tmpMat[0];
+        matrices[i * 16 + 1] = tmpMat[1];
+        matrices[i * 16 + 2] = tmpMat[2];
+        matrices[i * 16 + 3] = tmpMat[3];
+        matrices[i * 16 + 4] = tmpMat[4];
+        matrices[i * 16 + 5] = tmpMat[5];
+        matrices[i * 16 + 6] = tmpMat[6];
+        matrices[i * 16 + 7] = tmpMat[7];
+        matrices[i * 16 + 8] = tmpMat[8];
+        matrices[i * 16 + 9] = tmpMat[9];
+        matrices[i * 16 + 10] = tmpMat[10];
+        matrices[i * 16 + 11] = tmpMat[11];
+        matrices[i * 16 + 12] = tmpMat[12];
+        matrices[i * 16 + 13] = tmpMat[13];
+        matrices[i * 16 + 14] = tmpMat[14];
+        matrices[i * 16 + 15] = tmpMat[15];
       }
 
       gl.bindBuffer(gl.ARRAY_BUFFER, model.instanceVBO);
