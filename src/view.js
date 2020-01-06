@@ -209,28 +209,33 @@ View.prototype.step = (function () {
   };
 })();
 
-View.prototype.mouseLook = function (dx, dy) {
-  // dx = rotate around Y
-  // dy = rotate around X
+View.prototype.mouseLook = (function () {
+  var z = vec3.create();
+  var o = vec3.create();
 
-  // TODO this does nothing a lot of the time.
+  return function (dx, dy) {
+    // dx = rotate around Y
+    // dy = rotate around X
 
-  var a = (dx || dy) ? 0.005 : 0.1;
-  var filteredDx = (dx * a) + (this._dx * (1.0 - a));
-  var filteredDy = (dy * a) + (this._dy * (1.0 - a));
-  this._dx = filteredDx;
-  this._dy = filteredDy;
+    // TODO this does nothing a lot of the time.
 
-  var z = vec3.fromValues(0, 0, 1);
-  var o = vec3.fromValues(0, 0, 0);
+    var a = (dx || dy) ? 0.005 : 0.1;
+    var filteredDx = (dx * a) + (this._dx * (1.0 - a));
+    var filteredDy = (dy * a) + (this._dy * (1.0 - a));
+    this._dx = filteredDx;
+    this._dy = filteredDy;
 
-  if (filteredDx) {
-    vec3.rotateY(z, z, o, toRadian(-filteredDx));
-  }
-  if (filteredDy) {
-    vec3.rotateX(z, z, o, toRadian(-filteredDy));
-  }
+    vec3.set(z, 0, 0, 1);
+    vec3.set(o, 0, 0, 0);
 
-  vec3.transformMat4(z, z, this.getBasis());
-  vec3.add(this.c, this.p, vec3.negate(z, z));
-};
+    if (filteredDx) {
+      vec3.rotateY(z, z, o, toRadian(-filteredDx));
+    }
+    if (filteredDy) {
+      vec3.rotateX(z, z, o, toRadian(-filteredDy));
+    }
+
+    vec3.transformMat4(z, z, this.getBasis());
+    vec3.add(this.c, this.p, vec3.negate(z, z));
+  };
+})();

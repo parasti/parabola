@@ -246,21 +246,21 @@ function getBodyGeomsByMtrl (sol, body) {
 /**
  * Collect interleaved vertex attributes from SOL data structures.
  */
-function getVertAttribs (buff, sol, offs) {
+function getVertAttribs (verts, pos, sol, offs) {
   var p = sol.vv[offs.vi];
   var n = sol.sv[offs.si].n;
   var t = sol.tv[offs.ti];
 
-  buff[0] = p[0];
-  buff[1] = p[1];
-  buff[2] = p[2];
+  verts[pos + 0] = p[0];
+  verts[pos + 1] = p[1];
+  verts[pos + 2] = p[2];
 
-  buff[3] = n[0];
-  buff[4] = n[1];
-  buff[5] = n[2];
+  verts[pos + 3] = n[0];
+  verts[pos + 4] = n[1];
+  verts[pos + 5] = n[2];
 
-  buff[6] = t[0];
-  buff[7] = t[1];
+  verts[pos + 6] = t[0];
+  verts[pos + 7] = t[1];
 }
 
 /**
@@ -289,8 +289,9 @@ BodyModel.prototype.getMeshesFromSol = function (sol, body) {
   // Add a single SOL vertex to the vertex store.
   function addVert (sol, offs) {
     var pos = vertsTotal * stride;
-    var vert = verts.subarray(pos, pos + stride);
-    getVertAttribs(vert, sol, offs);
+    // var vert = verts.subarray(pos, pos + stride);
+    // getVertAttribs(vert, sol, offs);
+    getVertAttribs(verts, pos, sol, offs);
     vertsTotal++;
   }
 

@@ -50,7 +50,7 @@ function Scene () {
   this.emitter = new EventEmitter();
 
   // TODO
-  this._bodyModels = new Set();
+  this._bodyModels = [];
 }
 
 Scene.prototype._createSceneEntity = function (modelSlot) {
@@ -74,7 +74,7 @@ Scene.prototype._createEntities = function () {
 Scene.prototype._addBodyModels = function (solidModel) {
   if (solidModel) {
     for (var i = 0, n = solidModel.models.length; i < n; ++i) {
-      this._bodyModels.add(solidModel.models[i]);
+      this._bodyModels.push(solidModel.models[i]);
     }
   }
 }
@@ -83,7 +83,11 @@ Scene.prototype._removeBodyModels = function (solidModel) {
   if (solidModel) {
     // FIXME: when a SolidModel is in multiple slots, this removes all of them. Bummer.
     for (var i = 0, n = solidModel.models.length; i < n; ++i) {
-      this._bodyModels.delete(solidModel.models[i]);
+      var index = this._bodyModels.indexOf(solidModel.models[i]);
+
+      if (index >= 0) {
+        this._bodyModels.splice(index, 1);
+      }
     }
   }
 }
@@ -188,7 +192,9 @@ Scene.prototype.draw = function (state) {
    *   instance matrix N
    */
 
-  for (model of bodyModels) {
+  for (var modelIndex = 0, modelCount = bodyModels.length; modelIndex < modelCount; ++modelIndex) {
+    var model = bodyModels[modelIndex];
+
     if (!model.instanceVBO) {
       continue;
     }
@@ -256,7 +262,9 @@ Scene.prototype.draw = function (state) {
 
   var meshes = [];
 
-  for (model of bodyModels) {
+  for (modelIndex = 0, modelCount = bodyModels.length; modelIndex < modelCount; ++modelIndex) {
+    model = bodyModels[modelIndex];
+
     if (!model.getInstances().length) {
      continue;
     }
