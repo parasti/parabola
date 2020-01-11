@@ -6,42 +6,57 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Parabola</title>
   <style>
-  #main {
-    position: relative;
-  }
+    body {
+      font-family: sans-serif;
+      font-size: 12px;
+      line-height: 1.2;
+    }
 
-  #canvas {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-  }
+    ul {
+      margin: 1em 0;
+      padding: 0 0 0 1.5em;
+    }
 
-  #overlay {
-    position: absolute;
-    top: 5px;
-    left: 5px;
-    padding: 10px;
-    background-color: rgba(127, 127, 127, 0.4);
-    color: white;
-  }
+    input {
+      vertical-align: middle;
+    }
 
-  .overlay-content {
-    display: none;
-  }
+    #main {
+      position: relative;
+    }
 
-  body.no-js #overlay {
-    display: none;
-  }
+    #canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+    }
 
-  #show-overlay + .overlay-content {
-    display: none;
-  }
+    #overlay {
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      padding: 10px;
+      background-color: rgba(127, 127, 127, 0.4);
+      color: white;
+    }
 
-  #show-overlay:checked + .overlay-content {
-    display:  block;
-  }
+    .overlay-content {
+      display: none;
+    }
+
+    body.no-js #overlay {
+      display: none;
+    }
+
+    #show-overlay+.overlay-content {
+      display: none;
+    }
+
+    #show-overlay:checked+.overlay-content {
+      display: block;
+    }
   </style>
 </head>
 
@@ -52,7 +67,8 @@
 
   <div id="main">
     <canvas id="canvas" width="400" height="400">
-      Parabola is a WebGL port of <a href="https://neverball.org">Neverball</a>. As such, it requires a browser with JavaScript and an HTML5 canvas.
+      Parabola is a WebGL port of <a href="https://neverball.org">Neverball</a>. As such, it requires a browser with
+      JavaScript and an HTML5 canvas.
     </canvas>
     <div id="overlay">
       <label for="show-overlay"><span>Show overlay</span></label>
@@ -60,7 +76,8 @@
 
       <div class="overlay-content">
         <div class="overlay-input"><label>Fullscreen <input id="toggle-fullscreen" type="checkbox"></label></div>
-        <div class="overlay-input"><label for="set-view-position">Fly-by</label><input id="set-view-position" type="range" min="-1" max="1" step="0.005" value="1"></label></div>
+        <div class="overlay-input"><label for="set-view-position">Fly-by</label><input id="set-view-position"
+            type="range" min="-1" max="1" step="0.005" value="1"></label></div>
         <div class="overlay-input"><label>Textures <input id="toggle-textures" type="checkbox" checked></label></div>
         <div class="overlay-input">
           Models:
