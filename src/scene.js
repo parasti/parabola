@@ -9,6 +9,8 @@ var View = require('./view.js');
 var Mesh = require('./mesh.js');
 var EC = require('./entity-components.js');
 
+var utils = require('./utils.js');
+
 module.exports = Scene;
 
 function Scene () {
@@ -190,6 +192,8 @@ Scene.prototype.draw = function (state) {
    *   instance matrix 1
    *   ...
    *   instance matrix N
+   *
+   * Arrays of instance matrix data are uploaded to VBOs for instanced rendering.
    */
 
   for (var modelIndex = 0, modelCount = bodyModels.length; modelIndex < modelCount; ++modelIndex) {
@@ -203,41 +207,11 @@ Scene.prototype.draw = function (state) {
 
     if (matrices.length) {
       for (i = 0, n = matrices.length / 16; i < n; ++i) {
-        tmpMat[0] = matrices[i * 16 + 0];
-        tmpMat[1] = matrices[i * 16 + 1];
-        tmpMat[2] = matrices[i * 16 + 2];
-        tmpMat[3] = matrices[i * 16 + 3];
-        tmpMat[4] = matrices[i * 16 + 4];
-        tmpMat[5] = matrices[i * 16 + 5];
-        tmpMat[6] = matrices[i * 16 + 6];
-        tmpMat[7] = matrices[i * 16 + 7];
-        tmpMat[8] = matrices[i * 16 + 8];
-        tmpMat[9] = matrices[i * 16 + 9];
-        tmpMat[10] = matrices[i * 16 + 10];
-        tmpMat[11] = matrices[i * 16 + 11];
-        tmpMat[12] = matrices[i * 16 + 12];
-        tmpMat[13] = matrices[i * 16 + 13];
-        tmpMat[14] = matrices[i * 16 + 14];
-        tmpMat[15] = matrices[i * 16 + 15];
+        utils.mat4_copyFromOffset(tmpMat, matrices, i * 16);
 
         mat4.multiply(tmpMat, viewMatrix, tmpMat);
 
-        matrices[i * 16 + 0] = tmpMat[0];
-        matrices[i * 16 + 1] = tmpMat[1];
-        matrices[i * 16 + 2] = tmpMat[2];
-        matrices[i * 16 + 3] = tmpMat[3];
-        matrices[i * 16 + 4] = tmpMat[4];
-        matrices[i * 16 + 5] = tmpMat[5];
-        matrices[i * 16 + 6] = tmpMat[6];
-        matrices[i * 16 + 7] = tmpMat[7];
-        matrices[i * 16 + 8] = tmpMat[8];
-        matrices[i * 16 + 9] = tmpMat[9];
-        matrices[i * 16 + 10] = tmpMat[10];
-        matrices[i * 16 + 11] = tmpMat[11];
-        matrices[i * 16 + 12] = tmpMat[12];
-        matrices[i * 16 + 13] = tmpMat[13];
-        matrices[i * 16 + 14] = tmpMat[14];
-        matrices[i * 16 + 15] = tmpMat[15];
+        utils.mat4_copyToOffset(matrices, i * 16, tmpMat);
       }
 
       gl.bindBuffer(gl.ARRAY_BUFFER, model.instanceVBO);
@@ -285,34 +259,34 @@ Scene.prototype.draw = function (state) {
 
   // Draw stuff.
 
+  this._drawFrame(state, meshes);
+};
+
+Scene.prototype._drawFrame = function (state, meshes) {
+  var gl = state.gl;
+
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-  for (i = 0, n = meshes.length; i < n; ++i) {
-    mesh = meshes[i];
-
-    var count = mesh.model.getInstances().length;
+  for (var i = 0, n = meshes.length; i < n; ++i) {
+    var mesh = meshes[i];
+    var count = mesh.model.getInstances().length; // TODO
 
     mesh.drawInstanced(state, count);
   }
 };
 
-const MOVER_SYSTEM = [EC.Movers, EC.Spatial];
-const BILLBOARD_SYSTEM = [EC.Billboard, EC.Spatial];
-const SCENEGRAPH_SYSTEM = [EC.Spatial, EC.SceneGraph];
+var MOVER_SYSTEM = [EC.Movers, EC.Spatial];
+var BILLBOARD_SYSTEM = [EC.Billboard, EC.Spatial];
+var SCENEGRAPH_SYSTEM = [EC.Spatial, EC.SceneGraph];
 
 /**
- * Update entity systems.
+ * Model slot system: attach SolidModels to entities that need them.
  */
-Scene.prototype.updateSystems = function (dt) {
-  var ents, ent, i, n;
+Scene.prototype._updateModelSlots = function () {
+  var ents = this.entities.queryTag('needsModel');
 
-  /*
-   * Model slot system: attach SolidModels to entities that need them.
-   */
-  ents = this.entities.queryTag('needsModel');
-
-  for (i = 0, n = ents.length; i < n; ++i) {
-    ent = ents[i];
+  for (var i = 0, n = ents.length; i < n; ++i) {
+    var ent = ents[i];
 
     var modelSlot = ent.sceneModel.slot;
     var model = this.models[modelSlot];
@@ -328,14 +302,16 @@ Scene.prototype.updateSystems = function (dt) {
       i = i - 1;
     }
   }
+}
 
-  /*
-   * Mover system: get spatial position/orientation from the mover component.
-   */
-  ents = this.entities.queryComponents(MOVER_SYSTEM);
+/**
+ * Mover system: get spatial position/orientation from the mover component.
+ */
+Scene.prototype._updateMovers = function (dt) {
+  var ents = this.entities.queryComponents(MOVER_SYSTEM);
 
-  for (i = 0, n = ents.length; i < n; ++i) {
-    ent = ents[i];
+  for (var i = 0, n = ents.length; i < n; ++i) {
+    var ent = ents[i];
 
     // Update movers.
 
@@ -354,26 +330,49 @@ Scene.prototype.updateSystems = function (dt) {
     // TODO do this only on actual update
     moverTranslate.getPosition(ent.spatial.position);
     moverRotate.getOrientation(ent.spatial.orientation);
+
+    ent.spatial.dirty = true;
   }
+}
 
-  /*
-   * Billboard system: get spatial orientation/scale from the billboard component.
-   */
-  ents = this.entities.queryComponents(BILLBOARD_SYSTEM);
+/**
+ * Billboard system: get spatial orientation/scale from the billboard component.
+ */
+Scene.prototype._updateBillboards = function () {
+  var ents = this.entities.queryComponents(BILLBOARD_SYSTEM);
 
-  for (i = 0, n = ents.length; i < n; ++i) {
-    ent = ents[i];
+  for (var i = 0, n = ents.length; i < n; ++i) {
+    var ent = ents[i];
 
     ent.billboard.getTransform(ent.spatial.position, ent.spatial.orientation, ent.spatial.scale, this);
-  }
 
-  /*
-   * Scene graph system: get scene node matrix from the spatial compontent.
-   */
-  ents = this.entities.queryComponents(SCENEGRAPH_SYSTEM);
-
-  for (i = 0, n = ents.length; i < n; ++i) {
-    ent = ents[i];
-    ent.sceneGraph.setMatrix(ent.spatial.position, ent.spatial.orientation, ent.spatial.scale);
+    ent.spatial.dirty = true;
   }
+}
+
+/**
+ * Scene graph system: get scene node matrix from the spatial compontent.
+ */
+Scene.prototype._updateSceneGraph = function () {
+  var ents = this.entities.queryComponents(SCENEGRAPH_SYSTEM);
+
+  for (var i = 0, n = ents.length; i < n; ++i) {
+    var ent = ents[i];
+
+    if (ent.spatial.dirty) {
+      ent.sceneGraph.setLocalMatrix(ent.spatial.position, ent.spatial.orientation, ent.spatial.scale);
+
+      ent.spatial.dirty = false;
+    }
+  }
+}
+
+/**
+ * Update entity systems.
+ */
+Scene.prototype.updateSystems = function (dt) {
+  this._updateModelSlots();
+  this._updateMovers(dt);
+  this._updateBillboards();
+  this._updateSceneGraph();
 };

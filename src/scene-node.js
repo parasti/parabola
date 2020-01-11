@@ -3,6 +3,8 @@
 var vec3 = require('gl-matrix').vec3;
 var mat4 = require('gl-matrix').mat4;
 
+var utils = require('./utils.js');
+
 module.exports = SceneNode;
 
 /**
@@ -41,7 +43,7 @@ function SceneNode (parent) {
   this.instances = [];
 
   // Getting world matrices of instances is a common use case.
-  this.instanceMatrices = [];
+  this.instanceMatrices = null;
 
   if (parent !== undefined) {
     this.setParent(parent);
@@ -100,19 +102,21 @@ SceneNode.prototype.getWorldMatrix = function () {
  */
 SceneNode.prototype.getInstanceMatrices = function () {
   if (this.instances.length) {
-    if (this.instances.length * 16 !== this.instanceMatrices.length) {
+    if (this.instanceMatrices === null || this.instanceMatrices.length !== this.instances.length * 16) {
       this.instanceMatrices = new Float32Array(16 * this.instances.length);
     }
 
     var instanceMatrices = this.instanceMatrices;
 
     for (var i = 0, n = this.instances.length; i < n; ++i) {
-      var node = this.instances[i];
-      var worldMatrix = node.getWorldMatrix();
+      var instance = this.instances[i];
+      var worldMatrix = instance.getWorldMatrix();
 
-      for (var j = 0, o = worldMatrix.length; j < o; ++j) {
-        instanceMatrices[i * 16 + j] = worldMatrix[j];
-      }
+      utils.mat4_copyToOffset(instanceMatrices, i * 16, worldMatrix);
+    }
+  } else {
+    if (this.instanceMatrices) {
+      this.instanceMatrices = null;
     }
   }
   return this.instanceMatrices;

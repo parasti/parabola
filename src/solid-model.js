@@ -104,7 +104,7 @@ SolidModel.fromSol = function (sol, entities) {
     ent.spatial.scale = 0.15; // Neverball default.
 
     // Update scene node.
-    ent.sceneGraph.setMatrix(ent.spatial.position, ent.spatial.orientation, ent.spatial.scale);
+    ent.sceneGraph.setLocalMatrix(ent.spatial.position, ent.spatial.orientation, ent.spatial.scale);
   }
 
   // Teleporters.
@@ -126,7 +126,7 @@ SolidModel.fromSol = function (sol, entities) {
     ent.spatial.scale = [solJump.r, 2.0, solJump.r];
 
     // Update scene node.
-    ent.sceneGraph.setMatrix(ent.spatial.position, ent.spatial.orientation, ent.spatial.scale);
+    ent.sceneGraph.setLocalMatrix(ent.spatial.position, ent.spatial.orientation, ent.spatial.scale);
   }
 
   // Balls
@@ -147,7 +147,7 @@ SolidModel.fromSol = function (sol, entities) {
     vec3.copy(ent.spatial.position, solBall.p);
 
     // Update scene node.
-    ent.sceneGraph.setMatrix(ent.spatial.position, ent.spatial.orientation, ent.spatial.scale);
+    ent.sceneGraph.setLocalMatrix(ent.spatial.position, ent.spatial.orientation, ent.spatial.scale);
   }
 
   // Billboards

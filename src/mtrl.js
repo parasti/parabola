@@ -134,7 +134,7 @@ Mtrl.prototype.draw = function (state) {
     state.bindTexture(gl.TEXTURE_2D, state.defaultTexture);
   }
 
-  // TODO caching
+  // TODO color cache
   var uniforms = state.uniforms;
 
   uniforms.uTexture.value = 0;
@@ -146,41 +146,41 @@ Mtrl.prototype.draw = function (state) {
   uniforms.uShininess.value = mtrl.shininess;
 
   if (mtrl.flags & Mtrl.DEPTH_WRITE) {
-    gl.depthMask(true);
+    state.depthMask(true);
   } else {
-    gl.depthMask(false);
+    state.depthMask(false);
   }
 
   if (mtrl.flags & Mtrl.DEPTH_TEST) {
-    gl.enable(gl.DEPTH_TEST);
+    state.enable(gl.DEPTH_TEST);
   } else {
-    gl.disable(gl.DEPTH_TEST);
+    state.disable(gl.DEPTH_TEST);
   }
 
   if (mtrl.flags & Mtrl.BLEND) {
-    gl.enable(gl.BLEND);
+    state.enable(gl.BLEND);
   } else {
-    gl.disable(gl.BLEND);
+    state.disable(gl.BLEND);
   }
 
   if (mtrl.flags & Mtrl.ADDITIVE) {
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+    state.blendFunc(gl.SRC_ALPHA, gl.ONE);
   } else {
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    state.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
   }
 
   if (mtrl.flags & Mtrl.POLYGON_OFFSET) {
-    gl.enable(gl.POLYGON_OFFSET_FILL);
-    gl.polygonOffset(-1.0, -2.0);
+    state.enable(gl.POLYGON_OFFSET_FILL);
+    state.polygonOffset(-1.0, -2.0);
   } else {
-    gl.polygonOffset(0.0, 0.0);
-    gl.disable(gl.POLYGON_OFFSET_FILL);
+    state.polygonOffset(0.0, 0.0);
+    state.disable(gl.POLYGON_OFFSET_FILL);
   }
 
   if (mtrl.flags & Mtrl.CULL_FACE) {
-    gl.enable(gl.CULL_FACE);
+    state.enable(gl.CULL_FACE);
   } else {
-    gl.disable(gl.CULL_FACE);
+    state.disable(gl.CULL_FACE);
   }
 };
 

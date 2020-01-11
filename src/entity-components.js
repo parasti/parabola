@@ -25,7 +25,7 @@ EC.SceneGraph.prototype.setParent = function (node) {
   this.node.setParent(node);
 };
 
-EC.SceneGraph.prototype.setMatrix = function (p, e, s) {
+EC.SceneGraph.prototype.setLocalMatrix = function (p, e, s) {
   var node = this.node;
 
   if (node) {
@@ -61,6 +61,9 @@ EC.Spatial = function spatial () {
   this.position = vec3.create();
   this.orientation = quat.create();
   this.scale = 1;
+
+  // TODO
+  this.dirty = true;
 };
 
 /*

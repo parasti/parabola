@@ -19,10 +19,19 @@ function GLState (canvas) {
 
   this.usedProgram = null;
   this.boundTextures = [];
+  this.enabledCapabilities = [];
 
-  this.gl = getContext(canvas);
+  var gl = this.gl = getContext(canvas);
+
   setupContext(this.gl);
-  this.createDefaultObjects();
+
+  this.shadowState = {
+    depthMask: gl.getParameter(gl.DEPTH_WRITEMASK),
+    blendSrcRGB: gl.getParameter(gl.BLEND_SRC_RGB),
+    blendDstRGB: gl.getParameter(gl.BLEND_DST_RGB),
+    polygonOffsetFactor: gl.getParameter(gl.POLYGON_OFFSET_FACTOR),
+    polygonOffsetUnits: gl.getParameter(gl.POLYGON_OFFSET_UNITS)
+  };
 
   this.instancedArrays = this.gl.getExtension('ANGLE_instanced_arrays');
   this.vertexArrayObject = this.gl.getExtension('OES_vertex_array_object');
@@ -38,14 +47,53 @@ function GLState (canvas) {
     uShininess: Uniform.f(),
     uEnvironment: Uniform.i()
   };
+
+  this.createDefaultObjects();
 }
+
+GLState.prototype.depthMask = function (mask) {
+  if (this.shadowState.depthMask !== mask) {
+    this.gl.depthMask(mask);
+    this.shadowState.depthMask = mask;
+  }
+};
 
 GLState.prototype.bindTexture = function (target, texture) {
   if (this.boundTextures[target] !== texture) {
-    this.boundTextures[target] = texture;
     this.gl.bindTexture(target, texture);
+    this.boundTextures[target] = texture;
   }
 };
+
+GLState.prototype.enable = function (cap) {
+  if (this.enabledCapabilities[cap] !== true) {
+    this.gl.enable(cap);
+    this.enabledCapabilities[cap] = true;
+  }
+};
+
+GLState.prototype.disable = function (cap) {
+  if (this.enabledCapabilities[cap] !== false) {
+    this.gl.disable(cap);
+    this.enabledCapabilities[cap] = false;
+  }
+};
+
+GLState.prototype.blendFunc = function (src, dst) {
+  if (this.shadowState.blendSrcRGB !== src || this.shadowState.blendDstRGB !== dst) {
+    this.gl.blendFunc(src, dst);
+    this.shadowState.blendSrcRGB = src;
+    this.shadowState.blendDstRGB = dst;
+  }
+}
+
+GLState.prototype.polygonOffset = function (factor, units) {
+  if (this.shadowState.polygonOffsetFactor !== factor || this.shadowState.polygonOffsetUnits !== units) {
+    this.gl.polygonOffset(factor, units);
+    this.shadowState.polygonOffsetFactor = factor;
+    this.shadowState.polygonOffsetUnits = units;
+  }
+}
 
 GLState.prototype.createVertexArray = function () {
   return this.vertexArrayObject.createVertexArrayOES();
