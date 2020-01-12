@@ -43,7 +43,7 @@ function SceneNode (parent) {
   this.instances = [];
 
   // Getting world matrices of instances is a common use case.
-  this.instanceMatrices = null;
+  this.instanceMatrices = [];
 
   if (parent !== undefined) {
     this.setParent(parent);
@@ -102,7 +102,7 @@ SceneNode.prototype.getWorldMatrix = function () {
  */
 SceneNode.prototype.getInstanceMatrices = function () {
   if (this.instances.length) {
-    if (this.instanceMatrices === null || this.instanceMatrices.length !== this.instances.length * 16) {
+    if (this.instanceMatrices.length !== this.instances.length * 16) {
       this.instanceMatrices = new Float32Array(16 * this.instances.length);
     }
 
@@ -115,8 +115,8 @@ SceneNode.prototype.getInstanceMatrices = function () {
       utils.mat4_copyToOffset(instanceMatrices, i * 16, worldMatrix);
     }
   } else {
-    if (this.instanceMatrices) {
-      this.instanceMatrices = null;
+    if (this.instanceMatrices.length) {
+      this.instanceMatrices = [];
     }
   }
   return this.instanceMatrices;
