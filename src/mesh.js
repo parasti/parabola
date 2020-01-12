@@ -23,7 +23,7 @@ function Mesh () {
   this.elemCount = 0;
 
   // Mesh sort order/draw order.
-  this.sortOrder = 0;
+  this.sortBits = 0;
 }
 
 Mesh.prototype.drawInstanced = function (state, count) {
@@ -57,13 +57,13 @@ var Mtrl = require('./mtrl.js');
 /*
  * TODO
  */
-Mesh.prototype.createSortOrder = function () {
+Mesh.prototype.defaultSortBits = function () {
   var mesh = this;
   var mtrl = mesh.mtrl;
   var flags = mtrl.flags;
 
-  this.setLayer(Mesh.LAYER_FOREGROUND);
-  this.setBlend((flags & Mtrl.DEPTH_WRITE) ? Mesh.BLEND_OPAQUE : Mesh.BLEND_TRANSPARENT);
+  this.setSortLayer(Mesh.LAYER_FOREGROUND);
+  this.setSortBlend((flags & Mtrl.DEPTH_WRITE) ? Mesh.BLEND_OPAQUE : Mesh.BLEND_TRANSPARENT);
 };
 
 Mesh.LAYER_GRADIENT = 0;
@@ -73,7 +73,7 @@ Mesh.LAYER_FOREGROUND = 2;
 Mesh.BLEND_OPAQUE = 0;
 Mesh.BLEND_TRANSPARENT = 1;
 
-Mesh.prototype.setSortBits = function (firstBit, bitLength, value) {
+Mesh.prototype._setSortBits = function (firstBit, bitLength, value) {
   if (firstBit < 0 || firstBit > 31) {
     throw new Error('Invalid first bit');
   }
@@ -85,20 +85,24 @@ Mesh.prototype.setSortBits = function (firstBit, bitLength, value) {
   var bitShift = 31 - (firstBit + bitLength);
   var bitMask = Math.pow(2, bitLength) - 1;
 
-  this.sortOrder = (this.sortOrder & ~(bitMask << bitShift)) | (value & bitMask) << bitShift;
+  this.sortBits = (this.sortBits & ~(bitMask << bitShift)) | (value & bitMask) << bitShift;
 }
 
-Mesh.prototype.setLayer = function (layer) {
-  this.setSortBits(15, 2, layer);
-}
+Mesh.prototype.setSortLayer = function (layer) {
+  this._setSortBits(0, 2, layer);
+};
 
-Mesh.prototype.setBlend = function (blend) {
-  this.setSortBits(17, 1, blend);
-}
+Mesh.prototype.setSortBlend = function (blend) {
+  this._setSortBits(2, 1, blend);
+};
+
+Mesh.prototype.setSortExceptLayer = function (value) {
+  this._setSortBits(2, 32 - 2, value);
+};
 
 Mesh.compare = function (mesh0, mesh1) {
-  var a = mesh0.sortOrder;
-  var b = mesh1.sortOrder;
+  var a = mesh0.sortBits;
+  var b = mesh1.sortBits;
 
   if (a < b) {
     return -1;

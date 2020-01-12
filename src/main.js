@@ -36,13 +36,15 @@ var getDeltaTime = (function () {
  * an appropriate transform matrix.
  */
 Parabola.createGradientModel = function (pool, entities, sol, gradFile) {
-  // Insert a gradient material in-place.
+  // Replace the first SOL material with a gradient.
   sol.mv[0].f = gradFile;
 
-  // Cache it manually to keep our flag changes from being overwritten.
+  // Create the material object.
   var gradMtrl = Mtrl.fromSolMtrl(sol.mv[0]);
+  // Disable depth testing and depth writes on the material.
   gradMtrl.flags &= ~Mtrl.DEPTH_TEST;
   gradMtrl.flags &= ~Mtrl.DEPTH_WRITE;
+  // Cache it manually to keep our flag changes from being overwritten.
   pool._cacheMtrl(gradMtrl);
 
   // Cache the rest of the resources.
@@ -55,8 +57,8 @@ Parabola.createGradientModel = function (pool, entities, sol, gradFile) {
   const BACK_DIST = 256.0;
   model.sceneNode.setLocalMatrix([0, 0, 0], [0, 0, 0, 1], [-BACK_DIST, BACK_DIST, -BACK_DIST]);
 
-  // TODO: set mesh sorting.
-  model.setMeshLayer(Mesh.LAYER_GRADIENT);
+  // Set the sort layer for the entire model.
+  model.setMeshSortLayer(Mesh.LAYER_GRADIENT);
 
   return model;
 };
@@ -72,7 +74,7 @@ Parabola.createBackgroundModel = function (pool, entities, sol) {
 
   pool.cacheSol(sol);
   var model = SolidModel.fromSol(sol, entities);
-  model.setMeshLayer(Mesh.LAYER_BACKGROUND);
+  model.setMeshSortLayer(Mesh.LAYER_BACKGROUND);
   return model;
 }
 

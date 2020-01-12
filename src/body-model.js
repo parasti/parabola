@@ -126,10 +126,10 @@ BodyModel.fromSolBill = function (sol, billIndex) {
 
   // Sort background billboards by order of appearance, and nothing else.
   if (bill.fl & Solid.BILL_BACK) {
-    mesh.setLayer(Mesh.LAYER_BACKGROUND);
-    mesh.setSortBits(17, 14, billIndex);
+    mesh.setSortLayer(Mesh.LAYER_BACKGROUND);
+    mesh.setSortExceptLayer(billIndex);
   } else {
-    mesh.createSortOrder();
+    mesh.defaultSortBits();
   }
 
   meshes.push(mesh);
@@ -308,7 +308,7 @@ BodyModel.prototype.getMeshesFromSol = function (sol, body) {
     mesh.elemBase = elemsTotal;
     mesh.elemCount = 0;
 
-    mesh.createSortOrder();
+    mesh.defaultSortBits();
 
     var offsToVert = [];
 
