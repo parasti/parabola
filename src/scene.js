@@ -46,7 +46,7 @@ function Scene () {
   // Entity manager.
   this.entities = nanoECS();
 
-  this._createEntities();
+  this._createWorldEntities();
 
   // Events.
   this.emitter = new EventEmitter();
@@ -55,7 +55,7 @@ function Scene () {
   this._bodyModels = [];
 }
 
-Scene.prototype._createSceneEntity = function (modelSlot) {
+Scene.prototype._createWorldEntity = function (modelSlot) {
   var ent = this.entities.createEntity();
 
   ent.addComponent(EC.SceneGraph);
@@ -67,10 +67,10 @@ Scene.prototype._createSceneEntity = function (modelSlot) {
   return ent;
 }
 
-Scene.prototype._createEntities = function () {
-  this._createSceneEntity('gradient');
-  this._createSceneEntity('background');
-  this._createSceneEntity('level');
+Scene.prototype._createWorldEntities = function () {
+  this._createWorldEntity('gradient');
+  this._createWorldEntity('background');
+  this._createWorldEntity('level');
 }
 
 Scene.prototype._addBodyModels = function (solidModel) {
