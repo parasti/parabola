@@ -12,6 +12,7 @@ function Shader (flags) {
   this.program = null;
   this.vertexShader = '';
   this.fragmentShader = '';
+  this.uniformLocationNames = [];
   this.uniformLocations = {};
   this.flags = (flags || 0);
 
@@ -104,6 +105,7 @@ Shader.prototype.createObjects = function (state) {
     var location = gl.getUniformLocation(prog, name);
 
     if (location) {
+      shader.uniformLocationNames.push(name);
       shader.uniformLocations[name] = location;
     }
   }
@@ -117,9 +119,11 @@ Shader.prototype.uploadUniforms = function (state) {
   var program = shader.program;
 
   if (program) {
+    var uniformLocationNames = shader.uniformLocationNames;
     var uniformLocations = shader.uniformLocations;
 
-    for (var name in uniformLocations) {
+    for (var i = 0, n = uniformLocationNames.length; i < n; ++i) {
+      var name = uniformLocationNames[i];
       var uniform = state.uniforms[name];
       var location = uniformLocations[name];
 
