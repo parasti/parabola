@@ -11,7 +11,7 @@ function Mover (path) {
     return new Mover(path);
   }
   this.path = path || null;
-  this.time = 0;
+  this.time = 0.0;
 }
 
 /*

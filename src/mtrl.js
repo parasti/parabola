@@ -29,7 +29,7 @@ function Mtrl (name) {
   this.ambient = null;
   this.specular = null;
   this.emission = null;
-  this.shininess = null;
+  this.shininess = -0.0;
 
   this.id = 'Mtrl:' + _materialIndex++;
 }
