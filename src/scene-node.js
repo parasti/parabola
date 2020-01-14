@@ -21,7 +21,7 @@ module.exports = SceneNode;
  * of its "master" node. Such an instance can then be inserted
  * elsewhere in the scene node graph.
  */
-function SceneNode (parent) {
+function SceneNode(parent) {
   if (!(this instanceof SceneNode)) {
     return new SceneNode(parent);
   }
@@ -43,7 +43,8 @@ function SceneNode (parent) {
   this.instances = [];
 
   // Getting world matrices of instances is a common use case.
-  this.instanceMatrices = [];
+  this._instanceMatrices = new Float32Array(16);
+  this.instanceMatrices = this._instanceMatrices;
 
   if (parent !== undefined) {
     this.setParent(parent);
@@ -100,27 +101,37 @@ SceneNode.prototype.getWorldMatrix = function () {
 /**
  * Get the world matrices of all instances of this node.
  */
-SceneNode.prototype.getInstanceMatrices = function () {
-  if (this.instances.length) {
-    if (this.instanceMatrices.length !== this.instances.length * 16) {
-      this.instanceMatrices = new Float32Array(16 * this.instances.length);
-    }
+SceneNode.prototype.getInstanceMatrices = (function () {
+  var M = mat4.create();
 
-    var instanceMatrices = this.instanceMatrices;
+  return function (viewMatrix = null) {
+    if (this.instances.length) {
+      if (this.instanceMatrices.length !== this.instances.length * 16) {
+        this.instanceMatrices = new Float32Array(16 * this.instances.length);
+      }
 
-    for (var i = 0, n = this.instances.length; i < n; ++i) {
-      var instance = this.instances[i];
-      var worldMatrix = instance.getWorldMatrix();
+      var instanceMatrices = this.instanceMatrices;
 
-      utils.mat4_copyToOffset(instanceMatrices, i * 16, worldMatrix);
+      for (var i = 0, n = this.instances.length; i < n; ++i) {
+        var instance = this.instances[i];
+        var worldMatrix = instance.getWorldMatrix();
+
+        if (viewMatrix) {
+          mat4.multiply(M, viewMatrix, worldMatrix);
+          utils.mat4_copyToOffset(instanceMatrices, i * 16, M);
+        } else {
+          utils.mat4_copyToOffset(instanceMatrices, i * 16, worldMatrix);
+        }
+
+      }
+    } else {
+      if (this.instanceMatrices !== this._instanceMatrices) {
+        this.instanceMatrices = this._instanceMatrices;
+      }
     }
-  } else {
-    if (this.instanceMatrices.length) {
-      this.instanceMatrices = [];
-    }
+    return this.instanceMatrices;
   }
-  return this.instanceMatrices;
-}
+})();
 
 /**
  * Test the given node for ancestry.
@@ -244,7 +255,7 @@ SceneNode.prototype.removeNode = function (node) {
 /**
  * Add unique object to list.
  */
-function addToList (list, obj) {
+function addToList(list, obj) {
   var index = list.indexOf(obj);
   if (index < 0) {
     list.push(obj);
@@ -254,7 +265,7 @@ function addToList (list, obj) {
 /**
  * Remove matching object from list.
  */
-function removeFromList (list, obj) {
+function removeFromList(list, obj) {
   var index = list.indexOf(obj);
   if (index >= 0) {
     list.splice(index, 1);

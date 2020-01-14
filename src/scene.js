@@ -9,8 +9,6 @@ var View = require('./view.js');
 var Mesh = require('./mesh.js');
 var EC = require('./entity-components.js');
 
-var utils = require('./utils.js');
-
 module.exports = Scene;
 
 function Scene () {
@@ -53,6 +51,7 @@ function Scene () {
 
   // TODO
   this._bodyModels = [];
+  this._meshes = [];
 }
 
 Scene.prototype._createWorldEntity = function (modelSlot) {
@@ -76,7 +75,11 @@ Scene.prototype._createWorldEntities = function () {
 Scene.prototype._addBodyModels = function (solidModel) {
   if (solidModel) {
     for (var i = 0, n = solidModel.models.length; i < n; ++i) {
-      this._bodyModels.push(solidModel.models[i]);
+      var bodyModel = solidModel.models[i];
+
+      this._bodyModels.push(bodyModel);
+
+      this._addMeshes(bodyModel.meshes);
     }
   }
 }
@@ -85,11 +88,29 @@ Scene.prototype._removeBodyModels = function (solidModel) {
   if (solidModel) {
     // FIXME: when a SolidModel is in multiple slots, this removes all of them. Bummer.
     for (var i = 0, n = solidModel.models.length; i < n; ++i) {
-      var index = this._bodyModels.indexOf(solidModel.models[i]);
+      var bodyModel = solidModel.models[i];
+      var index = this._bodyModels.indexOf(bodyModel);
 
       if (index >= 0) {
         this._bodyModels.splice(index, 1);
+
+        this._removeMeshes(bodyModel.meshes);
       }
+    }
+  }
+}
+
+Scene.prototype._addMeshes = function (meshes) {
+  Array.prototype.push.apply(this._meshes, meshes);
+}
+
+Scene.prototype._removeMeshes = function (meshes) {
+  for (var i = 0, n = meshes.length; i < n; ++i) {
+    var mesh = meshes[i];
+    var index = this._meshes.indexOf(mesh);
+
+    if (index >= 0) {
+      this._meshes.splice(index, 1);
     }
   }
 }
@@ -171,56 +192,50 @@ Scene.prototype.step = function (dt) {
   view.step(dt);
 };
 
-/*
- * Render everything. TODO rework this.
+/**
+ * Make arrays of modelview matrices.
+ *
+ * For each model
+ *   instance matrix 0
+ *   instance matrix 1
+ *   ...
+ *   instance matrix N
+ *
+ * Arrays of instance matrix data are uploaded to VBOs for instanced rendering.
  */
-var tmpMat = new Float32Array(16);
+Scene.prototype._uploadModelViewMatrices = (function () {
+  var M = mat4.create();
 
-Scene.prototype.draw = function (state) {
-  var gl = state.gl;
+  return function (state) {
+    var gl = state.gl;
 
-  var bodyModels = this._bodyModels;
-  var viewMatrix = this.view.getMatrix();
+    var bodyModels = this._bodyModels;
+    var viewMatrix = this.view.getMatrix();
 
-  var model, mesh, i, n;
+    for (var modelIndex = 0, modelCount = bodyModels.length; modelIndex < modelCount; ++modelIndex) {
+      var model = bodyModels[modelIndex];
 
-  /*
-   * Make arrays of modelview matrices.
-   *
-   * For each model
-   *   instance matrix 0
-   *   instance matrix 1
-   *   ...
-   *   instance matrix N
-   *
-   * Arrays of instance matrix data are uploaded to VBOs for instanced rendering.
-   */
-
-  for (var modelIndex = 0, modelCount = bodyModels.length; modelIndex < modelCount; ++modelIndex) {
-    var model = bodyModels[modelIndex];
-
-    if (!model.instanceVBO) {
-      continue;
-    }
-
-    var matrices = model.getInstanceMatrices();
-
-    if (matrices.length) {
-      for (i = 0, n = matrices.length / 16; i < n; ++i) {
-        utils.mat4_copyFromOffset(tmpMat, matrices, i * 16);
-
-        mat4.multiply(tmpMat, viewMatrix, tmpMat);
-
-        utils.mat4_copyToOffset(matrices, i * 16, tmpMat);
+      if (!model.instanceVBO) {
+        continue;
       }
 
-      gl.bindBuffer(gl.ARRAY_BUFFER, model.instanceVBO);
-      gl.bufferData(gl.ARRAY_BUFFER, matrices, gl.DYNAMIC_DRAW);
-    }
-  }
+      var matrices = model.getInstanceMatrices(viewMatrix);
 
-  // Sort meshes.
+      if (matrices.length) {
+        gl.bindBuffer(gl.ARRAY_BUFFER, model.instanceVBO);
+        gl.bufferData(gl.ARRAY_BUFFER, matrices, gl.DYNAMIC_DRAW);
+      }
+    }
+
+  };
+})();
+
+Scene.prototype.draw = function (state) {
+  this._uploadModelViewMatrices(state);
+
   /*
+   * Sort meshes.
+   *
    * Massive TODO. Depth sorting is kind of a big topic:
    *  - opaque meshes should be drawn first.
    *  - opaque meshes should be sorted front-to-back to allow for early-Z rejection.
@@ -234,24 +249,7 @@ Scene.prototype.draw = function (state) {
    *    on perfectly sorted visuals or we give up on instancing transparent meshes.
    */
 
-  var meshes = [];
-
-  for (modelIndex = 0, modelCount = bodyModels.length; modelIndex < modelCount; ++modelIndex) {
-    model = bodyModels[modelIndex];
-
-    if (!model.getInstances().length) {
-     continue;
-    }
-
-    var modelMeshes = model.meshes;
-
-    for (i = 0, n = modelMeshes.length; i < n; ++i) {
-      mesh = modelMeshes[i];
-      meshes.push(mesh);
-    }
-  }
-
-  meshes.sort(Mesh.compare);
+  this._meshes.sort(Mesh.compare);
 
   // Set some uniforms.
 
@@ -259,7 +257,7 @@ Scene.prototype.draw = function (state) {
 
   // Draw stuff.
 
-  this._drawFrame(state, meshes);
+  this._drawFrame(state, this._meshes);
 };
 
 Scene.prototype._drawFrame = function (state, meshes) {

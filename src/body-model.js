@@ -47,8 +47,8 @@ BodyModel.prototype.getInstances = function () {
   return this.sceneNode.instances;
 };
 
-BodyModel.prototype.getInstanceMatrices = function () {
-  return this.sceneNode.getInstanceMatrices();
+BodyModel.prototype.getInstanceMatrices = function (viewMatrix = null) {
+  return this.sceneNode.getInstanceMatrices(viewMatrix);
 };
 
 BodyModel.getIdFromSolBody = function (sol, bodyIndex) {
