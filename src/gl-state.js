@@ -12,10 +12,12 @@ function GLState (canvas) {
   this.defaultTexture = null;
   this.enableTextures = true;
 
-  this.aPositionID = 0;
-  this.aNormalID = 1;
-  this.aTexCoordID = 2;
-  this.aModelViewMatrixID = 3;
+  this.vertexAttrs = {
+    Position: 0,
+    Normal: 1,
+    TexCoord: 2,
+    ModelViewMatrix: 3 // and 4, 5, 6. Maximum is 8 attribute locations.
+  };
 
   this.usedProgram = null;
   this.boundTextures = [];

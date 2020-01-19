@@ -72,6 +72,7 @@ Shader.prototype.use = function (state) {
 Shader.prototype.createObjects = function (state) {
   var shader = this;
   var gl = state.gl;
+  var attrs = state.vertexAttrs;
 
   if (shader.program) {
     console.warn('Shader program already exists');
@@ -88,10 +89,10 @@ Shader.prototype.createObjects = function (state) {
 
   // TODO unhardcode or something.
 
-  gl.bindAttribLocation(prog, 0, 'aPosition');
-  gl.bindAttribLocation(prog, 1, 'aNormal');
-  gl.bindAttribLocation(prog, 2, 'aTexCoord');
-  gl.bindAttribLocation(prog, 3, 'aModelViewMatrix');
+  gl.bindAttribLocation(prog, attrs.Position, 'aPosition');
+  gl.bindAttribLocation(prog, attrs.Normal, 'aNormal');
+  gl.bindAttribLocation(prog, attrs.TexCoord, 'aTexCoord');
+  gl.bindAttribLocation(prog, attrs.ModelViewMatrix, 'aModelViewMatrix');
 
   gl.linkProgram(prog);
 
