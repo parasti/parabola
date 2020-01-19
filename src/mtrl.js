@@ -64,33 +64,34 @@ Mtrl.CLAMP_S = (1 << 7); // TODO: move this elsewhere.
  * Break down SOL material flags into GL state changes.
  */
 Mtrl.getFlagsFromSolMtrl = function (solMtrl) {
+  var solFlags = solMtrl.fl;
   var flags = Mtrl.DEPTH_TEST;
 
-  if (!(solMtrl.fl & Solid.MTRL_TRANSPARENT)) {
+  if (!(solFlags & Solid.MTRL_TRANSPARENT)) {
     flags |= Mtrl.DEPTH_WRITE;
   }
 
-  if ((solMtrl.fl & Solid.MTRL_TRANSPARENT) || (solMtrl.fl & Solid.MTRL_ADDITIVE)) {
+  if ((solFlags & Solid.MTRL_TRANSPARENT) || (solFlags & Solid.MTRL_ADDITIVE)) {
     flags |= Mtrl.BLEND;
   }
 
-  if (solMtrl.fl & Solid.MTRL_ADDITIVE) {
+  if (solFlags & Solid.MTRL_ADDITIVE) {
     flags |= Mtrl.ADDITIVE;
   }
 
-  if (solMtrl.fl & Solid.MTRL_DECAL) {
+  if (solFlags & Solid.MTRL_DECAL) {
     flags |= Mtrl.POLYGON_OFFSET;
   }
 
-  if (!(solMtrl.fl & Solid.TWO_SIDED)) {
+  if (!(solFlags & Solid.TWO_SIDED)) {
     flags |= Mtrl.CULL_FACE;
   }
 
-  if (solMtrl.fl & Solid.MTRL_CLAMP_T) {
+  if (solFlags & Solid.MTRL_CLAMP_T) {
     flags |= Mtrl.CLAMP_T;
   }
 
-  if (solMtrl.fl & Solid.MTRL_CLAMP_S) {
+  if (solFlags & Solid.MTRL_CLAMP_S) {
     flags |= Mtrl.CLAMP_S;
   }
 
