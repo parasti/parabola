@@ -88,7 +88,7 @@ GLPool.prototype.cacheMtrlsFromSol = function (sol) {
     var mtrl = pool.getMtrl(solMtrl.f);
 
     if (!mtrl) {
-      mtrl = Mtrl.fromSolMtrl(solMtrl);
+      mtrl = Mtrl.fromSolMtrl(sol, mi);
       pool._cacheMtrl(mtrl);
     }
 

@@ -35,12 +35,9 @@ var getDeltaTime = (function () {
  * given gradient material/image into it, and sets up
  * an appropriate transform matrix.
  */
-Parabola.createGradientModel = function (pool, entities, sol, gradFile) {
-  // Replace the first SOL material with a gradient.
-  sol.mv[0].f = gradFile;
-
+Parabola.createGradientModel = function (pool, entities, sol) {
   // Create the material object.
-  var gradMtrl = Mtrl.fromSolMtrl(sol.mv[0]);
+  var gradMtrl = Mtrl.fromSolMtrl(sol, 0);
   // Disable depth testing and depth writes on the material.
   gradMtrl.flags &= ~Mtrl.DEPTH_TEST;
   gradMtrl.flags &= ~Mtrl.DEPTH_WRITE;
@@ -87,7 +84,7 @@ Parabola.BACKGROUNDS = [
   // { sol: 'map-back/volcano.sol', gradient: 'back/volcano' }
 ];
 
-function init () {
+function init() {
   var canvas = document.getElementById('canvas');
   var state = GLState(canvas);
   var pool = GLPool();
@@ -97,7 +94,7 @@ function init () {
 
   var background = Parabola.BACKGROUNDS[Math.floor(Math.random() * (Parabola.BACKGROUNDS.length))];
 
-  function createObjects (res) {
+  function createObjects(res) {
     res.createObjects(state);
   }
 
@@ -105,44 +102,55 @@ function init () {
   pool.emitter.on('model', createObjects);
   pool.emitter.on('shader', createObjects);
 
-  data.fetchSolid('geom/back/back.sol').then(function (sol) {
-    var model = Parabola.createGradientModel(pool, scene.entities, sol, background.gradient);
-    scene.setModel(state, 'gradient', model);
-    return model;
-  });
+  data.fetchSol('geom/back/back.sol')
+    .then(function (sol) {
+      // Replace the first SOL material with a gradient image.
+      sol.mv[0].f = background.gradient;
+      return sol;
+    })
+    .then(data.fetchSolImages)
+    .then(function (sol) {
+      var model = Parabola.createGradientModel(pool, scene.entities, sol);
+      scene.setModel(state, 'gradient', model);
+      return model;
+    });
 
-  data.fetchSolid(background.sol).then(function (sol) {
-    var model = Parabola.createBackgroundModel(pool, scene.entities, sol);
-    scene.setModel(state, 'background', model);
-    return model;
-  });
+  data.fetchSol(background.sol)
+    .then(data.fetchSolImages)
+    .then(function (sol) {
+      var model = Parabola.createBackgroundModel(pool, scene.entities, sol);
+      scene.setModel(state, 'background', model);
+      return model;
+    });
 
   var modelPaths = {
     level: 'map-fwp/adventure.sol',
     coin: 'item/coin/coin.sol',
-    // coin5: 'item/coin/coin5.sol',
-    // coin10: 'item/coin/coin10.sol',
-    // grow: 'item/grow/grow.sol',
-    // shrink: 'item/shrink/shrink.sol',
-    // jump: 'geom/beam/beam.sol',
-    // ballInner: 'ball/reactor/reactor-inner.sol',
-    ballSolid: 'ball/basic-ball/basic-ball-solid.sol',
-    // ballOuter: 'ball/reactor/reactor-outer.sol'
+    coin5: 'item/coin/coin5.sol',
+    coin10: 'item/coin/coin10.sol',
+    grow: 'item/grow/grow.sol',
+    shrink: 'item/shrink/shrink.sol',
+    jump: 'geom/beam/beam.sol',
+    ballInner: 'ball/reactor/reactor-inner.sol',
+    ballSolid: 'ball/reactor/reactor-solid.sol',
+    ballOuter: 'ball/reactor/reactor-outer.sol'
   };
 
   for (let modelName in modelPaths) {
-    data.fetchSolid(modelPaths[modelName]).then(function (sol) {
-      pool.cacheSol(sol);
-      var model = SolidModel.fromSol(sol, scene.entities);
-      scene.setModel(state, modelName, model);
-      return model;
-    });
+    data.fetchSol(modelPaths[modelName])
+      .then(data.fetchSolImages)
+      .then(function (sol) {
+        pool.cacheSol(sol);
+        var model = SolidModel.fromSol(sol, scene.entities);
+        scene.setModel(state, modelName, model);
+        return model;
+      });
   }
 
   /*
    * Basic requestAnimationFrame loop.
    */
-  function animationFrame (currTime) {
+  function animationFrame(currTime) {
     window.requestAnimationFrame(animationFrame);
 
     var dt = getDeltaTime(currTime);
@@ -155,7 +163,7 @@ function init () {
 
   var currWidth = 0;
   var currHeight = 0;
-  function step (dt) {
+  function step(dt) {
     if (currWidth !== canvas.clientWidth || currHeight !== canvas.clientHeight) {
       var w = canvas.clientWidth;
       var h = canvas.clientHeight;
@@ -210,11 +218,11 @@ function init () {
     }
   });
 
-  function mouseMove (e) {
+  function mouseMove(e) {
     scene.view.mouseLook(e.movementX, e.movementY);
   }
 
-  function pointerLockChange (e) {
+  function pointerLockChange(e) {
     if (document.pointerLockElement === canvas) {
       document.addEventListener('mousemove', mouseMove);
 
@@ -228,7 +236,7 @@ function init () {
     }
   }
 
-  function togglePointerLock (e) {
+  function togglePointerLock(e) {
     if (document.pointerLockElement) {
       document.exitPointerLock();
     } else {
@@ -272,7 +280,7 @@ function init () {
     });
   }
 
-  function keyDown (e) {
+  function keyDown(e) {
     var code = e.code; // Not very portable.
 
     if (code === 'KeyW') {
@@ -285,7 +293,7 @@ function init () {
       scene.view.moveRight(true);
     }
   }
-  function keyUp (e) {
+  function keyUp(e) {
     var code = e.code;
 
     if (code === 'KeyW') {

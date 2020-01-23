@@ -1,14 +1,12 @@
 'use strict';
 
-var data = require('./data.js');
-var mtrlImages = require('./mtrl-images.json');
 var Solid = require('./solid.js');
 
 module.exports = Mtrl;
 
 var _materialIndex = 0;
 
-function Mtrl (name) {
+function Mtrl(name) {
   if (!(this instanceof Mtrl)) {
     return new Mtrl(name);
   }
@@ -17,12 +15,9 @@ function Mtrl (name) {
   this.flags = 0;
 
   // DOM image
-  this.image = null;
+  this._image = null;
   // GL texture
   this.texture = null;
-
-  // Image fetch promise
-  this._imageProm = null;
 
   // TODO
   this.diffuse = null;
@@ -34,11 +29,11 @@ function Mtrl (name) {
   this.id = 'Mtrl:' + _materialIndex++;
 }
 
-Mtrl.fromSolMtrl = function (solMtrl) {
+Mtrl.fromSolMtrl = function (sol, mi) {
+  var solMtrl = sol.mtrls[mi];
   var mtrl = Mtrl(solMtrl.f);
 
-  // TODO: this should be a separate thing.
-  mtrl.fetchImage();
+  mtrl._image = sol._images[solMtrl.f];
 
   mtrl.flags = Mtrl.getFlagsFromSolMtrl(solMtrl);
 
@@ -102,6 +97,10 @@ Mtrl.getFlagsFromSolMtrl = function (solMtrl) {
  * Create a GL texture from the given image.
  */
 Mtrl.prototype.createTexture = function (state) {
+  if (!this._image) {
+    throw Error('Attempted to create material texture without image data')
+  }
+
   var gl = state.gl;
   var tex = gl.createTexture();
 
@@ -115,7 +114,7 @@ Mtrl.prototype.createTexture = function (state) {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
 
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.image);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this._image);
   gl.generateMipmap(gl.TEXTURE_2D);
   gl.bindTexture(gl.TEXTURE_2D, null);
 
@@ -186,35 +185,10 @@ Mtrl.prototype.draw = function (state) {
 };
 
 /*
- * Download material image.
- */
-Mtrl.prototype.fetchImage = function () {
-  var mtrl = this;
-
-  if (!mtrl._imageProm) {
-    var imagePath = mtrlImages[mtrl.name];
-    if (!imagePath) {
-      console.warn(Error('Material image for ' + mtrl.name + ' is unknown'));
-      return;
-    }
-
-    mtrl._imageProm = data.fetchImage(imagePath).then(function (image) {
-      mtrl.image = image;
-    });
-  }
-};
-
-/*
  * Create material texture.
  */
 Mtrl.prototype.createObjects = function (state) {
   var mtrl = this;
 
-  if (!mtrl._imageProm) {
-    throw Error('Attempted to create material texture without fetching it first');
-  }
-
-  mtrl._imageProm.then(function () {
-    mtrl.createTexture(state);
-  });
+  mtrl.createTexture(state);
 };

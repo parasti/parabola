@@ -1,8 +1,9 @@
 var Solid = require('./solid.js');
+var mtrlImages = require('./mtrl-images.json');
 
 var data = module.exports;
 
-data.fetchBinaryFile = function (path) {
+function _fetchBinaryFile(path) {
   return new Promise(function (resolve, reject) {
     var req = new window.XMLHttpRequest();
     req.responseType = 'arraybuffer';
@@ -26,13 +27,50 @@ data.fetchImage = function (path) {
   });
 };
 
-data.fetchSolid = function (path) {
-  return data.fetchBinaryFile(path).then(function (buffer) {
+data.fetchSol = function (path) {
+  return _fetchBinaryFile(path).then(function (buffer) {
     var sol = Solid(buffer);
     sol.id = path;
     return sol;
   });
 };
+
+function _fetchMtrlImage(solMtrl) {
+  var imagePath = mtrlImages[solMtrl.f];
+
+  if (imagePath) {
+    return data.fetchImage(imagePath);
+  } else {
+    return Promise.reject(Error('Material image for ' + solMtrl.f + ' is unknown'));
+  }
+}
+
+data.fetchSolImages = function (sol) {
+  var promises = [];
+
+  for (var i = 0, n = sol.mtrls.length; i < n; ++i) {
+    var solMtrl = sol.mtrls[i];
+    var promise = _fetchMtrlImage(solMtrl).catch(function (reason) {
+      console.warn(reason);
+    });
+    promises.push(promise);
+  }
+
+  return Promise.all(promises).then(function (values) {
+    // Value order matches original order. We can use that.
+
+    var images = {};
+
+    for (var i = 0, n = sol.mtrls.length; i < n; ++i) {
+      var solMtrl = sol.mtrls[i];
+      images[solMtrl.f] = values[i];
+    }
+
+    sol._images = images;
+
+    return sol;
+  });
+}
 
 data.loadFile = function (file) {
   return new Promise(function (resolve, reject) {
