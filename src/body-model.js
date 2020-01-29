@@ -2,6 +2,7 @@
 
 var SceneNode = require('./scene-node.js');
 var Mesh = require('./mesh.js');
+var MeshData = require('./mesh-data.js');
 var Solid = require('./solid.js');
 
 module.exports = BodyModel;
@@ -22,19 +23,8 @@ function BodyModel () {
   // Also known as draw calls.
   this.meshes = null;
 
-  // Vertex data and store.
-  this.verts = null;
-  this.vertsVBO = null;
-
-  // Element data and store.
-  this.elems = null;
-  this.elemsVBO = null;
-
-  // Model-view matrix store. 1 matrix per scene-node instance.
-  this.instanceVBO = null;
-
-  // All of the above, but activated with one GL call.
-  this.vao = null;
+  // Also known as vertex data.
+  this.meshData = MeshData();
 
   // Model-view matrices are managed by the scene graph.
   // We can set a parent node on this scene-node.
@@ -72,8 +62,9 @@ BodyModel.fromSolBill = function (sol, billIndex) {
   var bill = sol.rv[billIndex];
 
   var model = BodyModel();
-  var verts = model.verts = new Float32Array(4 * stride); // 4 vertices
-  var elems = model.elems = new Uint16Array(2 * 3); // 2 triangles
+  var meshData = model.meshData;
+  var verts = meshData.verts = new Float32Array(4 * stride); // 4 vertices
+  var elems = meshData.elems = new Uint16Array(2 * 3); // 2 triangles
   var meshes = model.meshes = [];
 
   function addBillVert (i, x, y, s, t) {
@@ -120,7 +111,7 @@ BodyModel.fromSolBill = function (sol, billIndex) {
 
   mesh.mtrl = sol._materials[bill.mi];
   mesh.shader = sol._shaders[bill.mi];
-  mesh.model = model;
+  mesh.meshData = meshData;
   mesh.elemBase = 0;
   mesh.elemCount = 6;
 
@@ -138,75 +129,31 @@ BodyModel.fromSolBill = function (sol, billIndex) {
 };
 
 BodyModel.prototype.createObjects = function (state) {
-  var model = this;
-  var gl = state.gl;
-  var attrs = state.vertexAttrs;
-
-  // Create VBOs.
-
-  model.vertsVBO = gl.createBuffer();
-
-  gl.bindBuffer(gl.ARRAY_BUFFER, model.vertsVBO);
-  gl.bufferData(gl.ARRAY_BUFFER, model.verts, gl.STATIC_DRAW);
-
-  model.elemsVBO = gl.createBuffer();
-
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, model.elemsVBO);
-  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, model.elems, gl.STATIC_DRAW);
-
-  model.instanceVBO = gl.createBuffer();
-  /*
-   * Matrix data depends on the number of model instances,
-   * which is not yet known at this point.
-   */
-
-  // Create and set up the VAO.
-
-  model.vao = state.createVertexArray();
-
-  state.bindVertexArray(model.vao);
-
-  gl.bindBuffer(gl.ARRAY_BUFFER, model.vertsVBO);
-
-  gl.vertexAttribPointer(attrs.Position, 3, gl.FLOAT, false, 8 * 4, 0);
-  gl.vertexAttribPointer(attrs.Normal, 3, gl.FLOAT, false, 8 * 4, 12);
-  gl.vertexAttribPointer(attrs.TexCoord, 2, gl.FLOAT, false, 8 * 4, 24);
-
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, model.elemsVBO);
-
-  gl.enableVertexAttribArray(attrs.Position);
-  gl.enableVertexAttribArray(attrs.Normal);
-  gl.enableVertexAttribArray(attrs.TexCoord);
-
-  // The complex art of passing a 4x4 matrix as a vertex attribute.
-
-  gl.enableVertexAttribArray(attrs.ModelViewMatrix + 0);
-  gl.enableVertexAttribArray(attrs.ModelViewMatrix + 1);
-  gl.enableVertexAttribArray(attrs.ModelViewMatrix + 2);
-  gl.enableVertexAttribArray(attrs.ModelViewMatrix + 3);
-
-  gl.bindBuffer(gl.ARRAY_BUFFER, model.instanceVBO);
-
-  gl.vertexAttribPointer(attrs.ModelViewMatrix + 0, 4, gl.FLOAT, false, 16 * 4, 0);
-  gl.vertexAttribPointer(attrs.ModelViewMatrix + 1, 4, gl.FLOAT, false, 16 * 4, 16);
-  gl.vertexAttribPointer(attrs.ModelViewMatrix + 2, 4, gl.FLOAT, false, 16 * 4, 32);
-  gl.vertexAttribPointer(attrs.ModelViewMatrix + 3, 4, gl.FLOAT, false, 16 * 4, 48);
-
-  state.vertexAttribDivisor(attrs.ModelViewMatrix + 0, 1);
-  state.vertexAttribDivisor(attrs.ModelViewMatrix + 1, 1);
-  state.vertexAttribDivisor(attrs.ModelViewMatrix + 2, 1);
-  state.vertexAttribDivisor(attrs.ModelViewMatrix + 3, 1);
-
-  state.bindVertexArray(null);
+  var meshData = this.meshData;
+  meshData.createObjects(state);
 };
 
 BodyModel.prototype.bindArray = function (state) {
-  var model = this;
-
-  if (model.vao) {
-    state.bindVertexArray(model.vao);
-  }
+  var meshData = this.meshData;
+  meshData.bindArray(state);
 };
+
+BodyModel.prototype.uploadModelViewMatrices = function (state, viewMatrix = null) {
+  var model = this;
+  var meshData = this.meshData;
+  var gl = state.gl;
+
+  if (!meshData.instanceVBO) {
+    return;
+  }
+
+  var matrices = model.getInstanceMatrices(viewMatrix);
+
+  if (matrices.length) {
+    gl.bindBuffer(gl.ARRAY_BUFFER, meshData.instanceVBO);
+    gl.bufferData(gl.ARRAY_BUFFER, matrices, gl.DYNAMIC_DRAW);
+  }
+}
 
 /**
  * Add a geom (triangle) to the list, indexed by used material.
@@ -271,6 +218,7 @@ function getVertAttribs (verts, pos, sol, offs) {
  */
 BodyModel.prototype.getMeshesFromSol = function (sol, body) {
   var model = this;
+  var meshData = this.meshData;
 
   const stride = (3 + 3 + 2); // p + n + t
 
@@ -307,7 +255,7 @@ BodyModel.prototype.getMeshesFromSol = function (sol, body) {
 
     mesh.mtrl = mtrl;
     mesh.shader = shader;
-    mesh.model = model;
+    mesh.meshData = meshData;
     mesh.elemBase = elemsTotal;
     mesh.elemCount = 0;
 
@@ -345,7 +293,8 @@ BodyModel.prototype.getMeshesFromSol = function (sol, body) {
     meshes.push(mesh);
   });
 
-  this.meshes = meshes;
-  this.verts = verts.slice(0, vertsTotal * stride);
-  this.elems = elems;
+  meshData.verts = verts.slice(0, vertsTotal * stride);
+  meshData.elems = elems;
+
+  model.meshes = meshes;
 };

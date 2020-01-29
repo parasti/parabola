@@ -1,6 +1,6 @@
 module.exports = Mesh;
 
-/*
+/**
  * Mesh is a fully specified draw call. That's it.
  */
 function Mesh () {
@@ -17,10 +17,13 @@ function Mesh () {
   // VBO/VAO
   // TODO: this is literally only used to bind a VAO. We don't need an entire model for that.
   this.model = null;
+  this.meshData = null;
 
   // Location in the element array.
   this.elemBase = 0;
   this.elemCount = 0;
+
+  this.instanceCount = 0;
 
   // Mesh sort order/draw order.
   this.sortBits = 0;
@@ -32,10 +35,10 @@ Mesh.prototype.drawInstanced = function (state, count) {
   var mesh = this;
   var mtrl = mesh.mtrl;
   var shader = mesh.shader;
-  var model = mesh.model;
+  var meshData = mesh.meshData;
 
   // Bind vertex array.
-  model.bindArray(state);
+  meshData.bindArray(state);
 
   // Apply material state.
   mtrl.draw(state);

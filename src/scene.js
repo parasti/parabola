@@ -11,7 +11,7 @@ var EC = require('./entity-components.js');
 
 module.exports = Scene;
 
-function Scene () {
+function Scene() {
   if (!(this instanceof Scene)) {
     return new Scene();
   }
@@ -207,30 +207,33 @@ Scene.prototype._uploadModelViewMatrices = (function () {
   var M = mat4.create();
 
   return function (state) {
-    var gl = state.gl;
-
     var bodyModels = this._bodyModels;
     var viewMatrix = this.view.getMatrix();
 
     for (var modelIndex = 0, modelCount = bodyModels.length; modelIndex < modelCount; ++modelIndex) {
       var model = bodyModels[modelIndex];
-
-      if (!model.instanceVBO) {
-        continue;
-      }
-
-      var matrices = model.getInstanceMatrices(viewMatrix);
-
-      if (matrices.length) {
-        gl.bindBuffer(gl.ARRAY_BUFFER, model.instanceVBO);
-        gl.bufferData(gl.ARRAY_BUFFER, matrices, gl.DYNAMIC_DRAW);
-      }
+      model.uploadModelViewMatrices(state, viewMatrix);
     }
-
   };
 })();
 
+Scene.prototype._updateMeshInstanceCounts = function () {
+  var bodyModels = this._bodyModels;
+
+  for (var modelIndex = 0, modelCount = bodyModels.length; modelIndex < modelCount; ++modelIndex) {
+    var model = bodyModels[modelIndex];
+    var meshes = model.meshes;
+
+    for (var meshIndex = 0, meshCount = meshes.length; meshIndex < meshCount; ++meshIndex) {
+      var mesh = meshes[meshIndex];
+      mesh.instanceCount = model.getInstances().length;
+    }
+  }
+}
+
 Scene.prototype.draw = function (state) {
+  this._updateMeshInstanceCounts();
+
   this._uploadModelViewMatrices(state);
 
   /*
@@ -267,7 +270,7 @@ Scene.prototype._drawFrame = function (state, meshes) {
 
   for (var i = 0, n = meshes.length; i < n; ++i) {
     var mesh = meshes[i];
-    var count = mesh.model.getInstances().length; // TODO
+    var count = mesh.instanceCount;
 
     mesh.drawInstanced(state, count);
   }
