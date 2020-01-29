@@ -203,19 +203,15 @@ Scene.prototype.step = function (dt) {
  *
  * Arrays of instance matrix data are uploaded to VBOs for instanced rendering.
  */
-Scene.prototype._uploadModelViewMatrices = (function () {
-  var M = mat4.create();
+Scene.prototype._uploadModelViewMatrices = function (state) {
+  var bodyModels = this._bodyModels;
+  var viewMatrix = this.view.getMatrix();
 
-  return function (state) {
-    var bodyModels = this._bodyModels;
-    var viewMatrix = this.view.getMatrix();
-
-    for (var modelIndex = 0, modelCount = bodyModels.length; modelIndex < modelCount; ++modelIndex) {
-      var model = bodyModels[modelIndex];
-      model.uploadModelViewMatrices(state, viewMatrix);
-    }
-  };
-})();
+  for (var modelIndex = 0, modelCount = bodyModels.length; modelIndex < modelCount; ++modelIndex) {
+    var model = bodyModels[modelIndex];
+    model.uploadModelViewMatrices(state, viewMatrix);
+  }
+};
 
 Scene.prototype._updateMeshInstanceCounts = function () {
   var bodyModels = this._bodyModels;
