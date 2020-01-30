@@ -218,11 +218,12 @@ Scene.prototype._updateMeshInstanceCounts = function () {
 
   for (var modelIndex = 0, modelCount = bodyModels.length; modelIndex < modelCount; ++modelIndex) {
     var model = bodyModels[modelIndex];
+    var count = model.getInstances().length;
     var meshes = model.meshes;
 
     for (var meshIndex = 0, meshCount = meshes.length; meshIndex < meshCount; ++meshIndex) {
       var mesh = meshes[meshIndex];
-      mesh.instanceCount = model.getInstances().length;
+      mesh.instanceCount = count;
     }
   }
 }
