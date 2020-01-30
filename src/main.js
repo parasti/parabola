@@ -102,18 +102,18 @@ function init() {
   pool.emitter.on('model', createObjects);
   pool.emitter.on('shader', createObjects);
 
-  data.fetchSol('geom/back/back.sol')
-    .then(function (sol) {
-      // Replace the first SOL material with a gradient image.
-      sol.mv[0].f = background.gradient;
-      return sol;
-    })
-    .then(data.fetchSolImages)
-    .then(function (sol) {
-      var model = Parabola.createGradientModel(pool, scene.entities, sol);
-      scene.setModel(state, 'gradient', model);
-      return model;
-    });
+  // data.fetchSol('geom/back/back.sol')
+  //   .then(function (sol) {
+  //     // Replace the first SOL material with a gradient image.
+  //     sol.mv[0].f = background.gradient;
+  //     return sol;
+  //   })
+  //   .then(data.fetchSolImages)
+  //   .then(function (sol) {
+  //     var model = Parabola.createGradientModel(pool, scene.entities, sol);
+  //     scene.setModel(state, 'gradient', model);
+  //     return model;
+  //   });
 
   data.fetchSol(background.sol)
     .then(data.fetchSolImages)
@@ -124,16 +124,16 @@ function init() {
     });
 
   var modelPaths = {
-    level: 'map-fwp/adventure.sol',
-    coin: 'item/coin/coin.sol',
-    coin5: 'item/coin/coin5.sol',
-    coin10: 'item/coin/coin10.sol',
-    grow: 'item/grow/grow.sol',
-    shrink: 'item/shrink/shrink.sol',
-    jump: 'geom/beam/beam.sol',
-    ballInner: 'ball/reactor/reactor-inner.sol',
-    ballSolid: 'ball/reactor/reactor-solid.sol',
-    ballOuter: 'ball/reactor/reactor-outer.sol'
+    // level: 'map-fwp/adventure.sol',
+    // coin: 'item/coin/coin.sol',
+    // coin5: 'item/coin/coin5.sol',
+    // coin10: 'item/coin/coin10.sol',
+    // grow: 'item/grow/grow.sol',
+    // shrink: 'item/shrink/shrink.sol',
+    // jump: 'geom/beam/beam.sol',
+    // ballInner: 'ball/reactor/reactor-inner.sol',
+    // ballSolid: 'ball/reactor/reactor-solid.sol',
+    // ballOuter: 'ball/reactor/reactor-outer.sol'
   };
 
   for (let modelName in modelPaths) {
