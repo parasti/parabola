@@ -92,7 +92,7 @@ MeshData.prototype.createObjects = function (state) {
     state.bindVertexArray(null);
 };
 
-MeshData.prototype.bindArray = function (state) {
+MeshData.prototype.bindVertexArray = function (state) {
     var meshData = this;
 
     if (meshData.vao) {

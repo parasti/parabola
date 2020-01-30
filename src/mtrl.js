@@ -124,7 +124,7 @@ Mtrl.prototype.createTexture = function (state) {
 /*
  * Apply material state.
  */
-Mtrl.prototype.draw = function (state) {
+Mtrl.prototype.apply = function (state) {
   var mtrl = this;
   var gl = state.gl;
 

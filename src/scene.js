@@ -266,9 +266,7 @@ Scene.prototype._drawFrame = function (state, meshes) {
 
   for (var i = 0, n = meshes.length; i < n; ++i) {
     var mesh = meshes[i];
-    var count = mesh.instanceCount;
-
-    mesh.drawInstanced(state, count);
+    mesh.draw(state);
   }
 };
 

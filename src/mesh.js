@@ -1,3 +1,7 @@
+'use strict';
+
+var Mtrl = require('./mtrl.js');
+
 module.exports = Mesh;
 
 /**
@@ -14,34 +18,34 @@ function Mesh () {
   // Shader program
   this.shader = null;
 
-  // VBO/VAO
-  // TODO: this is literally only used to bind a VAO. We don't need an entire model for that.
-  this.model = null;
+  // Vertex/element data
   this.meshData = null;
 
   // Location in the element array.
   this.elemBase = 0;
   this.elemCount = 0;
 
+  // Value passed to DrawElementsInstanced.
   this.instanceCount = 0;
 
   // Mesh sort order/draw order.
   this.sortBits = 0;
 }
 
-Mesh.prototype.drawInstanced = function (state, count) {
+Mesh.prototype.draw = function (state) {
   var gl = state.gl;
 
   var mesh = this;
   var mtrl = mesh.mtrl;
   var shader = mesh.shader;
   var meshData = mesh.meshData;
+  var count = mesh.instanceCount;
 
-  // Bind vertex array.
-  meshData.bindArray(state);
+  // Bind vertex array object.
+  meshData.bindVertexArray(state);
 
   // Apply material state.
-  mtrl.draw(state);
+  mtrl.apply(state);
 
   // Bind shader.
   shader.use(state);
@@ -55,11 +59,17 @@ Mesh.prototype.drawInstanced = function (state, count) {
   state.bindVertexArray(null);
 };
 
-var Mtrl = require('./mtrl.js');
-
 /*
  * TODO
  */
+
+Mesh.LAYER_GRADIENT = 0;
+Mesh.LAYER_BACKGROUND = 1;
+Mesh.LAYER_FOREGROUND = 2;
+
+Mesh.BLEND_OPAQUE = 0;
+Mesh.BLEND_TRANSPARENT = 1;
+
 Mesh.prototype.defaultSortBits = function () {
   var mesh = this;
   var mtrl = mesh.mtrl;
@@ -68,13 +78,6 @@ Mesh.prototype.defaultSortBits = function () {
   this.setSortLayer(Mesh.LAYER_FOREGROUND);
   this.setSortBlend((flags & Mtrl.DEPTH_WRITE) ? Mesh.BLEND_OPAQUE : Mesh.BLEND_TRANSPARENT);
 };
-
-Mesh.LAYER_GRADIENT = 0;
-Mesh.LAYER_BACKGROUND = 1;
-Mesh.LAYER_FOREGROUND = 2;
-
-Mesh.BLEND_OPAQUE = 0;
-Mesh.BLEND_TRANSPARENT = 1;
 
 Mesh.prototype._setSortBits = function (firstBit, bitLength, value) {
   if (firstBit < 0 || firstBit > 31) {
