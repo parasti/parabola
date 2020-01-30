@@ -3,11 +3,8 @@
 module.exports = MeshData;
 
 /**
- * Some people call this geometry.
- *
- * I call it an awkward name. It's basically a vertex array object,
- * but we keep the source vertex data around for easy rebuilding
- * in case of GL context loss.
+ * This is basically a vertex array object, but we keep the source
+ * vertex data around for easy rebuilding in case of GL context loss.
  */
 function MeshData() {
     if (!(this instanceof MeshData)) {
