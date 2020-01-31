@@ -9,9 +9,9 @@ var BodyModel = require('./body-model.js');
 module.exports = GLPool;
 
 /**
- * Create a pool for easier GL object management and reuse.
+ * Keep track of allocated GL resources.
  *
- * There are three types of resources in Parabola:
+ * There are three types of resources:
  *
  * 1) materials (textures)
  * 2) shaders (programs)
@@ -31,7 +31,7 @@ function GLPool () {
 
   this.materials = makeCache(Object.create(null)); // Keyed by name (string).
   this.shaders = makeCache([]); // Keyed by flags (integer).
-  this.models = makeCache(Object.create(null)); // Keyed by an id (string).
+  this.models = makeCache(Object.create(null)); // Keyed by id (string).
 }
 
 function makeCache (store) {

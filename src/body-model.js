@@ -128,14 +128,10 @@ BodyModel.fromSolBill = function (sol, billIndex) {
   return model;
 };
 
+// TODO This is just a proxy, get rid of it.
 BodyModel.prototype.createObjects = function (state) {
   var meshData = this.meshData;
   meshData.createObjects(state);
-};
-
-BodyModel.prototype.bindArray = function (state) {
-  var meshData = this.meshData;
-  meshData.bindArray(state);
 };
 
 BodyModel.prototype.uploadModelViewMatrices = function (state, viewMatrix = null) {
@@ -156,20 +152,20 @@ BodyModel.prototype.uploadModelViewMatrices = function (state, viewMatrix = null
 }
 
 /**
- * Add a geom (triangle) to the list, indexed by used material.
+ * Sort a geom (triangle) into the appropriate material bucket.
  */
 function addGeomByMtrl (geoms, geom) {
   var mi = geom.mi;
 
-  if (geoms[mi] === undefined) {
-    geoms[mi] = [];
+  if (geoms[mi]) {
+    geoms[mi].push(geom);
+  } else {
+    geoms[mi] = [geom];
   }
-
-  geoms[mi].push(geom);
 }
 
 /**
- * Get a list of geoms (triangles) for a body, indexed by material.
+ * Sort body geoms (triangles) into per-material buckets.
  */
 function getBodyGeomsByMtrl (sol, body) {
   var geoms = Array(sol.mtrls.length);
@@ -218,7 +214,6 @@ function getVertAttribs (verts, pos, sol, offs) {
  */
 BodyModel.prototype.getMeshesFromSol = function (sol, body) {
   var model = this;
-  var meshData = this.meshData;
 
   const stride = (3 + 3 + 2); // p + n + t
 
@@ -235,6 +230,7 @@ BodyModel.prototype.getMeshesFromSol = function (sol, body) {
   // Added elements.
   var elemsTotal = 0;
 
+  var meshData = MeshData();
   var meshes = [];
 
   // Add a single SOL vertex to the vertex store.
@@ -296,5 +292,6 @@ BodyModel.prototype.getMeshesFromSol = function (sol, body) {
   meshData.verts = verts.slice(0, vertsTotal * stride);
   meshData.elems = elems;
 
+  model.meshData = meshData;
   model.meshes = meshes;
 };
