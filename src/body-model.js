@@ -236,8 +236,6 @@ BodyModel.prototype.getMeshesFromSol = function (sol, body) {
   // Add a single SOL vertex to the vertex store.
   function addVert (sol, offs) {
     var pos = vertsTotal * stride;
-    // var vert = verts.subarray(pos, pos + stride);
-    // getVertAttribs(vert, sol, offs);
     getVertAttribs(verts, pos, sol, offs);
     vertsTotal++;
   }

@@ -4,7 +4,7 @@ var Uniform = require('./uniform.js');
 
 module.exports = GLState;
 
-function GLState (canvas) {
+function GLState(canvas) {
   if (!(this instanceof GLState)) {
     return new GLState(canvas);
   }
@@ -19,7 +19,6 @@ function GLState (canvas) {
     ModelViewMatrix: 3 // and 4, 5, 6. Maximum is 8 attribute locations.
   };
 
-  this.usedProgram = null;
   this.boundTextures = [];
   this.enabledCapabilities = [];
 
@@ -28,9 +27,10 @@ function GLState (canvas) {
   setupContext(this.gl);
 
   this.shadowState = {
-    depthMask: gl.getParameter(gl.DEPTH_WRITEMASK),
+    currentProgram: gl.getParameter(gl.CURRENT_PROGRAM),
     blendSrcRGB: gl.getParameter(gl.BLEND_SRC_RGB),
     blendDstRGB: gl.getParameter(gl.BLEND_DST_RGB),
+    depthMask: gl.getParameter(gl.DEPTH_WRITEMASK),
     polygonOffsetFactor: gl.getParameter(gl.POLYGON_OFFSET_FACTOR),
     polygonOffsetUnits: gl.getParameter(gl.POLYGON_OFFSET_UNITS)
   };
@@ -64,6 +64,13 @@ GLState.prototype.bindTexture = function (target, texture) {
   if (this.boundTextures[target] !== texture) {
     this.gl.bindTexture(target, texture);
     this.boundTextures[target] = texture;
+  }
+};
+
+GLState.prototype.useProgram = function (program) {
+  if (this.shadowState.currentProgram !== program) {
+    this.gl.useProgram(program);
+    this.shadowState.currentProgram = program;
   }
 };
 
@@ -116,13 +123,13 @@ GLState.prototype.drawElementsInstanced = function (mode, count, type, offset, p
 /*
  * Obtain a WebGL context. Now IE compatible, whoo.
  */
-function getContext (canvas) {
+function getContext(canvas) {
   var opts = { depth: true, alpha: false };
   var gl = canvas.getContext('webgl', opts) || canvas.getContext('experimental-webgl', opts);
   return gl;
 }
 
-function setupContext (gl) {
+function setupContext(gl) {
   // Straight alpha vs premultiplied alpha:
   // https://limnu.com/webgl-blending-youre-probably-wrong/
   // https://developer.nvidia.com/content/alpha-blending-pre-or-not-pre
@@ -155,27 +162,17 @@ GLState.prototype.createDefaultTexture = function (gl) {
   }
 
   var data = [
-    0xff, 0x00, 0xff, 0xff,
-    0xff, 0xff, 0x00, 0xff,
-    0x00, 0xff, 0xff, 0xff,
-    0xff, 0x00, 0xff, 0xff
+    0xff, 0x00, 0x00, 0x80,
+    0x00, 0xff, 0x00, 0x80,
+    0x00, 0x00, 0xff, 0x80,
+    0xff, 0xff, 0x00, 0x80
   ];
 
   var tex = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D, tex);
+  this.bindTexture(gl.TEXTURE_2D, tex);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 2, 2, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(data));
-  gl.bindTexture(gl.TEXTURE_2D, null);
+  this.bindTexture(gl.TEXTURE_2D, null);
   this.defaultTexture = tex;
-};
-
-/*
- * Track used program.
- */
-GLState.prototype.useProgram = function (program) {
-  if (program !== this.usedProgram) {
-    this.gl.useProgram(program);
-    this.usedProgram = program;
-  }
 };

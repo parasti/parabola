@@ -32,6 +32,7 @@ function GLPool () {
   this.materials = makeCache(Object.create(null)); // Keyed by name (string).
   this.shaders = makeCache([]); // Keyed by flags (integer).
   this.models = makeCache(Object.create(null)); // Keyed by id (string).
+  this.meshData = makeCache(Object.create(null)); // Keyed by id (string).
 }
 
 function makeCache (store) {
@@ -48,17 +49,21 @@ function makeCache (store) {
   };
 }
 
-GLPool.prototype.getMtrl = function (name) {
+GLPool.prototype._getMtrl = function (name) {
   return this.materials.get(name);
 };
 
-GLPool.prototype.getShader = function (flags) {
+GLPool.prototype._getShader = function (flags) {
   return this.shaders.get(flags);
 };
 
-GLPool.prototype.getModel = function (id) {
+GLPool.prototype._getModel = function (id) {
   return this.models.get(id);
 };
+
+GLPool.prototype._getMeshData = function (id) {
+  return this.meshData.get(id);
+}
 
 GLPool.prototype._cacheMtrl = function (mtrl) {
   this.materials.set(mtrl.name, mtrl);
@@ -75,6 +80,11 @@ GLPool.prototype._cacheModel = function (model) {
   this.emitter.emit('model', model);
 };
 
+GLPool.prototype._cacheMeshData = function (meshData) {
+  this.meshData.set(meshData.id, meshData);
+  this.emitter.emit('meshdata', meshData);
+}
+
 /**
  * Cache materials and add a SOL-to-cache map to the SOL.
  */
@@ -85,7 +95,7 @@ GLPool.prototype.cacheMtrlsFromSol = function (sol) {
 
   for (var mi = 0; mi < sol.mtrls.length; ++mi) {
     var solMtrl = sol.mtrls[mi];
-    var mtrl = pool.getMtrl(solMtrl.f);
+    var mtrl = pool._getMtrl(solMtrl.f);
 
     if (!mtrl) {
       mtrl = Mtrl.fromSolMtrl(sol, mi);
@@ -106,7 +116,7 @@ GLPool.prototype.cacheModelsFromSol = function (sol) {
 
   for (var bi = 0; bi < sol.bodies.length; ++bi) {
     var id = BodyModel.getIdFromSolBody(sol, bi);
-    var model = pool.getModel(id);
+    var model = pool._getModel(id);
 
     if (!model) {
       model = BodyModel.fromSolBody(sol, bi);
@@ -137,7 +147,7 @@ GLPool.prototype.cacheShadersFromSol = function (sol) {
   for (var mi = 0; mi < sol.mtrls.length; ++mi) {
     var solMtrl = sol.mtrls[mi];
     var flags = Shader.getFlagsFromSolMtrl(solMtrl);
-    var shader = pool.getShader(flags);
+    var shader = pool._getShader(flags);
 
     if (!shader) {
       shader = Shader.fromSolMtrl(solMtrl);
