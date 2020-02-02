@@ -37,6 +37,12 @@ BodyModel.prototype.getInstances = function () {
   return this.sceneNode.instances;
 };
 
+BodyModel.prototype.attachInstance = function (parent) {
+  var instance = this.sceneNode.createInstance();
+  instance.setParent(parent);
+  return instance;
+}
+
 BodyModel.prototype.getInstanceMatrices = function (viewMatrix = null) {
   return this.sceneNode.getInstanceMatrices(viewMatrix);
 };
@@ -56,12 +62,21 @@ BodyModel.fromSolBody = function (sol, bodyIndex) {
   return model;
 };
 
+BodyModel.getIdFromSolBill = function (sol, billIndex) {
+  var solBill = sol.bills[billIndex];
+
+  return 'BillModel:' + ((solBill.fl & Solid.BILL_EDGE) ? 'edge__' : '') + sol.mtrls[solBill.mi].f;
+}
+
 BodyModel.fromSolBill = function (sol, billIndex) {
   const stride = 8;
 
   var bill = sol.rv[billIndex];
 
   var model = BodyModel();
+
+  model.id = BodyModel.getIdFromSolBill(sol, billIndex);
+
   var meshData = model.meshData;
   var verts = meshData.verts = new Float32Array(4 * stride); // 4 vertices
   var elems = meshData.elems = new Uint16Array(2 * 3); // 2 triangles

@@ -161,20 +161,19 @@ SolidModel.fromSol = function (sol, entities) {
     ent.addComponent(EC.SceneGraph);
     ent.addComponent(EC.Billboard);
 
-    // TODO:
-    // create a SolidModel for billboards?
-    // ent.sceneModel.setSlot('billboard');
-
     ent.billboard.fromSolBill(sol, solBill);
 
     // Get cached billboard model
     model = sol._billboardModels[i];
 
     // Add body-model to solid-model body-model (yup) list.
-    models.push(model);
+    if (models.indexOf(model) < 0) {
+      models.push(model);
+    }
 
     // Parent model scene-node to the entity scene-node.
-    model.sceneNode.setParent(ent.sceneGraph.node);
+    model.attachInstance(ent.sceneGraph.node);
+    //model.sceneNode.setParent(ent.sceneGraph.node);
 
     vec3.copy(ent.spatial.position, solBill.p);
     ent.spatial.scale = [1.0, 1.0, 1.0];
