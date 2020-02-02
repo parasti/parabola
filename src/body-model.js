@@ -24,7 +24,7 @@ function BodyModel () {
   this.meshes = null;
 
   // Also known as a vertex array object.
-  this.meshData = null;
+  this.meshData = MeshData();
 
   // Model-view matrices are managed by the scene graph.
   // We can set a parent node on this scene-node.
@@ -230,7 +230,7 @@ BodyModel.prototype.getMeshesFromSol = function (sol, body) {
   // Added elements.
   var elemsTotal = 0;
 
-  var meshData = MeshData();
+  var meshData = model.meshData;
   var meshes = [];
 
   // Add a single SOL vertex to the vertex store.
