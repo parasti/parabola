@@ -23,8 +23,8 @@ function BodyModel () {
   // Also known as draw calls.
   this.meshes = null;
 
-  // Also known as vertex data.
-  this.meshData = MeshData();
+  // Also known as a vertex array object.
+  this.meshData = null;
 
   // Model-view matrices are managed by the scene graph.
   // We can set a parent node on this scene-node.
