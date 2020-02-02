@@ -1,6 +1,7 @@
 'use strict';
 
 var Solid = require('./solid.js');
+var data = require('./data.js');
 
 module.exports = Mtrl;
 
@@ -16,6 +17,8 @@ function Mtrl(name) {
 
   // DOM image
   this._image = null;
+  // DOM image promise;
+  this._imageProm = null;
   // GL texture
   this.texture = null;
 
@@ -32,8 +35,6 @@ function Mtrl(name) {
 Mtrl.fromSolMtrl = function (sol, mi) {
   var solMtrl = sol.mtrls[mi];
   var mtrl = Mtrl(solMtrl.f);
-
-  mtrl._image = sol._images[solMtrl.f];
 
   mtrl.flags = Mtrl.getFlagsFromSolMtrl(solMtrl);
 
@@ -191,4 +192,19 @@ Mtrl.prototype.createObjects = function (state) {
   var mtrl = this;
 
   mtrl.createTexture(state);
+};
+
+Mtrl.prototype.fetchImage = function () {
+  var mtrl = this;
+
+  if (!mtrl._imageProm) {
+    mtrl._imageProm = data.fetchImageForMtrl(mtrl).then(function (image) {
+      mtrl._image = image;
+      return image;
+    }).catch(function (reason) {
+      console.warn(reason);
+    });
+  }
+
+  return mtrl._imageProm;
 };

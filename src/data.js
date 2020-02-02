@@ -35,41 +35,14 @@ data.fetchSol = function (path) {
   });
 };
 
-function _fetchMtrlImage(solMtrl) {
-  var imagePath = mtrlImages[solMtrl.f];
+data.fetchImageForMtrl = function (mtrl) {
+  var imagePath = mtrlImages[mtrl.name];
 
   if (imagePath) {
     return data.fetchImage(imagePath);
   } else {
-    return Promise.reject(Error('Material image for ' + solMtrl.f + ' is unknown'));
+    return Promise.reject(Error('Material image for ' + mtrl.name + ' is unknown'));
   }
-}
-
-data.fetchSolImages = function (sol) {
-  var promises = [];
-
-  for (var i = 0, n = sol.mtrls.length; i < n; ++i) {
-    var solMtrl = sol.mtrls[i];
-    var promise = _fetchMtrlImage(solMtrl).catch(function (reason) {
-      console.warn(reason);
-    });
-    promises.push(promise);
-  }
-
-  return Promise.all(promises).then(function (values) {
-    // Value order matches original order. We can use that.
-
-    var images = {};
-
-    for (var i = 0, n = sol.mtrls.length; i < n; ++i) {
-      var solMtrl = sol.mtrls[i];
-      images[solMtrl.f] = values[i];
-    }
-
-    sol._images = images;
-
-    return sol;
-  });
 }
 
 data.loadFile = function (file) {
