@@ -7,6 +7,8 @@ var utils = require('./utils.js');
 
 module.exports = SceneNode;
 
+var _nodeIndex = 0;
+
 /**
  * This is a scene graph. A scene graph can serve many
  * purposes, but this one does one thing and one thing only:
@@ -25,6 +27,8 @@ function SceneNode(parent) {
   if (!(this instanceof SceneNode)) {
     return new SceneNode(parent);
   }
+
+  this._id = 'node_' + (_nodeIndex++);
 
   this.parent = null;
   this.children = [];
@@ -51,7 +55,7 @@ function SceneNode(parent) {
   }
 }
 
-/*
+/**
  * Mark this tree of nodes for update.
  */
 SceneNode.prototype._markDirty = function () {
@@ -68,8 +72,10 @@ SceneNode.prototype._markDirty = function () {
   this.dirty = true;
 };
 
-/*
+/**
  * Set local matrix given a position vector, rotation quaternion and scale.
+ *
+ * Scale can be either a scalar or an array.
  */
 SceneNode.prototype.setLocalMatrix = (function () {
   // Preallocate.
@@ -294,7 +300,7 @@ SceneNode.prototype._update = function () {
 };
 
 SceneNode.prototype.dump = function (depth = 0) {
-  var str = this.parent ? 'node' : 'root node';
+  var str = this._id;
 
   if (this.master) {
     str += ' instance';
