@@ -240,12 +240,8 @@ SceneNode.prototype.removeNode = function (node) {
     return;
   }
 
-  if (this === node) {
-    this.remove();
-  } else {
-    for (var i = 0, n = this.children.length; i < n; ++i) {
-      this.children[i].removeNode(node);
-    }
+  for (var i = 0, n = this.children.length; i < n; ++i) {
+    this.children[i].removeNode(node);
   }
 }
 
