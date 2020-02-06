@@ -193,10 +193,7 @@ SceneNode.prototype._setMaster = function (node) {
  */
 SceneNode.prototype.getMaster = function () {
   if (this.master) {
-    return this.master;
-  }
-  if (this.parent) {
-    return this.parent.getMaster();
+    return this.master.getMaster() || this.master;
   }
   return null;
 };
