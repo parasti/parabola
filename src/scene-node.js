@@ -199,9 +199,9 @@ SceneNode.prototype._setMaster = function (node) {
  */
 SceneNode.prototype.getMaster = function () {
   if (this.master) {
-    return this.master.getMaster() || this.master;
+    return this.master.getMaster();
   }
-  return null;
+  return this;
 };
 
 /**
@@ -209,7 +209,7 @@ SceneNode.prototype.getMaster = function () {
  */
 SceneNode.prototype.createInstance = function () {
   var node = SceneNode();
-  var master = this.getMaster() || this;
+  var master = this.getMaster();
 
   node._setMaster(master);
 
