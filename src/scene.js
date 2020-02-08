@@ -52,6 +52,12 @@ function Scene() {
   // TODO
   this._bodyModels = [];
   this._meshes = [];
+
+  // TODO this is a tough one.
+  // Key: BodyModel
+  // Value: model.sceneNode instances reachable from this.sceneRoot.
+  // Reason: so that we do not draw rogue instances that aren't actually attached to the scene graph.
+  this._reachableInstances = new Map();
 }
 
 Scene.prototype._createWorldEntity = function (modelSlot) {
@@ -76,8 +82,19 @@ Scene.prototype._addBodyModels = function (solidModel) {
   if (solidModel) {
     for (var i = 0, n = solidModel.models.length; i < n; ++i) {
       var bodyModel = solidModel.models[i];
+      var reachableInstances = this._reachableInstances.get(bodyModel) || [];
 
       this._bodyModels.push(bodyModel);
+
+      for (var instanceIndex = 0, instanceCount = bodyModel.sceneNode.instances.length; instanceIndex < instanceCount; ++instanceIndex) {
+        var instance = bodyModel.sceneNode.instances[instanceIndex];
+
+        if (instance.hasAncestor(this.sceneRoot)) {
+          reachableInstances.push(instance);
+        }
+      }
+
+      this._reachableInstances.set(bodyModel, reachableInstances);
 
       this._addMeshes(bodyModel.meshes);
     }
@@ -93,6 +110,8 @@ Scene.prototype._removeBodyModels = function (solidModel) {
 
       if (index >= 0) {
         this._bodyModels.splice(index, 1);
+
+        this._reachableInstances.delete(bodyModel);
 
         this._removeMeshes(bodyModel.meshes);
       }
@@ -120,7 +139,10 @@ Scene.prototype._removeMeshes = function (meshes) {
  */
 Scene.prototype.assignModelSlot = function (modelSlot, solidModel) {
   this._clearModelSlot(modelSlot);
-  this._addBodyModels(solidModel);
+
+  // Note: the SolidModel scene node instance is created and attached by the ECS.
+
+  // this._addBodyModels(solidModel);
 
   this.models[modelSlot] = solidModel;
 
@@ -203,22 +225,47 @@ Scene.prototype.step = function (dt) {
  *
  * Arrays of instance matrix data are uploaded to VBOs for instanced rendering.
  */
+var utils = require('./utils.js');
+
 Scene.prototype._uploadModelViewMatrices = function (state) {
-  var bodyModels = this._bodyModels;
+  var M = mat4.create();
+
+  var gl = state.gl;
   var viewMatrix = this.view.getMatrix();
 
-  for (var modelIndex = 0, modelCount = bodyModels.length; modelIndex < modelCount; ++modelIndex) {
-    var model = bodyModels[modelIndex];
-    model.uploadModelViewMatrices(state, viewMatrix);
+  for (var [model, instances] of this._reachableInstances) {
+    var meshData = model.meshData;
+
+    if (!meshData) {
+      continue;
+    }
+
+    if (!meshData.instanceVBO) {
+      continue;
+    }
+
+    if (!instances.length) {
+      continue;
+    }
+
+    var instanceMatrices = new Float32Array(instances.length * 16);
+
+    for (var instanceIndex = 0, instanceCount = instances.length; instanceIndex < instanceCount; ++instanceIndex) {
+      var instance = instances[instanceIndex];
+      var worldMatrix = instance.getWorldMatrix();
+
+      mat4.multiply(M, viewMatrix, worldMatrix);
+      utils.mat4_copyToOffset(instanceMatrices, instanceIndex * 16, M);
+    }
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, meshData.instanceVBO);
+    gl.bufferData(gl.ARRAY_BUFFER, instanceMatrices, gl.DYNAMIC_DRAW);
   }
 };
 
 Scene.prototype._updateMeshInstanceCounts = function () {
-  var bodyModels = this._bodyModels;
-
-  for (var modelIndex = 0, modelCount = bodyModels.length; modelIndex < modelCount; ++modelIndex) {
-    var model = bodyModels[modelIndex];
-    var count = model.getInstances().length;
+  for (var [model, instances] of this._reachableInstances) {
+    var count = instances.length;
     var meshes = model.meshes;
 
     for (var meshIndex = 0, meshCount = meshes.length; meshIndex < meshCount; ++meshIndex) {
@@ -226,7 +273,7 @@ Scene.prototype._updateMeshInstanceCounts = function () {
       mesh.instanceCount = count;
     }
   }
-}
+};
 
 Scene.prototype.draw = function (state) {
   this._updateMeshInstanceCounts();
@@ -288,7 +335,12 @@ Scene.prototype._updateModelSlots = function () {
     var model = this.models[modelSlot];
 
     if (model) {
-      model.attachInstance(ent.sceneGraph.node);
+      var instance = ent.sceneGraph.node.createInstance();
+      instance.setParent(this.sceneRoot);
+      model.attachInstance(instance);
+
+      // TODO
+      this._addBodyModels(model);
 
       // Here's the weird part: removeTag changes the array we loop over. So, we adjust.
 

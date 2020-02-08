@@ -75,6 +75,8 @@ BodyModel.fromSolBill = function (sol, billIndex) {
 
   var model = BodyModel();
 
+  model.sceneNode._id = sol.id + ' bill_0' + billIndex;
+
   model.id = BodyModel.getIdFromSolBill(sol, billIndex);
 
   var meshData = model.meshData;

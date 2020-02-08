@@ -26,6 +26,7 @@ function SolidModel (id) {
  */
 SolidModel.fromSol = function (sol, entities) {
   var solidModel = SolidModel('SolidModel:' + sol.id);
+  solidModel.sceneNode._id = sol.id;
 
   var modelNode = solidModel.sceneNode;
   var ents = entities;
@@ -56,6 +57,8 @@ SolidModel.fromSol = function (sol, entities) {
 
     // Attach entity node to the solid-model node.
     ent.sceneGraph.setParent(modelNode);
+
+    ent.sceneGraph.node._id = sol.id + ' body_' + i + ' entity';
 
     // TODO should movers be entities?
     var movers = Mover.fromSolBody(sol, solBody);
@@ -141,6 +144,7 @@ SolidModel.fromSol = function (sol, entities) {
     ent.addComponent(EC.SceneModel);
 
     ent.sceneGraph.setParent(modelNode);
+    ent.sceneGraph.node._id = sol.id + ' ball_' + i + ' entity';
     ent.sceneModel.setSlot('ballSolid');
 
     ent.spatial.scale = solBall.r;
@@ -182,6 +186,8 @@ SolidModel.fromSol = function (sol, entities) {
 
     // Parent entity scene-node to the solid-model scene-node.
     ent.sceneGraph.setParent(modelNode);
+
+    ent.sceneGraph.node._id = sol.id + ' bill_' + i + ' entity';
   }
 
   return solidModel;

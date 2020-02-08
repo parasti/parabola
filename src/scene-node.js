@@ -209,7 +209,12 @@ SceneNode.prototype.getMaster = function () {
  */
 SceneNode.prototype.createInstance = function () {
   var node = SceneNode();
+<<<<<<< HEAD
   var master = this.getMaster();
+=======
+  node._id = this._id + ' instance';
+  var master = this.getMaster() || this;
+>>>>>>> de73ee8... thing
 
   node._setMaster(master);
 
