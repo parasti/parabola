@@ -154,7 +154,7 @@ SceneNode.prototype.hasAncestor = function (node) {
  * Set node parent.
  */
 SceneNode.prototype.setParent = function (node) {
-  if (this === node || this.hasAncestor(node)) {
+  if (this === node || node.hasAncestor(this)) {
     throw Error('Can not parent node to itself');
   }
 
