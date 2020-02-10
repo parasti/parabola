@@ -58,6 +58,8 @@ function Scene() {
   // Value: model.sceneNode instances reachable from this.sceneRoot.
   // Reason: so that we do not draw rogue instances that aren't actually attached to the scene graph.
   this._reachableInstances = new Map();
+  this._instanceMatrices = new Map();
+  this._modelSceneNodes = Object.create(null);
 }
 
 Scene.prototype._createWorldEntity = function (modelSlot) {
@@ -66,7 +68,7 @@ Scene.prototype._createWorldEntity = function (modelSlot) {
   ent.addComponent(EC.SceneGraph);
   ent.addComponent(EC.SceneModel);
 
-  ent.sceneGraph.setParent(this.sceneRoot);
+  // ent.sceneGraph.setParent(this.sceneRoot);
   ent.sceneModel.setSlot(modelSlot);
 
   return ent;
@@ -78,25 +80,41 @@ Scene.prototype._createWorldEntities = function () {
   this._createWorldEntity('level');
 }
 
+Scene.prototype._updateReachableInstances = function () {
+  var bodyModels = this._bodyModels;
+
+  for (var bodyModelIndex = 0, bodyModelCount = bodyModels.length; bodyModelIndex < bodyModelCount; ++bodyModelIndex) {
+    var bodyModel = bodyModels[bodyModelIndex];
+    var reachableInstances = [];
+
+    for (var instanceIndex = 0, instanceCount = bodyModel.sceneNode.instances.length; instanceIndex < instanceCount; ++instanceIndex) {
+      var instance = bodyModel.sceneNode.instances[instanceIndex];
+
+      if (instance.hasAncestor(this.sceneRoot)) {
+        reachableInstances.push(instance);
+      }
+    }
+
+    for (var meshIndex = 0, meshCount = bodyModel.meshes.length; meshIndex < meshCount; ++meshIndex) {
+      var mesh = bodyModel.meshes[meshIndex];
+      mesh.instanceCount = reachableInstances.length;
+    }
+
+    this._reachableInstances.set(bodyModel, reachableInstances);
+    this._instanceMatrices.set(bodyModel, new Float32Array(reachableInstances.length * 16));
+  }
+};
+
 Scene.prototype._addBodyModels = function (solidModel) {
   if (solidModel) {
     for (var i = 0, n = solidModel.models.length; i < n; ++i) {
       var bodyModel = solidModel.models[i];
-      var reachableInstances = this._reachableInstances.get(bodyModel) || [];
 
-      this._bodyModels.push(bodyModel);
+      if (this._bodyModels.indexOf(bodyModel) < 0) {
+        this._bodyModels.push(bodyModel);
 
-      for (var instanceIndex = 0, instanceCount = bodyModel.sceneNode.instances.length; instanceIndex < instanceCount; ++instanceIndex) {
-        var instance = bodyModel.sceneNode.instances[instanceIndex];
-
-        if (instance.hasAncestor(this.sceneRoot)) {
-          reachableInstances.push(instance);
-        }
+        this._addMeshes(bodyModel.meshes);
       }
-
-      this._reachableInstances.set(bodyModel, reachableInstances);
-
-      this._addMeshes(bodyModel.meshes);
     }
   }
 }
@@ -110,8 +128,6 @@ Scene.prototype._removeBodyModels = function (solidModel) {
 
       if (index >= 0) {
         this._bodyModels.splice(index, 1);
-
-        this._reachableInstances.delete(bodyModel);
 
         this._removeMeshes(bodyModel.meshes);
       }
@@ -140,9 +156,9 @@ Scene.prototype._removeMeshes = function (meshes) {
 Scene.prototype.assignModelSlot = function (modelSlot, solidModel) {
   this._clearModelSlot(modelSlot);
 
-  // Note: the SolidModel scene node instance is created and attached by the ECS.
+  // Note: the SolidModel is inserted in the screne graph by the ECS.
 
-  // this._addBodyModels(solidModel);
+  this._addBodyModels(solidModel);
 
   this.models[modelSlot] = solidModel;
 
@@ -248,7 +264,7 @@ Scene.prototype._uploadModelViewMatrices = function (state) {
       continue;
     }
 
-    var instanceMatrices = new Float32Array(instances.length * 16);
+    var instanceMatrices = this._instanceMatrices.get(model);
 
     for (var instanceIndex = 0, instanceCount = instances.length; instanceIndex < instanceCount; ++instanceIndex) {
       var instance = instances[instanceIndex];
@@ -276,7 +292,7 @@ Scene.prototype._updateMeshInstanceCounts = function () {
 };
 
 Scene.prototype.draw = function (state) {
-  this._updateMeshInstanceCounts();
+  // this._updateMeshInstanceCounts();
 
   this._uploadModelViewMatrices(state);
 
@@ -335,12 +351,14 @@ Scene.prototype._updateModelSlots = function () {
     var model = this.models[modelSlot];
 
     if (model) {
+      // FIXME: this is somehow completely wrong. Entity nodes are rooted at the
+      // SolidModel node. SolidModels are instanced and attached to entity nodes.
+      // It's a recursive clusterfuck right now.
+
+      // Attach an instance of a SolidModel scene graph to the entity SceneNode.
       var instance = ent.sceneGraph.node.createInstance();
       instance.setParent(this.sceneRoot);
       model.attachInstance(instance);
-
-      // TODO
-      this._addBodyModels(model);
 
       // Here's the weird part: removeTag changes the array we loop over. So, we adjust.
 
@@ -350,6 +368,8 @@ Scene.prototype._updateModelSlots = function () {
       i = i - 1;
     }
   }
+
+  this._updateReachableInstances();
 }
 
 /**
