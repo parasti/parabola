@@ -355,7 +355,6 @@ Scene.prototype._updateModelSlots = function () {
       // SolidModel node. SolidModels are instanced and attached to entity nodes.
       // It's a recursive clusterfuck right now.
 
-      // Attach an instance of a SolidModel scene graph to the entity SceneNode.
       var instance = ent.sceneGraph.node.createInstance();
       instance.setParent(this.sceneRoot);
       model.attachInstance(instance);

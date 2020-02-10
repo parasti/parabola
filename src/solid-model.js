@@ -11,7 +11,7 @@ module.exports = SolidModel;
 
 var solidModelIndex = 0;
 
-function SolidModel (id) {
+function SolidModel(id) {
   if (!(this instanceof SolidModel)) {
     return new SolidModel(id);
   }
@@ -98,16 +98,12 @@ SolidModel.fromSol = function (sol, entities) {
     ent.addComponent(EC.SceneGraph);
     ent.addComponent(EC.SceneModel);
 
-    ent.sceneGraph.setParent(modelNode);
     ent.sceneModel.setSlot(itemType);
 
     ent.item.value = solItem.n;
 
     vec3.copy(ent.spatial.position, solItem.p);
     ent.spatial.scale = 0.15; // Neverball default.
-
-    // Update scene node.
-    ent.sceneGraph.setLocalMatrix(ent.spatial.position, ent.spatial.orientation, ent.spatial.scale);
   }
 
   // Teleporters.
@@ -121,15 +117,11 @@ SolidModel.fromSol = function (sol, entities) {
     ent.addComponent(EC.SceneGraph);
     ent.addComponent(EC.SceneModel);
 
-    ent.sceneGraph.setParent(modelNode);
     // TODO
     ent.sceneModel.setSlot('jump');
 
     vec3.copy(ent.spatial.position, solJump.p);
     ent.spatial.scale = [solJump.r, 2.0, solJump.r];
-
-    // Update scene node.
-    ent.sceneGraph.setLocalMatrix(ent.spatial.position, ent.spatial.orientation, ent.spatial.scale);
   }
 
   // Balls
@@ -143,15 +135,25 @@ SolidModel.fromSol = function (sol, entities) {
     ent.addComponent(EC.SceneGraph);
     ent.addComponent(EC.SceneModel);
 
-    ent.sceneGraph.setParent(modelNode);
-    ent.sceneGraph.node._id = sol.id + ' ball_' + i + ' entity';
     ent.sceneModel.setSlot('ballSolid');
 
     ent.spatial.scale = solBall.r;
     vec3.copy(ent.spatial.position, solBall.p);
 
-    // Update scene node.
-    ent.sceneGraph.setLocalMatrix(ent.spatial.position, ent.spatial.orientation, ent.spatial.scale);
+    {
+      var inner = ents.createEntity();
+
+      inner.addComponent(EC.Spatial);
+      inner.addComponent(EC.SceneGraph);
+      inner.addComponent(EC.SceneModel);
+
+      inner.sceneModel.setSlot('ballInner');
+
+      inner.sceneGraph.setParent(ent.sceneGraph.node);
+
+      inner.spatial.scale = solBall.r;
+      vec3.copy(inner.spatial.position, solBall.p);
+    }
   }
 
   // Billboards
@@ -177,17 +179,11 @@ SolidModel.fromSol = function (sol, entities) {
 
     // Parent model scene-node to the entity scene-node.
     model.attachInstance(ent.sceneGraph.node);
-    //model.sceneNode.setParent(ent.sceneGraph.node);
+
+    ent.sceneGraph.setParent(modelNode);
 
     vec3.copy(ent.spatial.position, solBill.p);
     ent.spatial.scale = [1.0, 1.0, 1.0];
-
-    // ent.billboard.fromSolBill(sol, solBill);
-
-    // Parent entity scene-node to the solid-model scene-node.
-    ent.sceneGraph.setParent(modelNode);
-
-    ent.sceneGraph.node._id = sol.id + ' bill_' + i + ' entity';
   }
 
   return solidModel;
