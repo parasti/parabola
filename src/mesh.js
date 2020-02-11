@@ -103,7 +103,7 @@ Mesh.prototype.setSortBlend = function (blend) {
 };
 
 Mesh.prototype.setSortExceptLayer = function (value) {
-  this._setSortBits(2, 32 - 2, value);
+  this._setSortBits(2, 31 - 2, value);
 };
 
 Mesh.compare = function (mesh0, mesh1) {
