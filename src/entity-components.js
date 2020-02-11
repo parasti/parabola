@@ -6,6 +6,7 @@ var mat3 = require('gl-matrix').mat3;
 
 var Solid = require('./solid.js');
 var SceneNode = require('./scene-node.js');
+var Mover = require('./mover.js');
 
 var EC = module.exports = {};
 
@@ -36,7 +37,7 @@ EC.SceneGraph.prototype.setLocalMatrix = function (p, e, s) {
 /**
  * Model data.
  */
-EC.SceneModel = function sceneModel (entity) {
+EC.SceneModel = function sceneModel () {
   this.slot = '';
 }
 
@@ -72,6 +73,13 @@ EC.Spatial = function spatial () {
 EC.Movers = function movers () {
   this.translate = null;
   this.rotate = null;
+};
+
+EC.Movers.prototype.fromSolBody = function (sol, solBody) {
+  var movers = Mover.fromSolBody(sol, solBody);
+
+  this.translate = movers.translate;
+  this.rotate = movers.rotate;
 };
 
 /*

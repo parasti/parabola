@@ -60,13 +60,9 @@ SolidModel.fromSol = function (sol, entities) {
 
     ent.sceneGraph.node._id = sol.id + ' body_' + i + ' entity';
 
-    // TODO should movers be entities?
-    var movers = Mover.fromSolBody(sol, solBody);
-    ent.movers.translate = movers.translate;
-    ent.movers.rotate = movers.rotate;
-
-    movers.translate.getPosition(ent.spatial.position);
-    movers.rotate.getOrientation(ent.spatial.orientation);
+    ent.movers.fromSolBody(sol, solBody);
+    ent.movers.translate.getPosition(ent.spatial.position);
+    ent.movers.rotate.getOrientation(ent.spatial.orientation);
   }
 
   // Items
