@@ -149,6 +149,19 @@ SolidModel.fromSol = function (sol, entities) {
 
       inner.spatial.scale = solBall.r;
       vec3.copy(inner.spatial.position, solBall.p);
+
+      var outer = ents.createEntity();
+
+      outer.addComponent(EC.Spatial);
+      outer.addComponent(EC.SceneGraph);
+      outer.addComponent(EC.SceneModel);
+
+      outer.sceneModel.setSlot('ballOuter');
+
+      outer.sceneGraph.setParent(ent.sceneGraph.node);
+
+      outer.spatial.scale = solBall.r;
+      vec3.copy(outer.spatial.position, solBall.p);
     }
   }
 
