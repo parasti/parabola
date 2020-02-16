@@ -137,7 +137,7 @@ function setupContext(gl) {
   // gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
   gl.depthFunc(gl.LEQUAL);
-  gl.clearColor(1.0, 1.0, 1.0, 1.0);
+  gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
   // Fix upside down images.
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
