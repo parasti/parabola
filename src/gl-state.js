@@ -137,7 +137,7 @@ function setupContext(gl) {
   // gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
   gl.depthFunc(gl.LEQUAL);
-  gl.clearColor(0.2, 0.2, 0.2, 1.0);
+  gl.clearColor(1.0, 1.0, 1.0, 1.0);
 
   // Fix upside down images.
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -162,10 +162,10 @@ GLState.prototype.createDefaultTexture = function (gl) {
   }
 
   var data = [
-    0xff, 0x00, 0x00, 0x80,
-    0x00, 0xff, 0x00, 0x80,
-    0x00, 0x00, 0xff, 0x80,
-    0xff, 0xff, 0x00, 0x80
+    0x00, 0x00, 0x00, 0xff,
+    0x40, 0x40, 0x40, 0xff,
+    0x80, 0x80, 0x80, 0xff,
+    0xc0, 0xc0, 0xc0, 0xff
   ];
 
   var tex = gl.createTexture();
