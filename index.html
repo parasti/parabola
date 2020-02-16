@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html class="no-js">
 
 <head>
   <meta charset="utf-8">
@@ -40,29 +40,30 @@
       padding: 10px;
       background-color: rgba(127, 127, 127, 0.4);
       color: white;
+      display: none;
+    }
+
+    body.with-overlay #overlay {
+      display: block;
     }
 
     .overlay-content {
       display: none;
     }
 
-    body.no-js #overlay {
+    #show-overlay + .overlay-content {
       display: none;
     }
 
-    #show-overlay+.overlay-content {
-      display: none;
-    }
-
-    #show-overlay:checked+.overlay-content {
+    #show-overlay:checked + .overlay-content {
       display: block;
     }
   </style>
 </head>
 
-<body class="no-js">
+<body class="with-overlay">
   <script>
-    document.body.classList.remove('no-js');
+    document.documentElement.classList.remove('no-js');
   </script>
 
   <div id="main">
@@ -76,8 +77,7 @@
 
       <div class="overlay-content">
         <div class="overlay-input"><label>Fullscreen <input id="toggle-fullscreen" type="checkbox"></label></div>
-        <div class="overlay-input"><label for="set-view-position">Fly-by</label><input id="set-view-position"
-            type="range" min="-1" max="1" step="0.005" value="1"></label></div>
+        <div class="overlay-input"><label for="set-view-position">Fly-by <input id="set-view-position" type="range" min="-1" max="1" step="0.005" value="1"></label></div>
         <div class="overlay-input"><label>Textures <input id="toggle-textures" type="checkbox" checked></label></div>
         <div class="overlay-input">
           Models:

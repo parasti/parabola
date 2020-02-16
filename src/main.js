@@ -76,12 +76,12 @@ Parabola.createBackgroundModel = function (pool, entities, sol) {
 }
 
 Parabola.BACKGROUNDS = [
-  // { sol: 'map-back/alien.sol', gradient: 'back/alien' },
+  { sol: 'map-back/alien.sol', gradient: 'back/alien' },
   // { sol: 'map-back/city.sol', gradient: 'back/city' },
   // { sol: 'map-back/clouds.sol', gradient: 'back/land' },
   // { sol: 'map-back/jupiter.sol', gradient: 'back/space' },
   // { sol: 'map-back/ocean.sol', gradient: 'back/ocean' },
-  { sol: 'map-back/volcano.sol', gradient: 'back/volcano' }
+  // { sol: 'map-back/volcano.sol', gradient: 'back/volcano' }
 ];
 
 function init() {
@@ -137,6 +137,11 @@ function init() {
   for (let modelName in modelPaths) {
     data.fetchSol(modelPaths[modelName])
       .then(function (sol) {
+        // Hack.
+        if (modelName === 'level') {
+          solFile = sol;
+        }
+
         pool.cacheSol(sol);
         var model = SolidModel.fromSol(sol, scene.entities);
         scene.setModel(state, modelName, model);
