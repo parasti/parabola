@@ -308,6 +308,11 @@ Scene.prototype._drawFrame = function (state, meshes) {
 
   for (var i = 0, n = meshes.length; i < n; ++i) {
     var mesh = meshes[i];
+
+    if (mesh.instanceCount === 0) {
+      break;
+    }
+
     mesh.draw(state);
   }
 };

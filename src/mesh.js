@@ -107,6 +107,13 @@ Mesh.prototype.setSortExceptLayer = function (value) {
 };
 
 function compareMeshes(mesh0, mesh1) {
+  if (mesh0.instanceCount === 0) {
+    return +1;
+  }
+  if (mesh1.instanceCount === 0) {
+    return -1;
+  }
+
   var a = mesh0.sortBits;
   var b = mesh1.sortBits;
 
