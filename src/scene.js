@@ -8,6 +8,7 @@ var SceneNode = require('./scene-node.js');
 var View = require('./view.js');
 var Mesh = require('./mesh.js');
 var EC = require('./entity-components.js');
+var utils = require('./utils.js');
 
 module.exports = Scene;
 
@@ -80,6 +81,12 @@ Scene.prototype._createWorldEntities = function () {
   this._createWorldEntity('level');
 }
 
+/**
+ * Make a list of BodyModel scene node instances reachable from scene root.
+ *
+ * We're not walking the scene graph, because the nodes actually
+ * have no idea about the model (or whatever) that owns them.
+ */
 Scene.prototype._updateReachableInstances = function () {
   var bodyModels = this._bodyModels;
 
@@ -156,7 +163,7 @@ Scene.prototype._removeMeshes = function (meshes) {
 Scene.prototype.assignModelSlot = function (modelSlot, solidModel) {
   this._clearModelSlot(modelSlot);
 
-  // Note: the SolidModel is inserted in the screne graph by the ECS.
+  // Note: the SolidModel is inserted in the scene graph by the ECS.
 
   this._addBodyModels(solidModel);
 
@@ -241,78 +248,49 @@ Scene.prototype.step = function (dt) {
  *
  * Arrays of instance matrix data are uploaded to VBOs for instanced rendering.
  */
-var utils = require('./utils.js');
-
-Scene.prototype._uploadModelViewMatrices = function (state) {
+Scene.prototype._uploadModelViewMatrices = (function () {
   var M = mat4.create();
 
-  var gl = state.gl;
-  var viewMatrix = this.view.getMatrix();
+  return function (state) {
+    var gl = state.gl;
 
-  for (var [model, instances] of this._reachableInstances) {
-    var meshData = model.meshData;
+    var viewMatrix = this.view.getMatrix();
 
-    if (!meshData) {
-      continue;
+    for (var [bodyModel, instances] of this._reachableInstances) {
+      var meshData = bodyModel.meshData;
+
+      if (!meshData) {
+        continue;
+      }
+
+      if (!meshData.instanceVBO) {
+        continue;
+      }
+
+      if (!instances.length) {
+        continue;
+      }
+
+      var instanceMatrices = this._instanceMatrices.get(bodyModel);
+
+      for (var instanceIndex = 0, instanceCount = instances.length; instanceIndex < instanceCount; ++instanceIndex) {
+        var instance = instances[instanceIndex];
+        var worldMatrix = instance.getWorldMatrix();
+
+        mat4.multiply(M, viewMatrix, worldMatrix);
+        utils.mat4_copyToOffset(instanceMatrices, instanceIndex * 16, M);
+      }
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, meshData.instanceVBO);
+      gl.bufferData(gl.ARRAY_BUFFER, instanceMatrices, gl.DYNAMIC_DRAW);
     }
-
-    if (!meshData.instanceVBO) {
-      continue;
-    }
-
-    if (!instances.length) {
-      continue;
-    }
-
-    var instanceMatrices = this._instanceMatrices.get(model);
-
-    for (var instanceIndex = 0, instanceCount = instances.length; instanceIndex < instanceCount; ++instanceIndex) {
-      var instance = instances[instanceIndex];
-      var worldMatrix = instance.getWorldMatrix();
-
-      mat4.multiply(M, viewMatrix, worldMatrix);
-      utils.mat4_copyToOffset(instanceMatrices, instanceIndex * 16, M);
-    }
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, meshData.instanceVBO);
-    gl.bufferData(gl.ARRAY_BUFFER, instanceMatrices, gl.DYNAMIC_DRAW);
-  }
-};
-
-Scene.prototype._updateMeshInstanceCounts = function () {
-  for (var [model, instances] of this._reachableInstances) {
-    var count = instances.length;
-    var meshes = model.meshes;
-
-    for (var meshIndex = 0, meshCount = meshes.length; meshIndex < meshCount; ++meshIndex) {
-      var mesh = meshes[meshIndex];
-      mesh.instanceCount = count;
-    }
-  }
-};
+  };
+})();
 
 Scene.prototype.draw = function (state) {
-  // this._updateMeshInstanceCounts();
-
   this._uploadModelViewMatrices(state);
 
-  /*
-   * Sort meshes.
-   *
-   * Massive TODO. Depth sorting is kind of a big topic:
-   *  - opaque meshes should be drawn first.
-   *  - opaque meshes should be sorted front-to-back to allow for early-Z rejection.
-   *  - transparent meshes should be sorted back-to-front for correct visuals.
-   *  - due to instanced rendering, a single transparent mesh can be drawn
-   *    in multiple places with a single draw call. How do we sort that within
-   *    the draw call as well as within the list of all transparent-instanced meshes?
-   *    This potentially means splitting a draw call into batches (depth layers?) and
-   *    sorting those against all other transparent-instanced batches. Which might mean
-   *    that perfect sorting + instancing is less feasible than I hoped. Either we give up
-   *    on perfectly sorted visuals or we give up on instancing transparent meshes.
-   */
-
-  this._meshes.sort(Mesh.compare);
+  Mesh.sortMeshes(this._meshes);
 
   // Set some uniforms.
 
@@ -348,16 +326,14 @@ Scene.prototype._updateModelSlots = function () {
     var ent = ents[i];
 
     var modelSlot = ent.sceneModel.slot;
-    var model = this.models[modelSlot];
+    var solidModel = this.models[modelSlot];
 
-    if (model) {
-      // FIXME: this is somehow completely wrong. Entity nodes are rooted at the
-      // SolidModel node. SolidModels are instanced and attached to entity nodes.
-      // It's a recursive clusterfuck right now.
+    if (solidModel) {
+      // This is all very complicated.
 
       var instance = ent.sceneGraph.node.createInstance();
       instance.setParent(this.sceneRoot);
-      model.attachInstance(instance);
+      solidModel.attachInstance(instance);
 
       // Here's the weird part: removeTag changes the array we loop over. So, we adjust.
 

@@ -7,7 +7,7 @@ module.exports = Mesh;
 /**
  * Mesh is a fully specified draw call. That's it.
  */
-function Mesh () {
+function Mesh() {
   if (!(this instanceof Mesh)) {
     return new Mesh();
   }
@@ -85,7 +85,7 @@ Mesh.prototype._setSortBits = function (firstBit, bitLength, value) {
   }
 
   if (bitLength < 1 || firstBit + bitLength > 32) {
-    throw new Error ('Invalid bit length');
+    throw new Error('Invalid bit length');
   }
 
   var bitShift = 31 - (firstBit + bitLength);
@@ -106,7 +106,7 @@ Mesh.prototype.setSortExceptLayer = function (value) {
   this._setSortBits(2, 31 - 2, value);
 };
 
-Mesh.compare = function (mesh0, mesh1) {
+function compareMeshes(mesh0, mesh1) {
   var a = mesh0.sortBits;
   var b = mesh1.sortBits;
 
@@ -129,4 +129,8 @@ Mesh.compare = function (mesh0, mesh1) {
     return +1;
   }
   return 0;
+};
+
+Mesh.sortMeshes = function (meshes) {
+  meshes.sort(compareMeshes);
 };
