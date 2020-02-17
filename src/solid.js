@@ -52,8 +52,8 @@ Solid.genTestMap = function () {
         for (var j = 0; j < 20; ++j) {
             for (var k = 0; k < 20; ++k) {
                 sol.items.push({
-                    p: [0.5 * i, 0.5 * j, 0.5 * k],
-                    t: Solid.ITEM_COIN,
+                    p: [Math.random() * 25, Math.random() * 25, Math.random() * 25],
+                    t: Math.random() > 0.5 ? Solid.ITEM_COIN : (Math.random() > 0.5 ? Solid.ITEM_GROW : Solid.ITEM_SHRINK),
                     n: Math.random() * 15
                 });
             }
