@@ -78,7 +78,7 @@ Parabola.createBackgroundModel = function (pool, entities, sol) {
 Parabola.BACKGROUNDS = [
   // { sol: 'map-back/alien.sol', gradient: 'back/alien' },
   // { sol: 'map-back/city.sol', gradient: 'back/city' },
-  // { sol: 'map-back/clouds.sol', gradient: 'back/land' },
+  { sol: 'map-back/clouds.sol', gradient: 'back/land' },
   // { sol: 'map-back/jupiter.sol', gradient: 'back/space' },
   // { sol: 'map-back/ocean.sol', gradient: 'back/ocean' },
   // { sol: 'map-back/volcano.sol', gradient: 'back/volcano' }
@@ -102,41 +102,41 @@ function init() {
   pool.emitter.on('model', createObjects);
   pool.emitter.on('shader', createObjects);
 
-  // data.fetchSol('geom/back/back.sol')
-  //   .then(function (sol) {
-  //     // Replace the first SOL material with a gradient image.
-  //     sol.mv[0].f = background.gradient;
-  //     return sol;
-  //   })
-  //   .then(function (sol) {
-  //     var model = Parabola.createGradientModel(pool, scene.entities, sol);
-  //     scene.setModel(state, 'gradient', model);
-  //     return model;
-  //   });
+  data.fetchSol('geom/back/back.sol')
+    .then(function (sol) {
+      // Replace the first SOL material with a gradient image.
+      sol.mv[0].f = background.gradient;
+      return sol;
+    })
+    .then(function (sol) {
+      var model = Parabola.createGradientModel(pool, scene.entities, sol);
+      scene.setModel(state, 'gradient', model);
+      return model;
+    });
 
-  // data.fetchSol(background.sol)
-  //   .then(function (sol) {
-  //     var model = Parabola.createBackgroundModel(pool, scene.entities, sol);
-  //     scene.setModel(state, 'background', model);
-  //     return model;
-  //   });
+  data.fetchSol(background.sol)
+    .then(function (sol) {
+      var model = Parabola.createBackgroundModel(pool, scene.entities, sol);
+      scene.setModel(state, 'background', model);
+      return model;
+    });
 
   var modelPaths = {
-    // level: 'map-fwp/adventure.sol',
+    level: 'map-easy/easy.sol',
     coin: 'item/coin/coin.sol',
     coin5: 'item/coin/coin5.sol',
     coin10: 'item/coin/coin10.sol',
-    grow: 'item/grow/grow.sol',
-    shrink: 'item/shrink/shrink.sol',
-    jump: 'geom/beam/beam.sol',
-    ballInner: 'ball/reactor/reactor-inner.sol',
-    ballSolid: 'ball/reactor/reactor-solid.sol',
-    ballOuter: 'ball/reactor/reactor-outer.sol'
+    // grow: 'item/grow/grow.sol',
+    // shrink: 'item/shrink/shrink.sol',
+    // jump: 'geom/beam/beam.sol',
+    // ballInner: 'ball/reactor/reactor-inner.sol',
+    ballSolid: 'ball/basic-ball/basic-ball-solid.sol',
+    // ballOuter: 'ball/reactor/reactor-outer.sol'
   };
 
-  var testSol = Solid.genTestMap();
-  var testModel = SolidModel.fromSol(testSol, scene.entities);
-  scene.setModel('level', testModel);
+  // var testSol = Solid.genTestMap2();
+  // var testModel = SolidModel.fromSol(testSol, scene.entities);
+  // scene.setModel('level', testModel);
 
   for (let modelName in modelPaths) {
     data.fetchSol(modelPaths[modelName])

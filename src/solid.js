@@ -69,3 +69,14 @@ Solid.genTestMap = function () {
 
     return sol;
 };
+
+Solid.genTestMap2 = function () {
+    var sol = Solid.empty();
+
+    sol.balls.push({
+        p: [0, 0, 0],
+        r: 0.25
+    });
+
+    return sol;
+};
