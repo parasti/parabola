@@ -302,6 +302,18 @@ BodyModel.prototype.getMeshesFromSol = function (sol, body) {
     mesh.elemCount = elemsTotal - mesh.elemBase;
 
     meshes.push(mesh);
+
+    // Insert additional draw calls for multi-pass rendering.
+
+    for (var passIndex = 1, passCount = mtrl.flagsPerPass.length; passIndex < passCount; ++passIndex) {
+      // Copy mesh, but set a different pass index.
+
+      var extraMesh = Mesh();
+      Object.assign(extraMesh, mesh);
+      extraMesh.passIndex = passIndex;
+
+      meshes.push(extraMesh);
+    }
   });
 
   meshData.verts = verts.slice(0, vertsTotal * stride);
