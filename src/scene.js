@@ -61,6 +61,8 @@ function Scene() {
   this._reachableInstances = new Map();
   this._instanceMatrices = new Map();
   this._modelSceneNodes = Object.create(null);
+
+  this._maxRenderedMeshes = -1;
 }
 
 Scene.prototype._createWorldEntity = function (modelSlot) {
@@ -307,6 +309,10 @@ Scene.prototype._drawFrame = function (state, meshes) {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
   for (var i = 0, n = meshes.length; i < n; ++i) {
+    if (this._maxRenderedMeshes >= 0 && i >= this._maxRenderedMeshes) {
+      break;
+    }
+
     var mesh = meshes[i];
 
     if (mesh.instanceCount === 0) {

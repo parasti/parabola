@@ -333,6 +333,14 @@ function init() {
       state.enableTextures = this.checked;
     });
   }
+
+  var maxBatchesInput = document.getElementById('max-batches');
+  if (maxBatchesInput) {
+    maxBatchesInput.addEventListener('change', function (event) {
+      this.setAttribute('max', scene._meshes.length);
+      scene._maxRenderedMeshes = this.value;
+    });
+  }
 }
 
 init();
