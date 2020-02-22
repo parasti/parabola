@@ -64,12 +64,14 @@ Mesh.prototype.draw = function (state) {
 
 /*
  * 1111 1111 1111 1111
- * ^^^
- * | |
- * | |
+ * ^ ^^
+ * | ||
+ * | | `- Decal (1 bit)
  * |  `- Blend (1 bit)
  *  `-- Layer (2 bits)
  */
+
+Mesh._MAX_SORT_BITS = 16;
 
 Mesh.LAYER_GRADIENT = 0;
 Mesh.LAYER_BACKGROUND = 1;
@@ -85,12 +87,11 @@ Mesh.prototype.defaultSortBits = function () {
 
   this.setSortLayer(Mesh.LAYER_FOREGROUND);
   this.setSortBlend((flags & Mtrl.DEPTH_WRITE) ? Mesh.BLEND_OPAQUE : Mesh.BLEND_TRANSPARENT);
+  this.setSortDecal(!!(flags & Mtrl.POLYGON_OFFSET));
 };
 
-Mesh._MAX_BITS = 16;
-
 Mesh.prototype._setSortBits = function (firstBit, bitLength, value) {
-  const MAX_BITS = Mesh._MAX_BITS;
+  const MAX_BITS = Mesh._MAX_SORT_BITS;
 
   if (firstBit < 0 || firstBit >= MAX_BITS) {
     throw new Error('Invalid first bit');
@@ -114,8 +115,12 @@ Mesh.prototype.setSortBlend = function (blend) {
   this._setSortBits(2, 1, blend);
 };
 
+Mesh.prototype.setSortDecal = function (decal) {
+  this._setSortBits(3, 1, decal ? 0 : 1);
+}
+
 Mesh.prototype.setSortExceptLayer = function (value) {
-  this._setSortBits(2, Mesh._MAX_BITS - 2, value);
+  this._setSortBits(2, Mesh._MAX_SORT_BITS - 2, value);
 };
 
 function compareMeshes(mesh0, mesh1) {
