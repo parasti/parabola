@@ -13,7 +13,7 @@ function Mtrl(name) {
   }
 
   this.name = name;
-  this.flags = 0;
+  this.flagsPerPass = [ 0 ];
 
   // DOM image
   this._image = null;
@@ -36,7 +36,13 @@ Mtrl.fromSolMtrl = function (sol, mi) {
   var solMtrl = sol.mtrls[mi];
   var mtrl = Mtrl(solMtrl.f);
 
-  mtrl.flags = Mtrl.getFlagsFromSolMtrl(solMtrl);
+  var passCount = getPassCountFromSolMtrl(solMtrl);
+
+  mtrl.flagsPerPass = new Array(passCount);
+
+  for (var passIndex = 0; passIndex < passCount; ++passIndex) {
+    mtrl.flagsPerPass[passIndex] = getFlagsFromSolMtrl(solMtrl, passIndex);
+  }
 
   mtrl.diffuse = solMtrl.d;
   mtrl.ambient = solMtrl.a;
@@ -52,14 +58,29 @@ Mtrl.DEPTH_TEST = (1 << 1);
 Mtrl.BLEND = (1 << 2);
 Mtrl.ADDITIVE = (1 << 3);
 Mtrl.POLYGON_OFFSET = (1 << 4);
-Mtrl.CULL_FACE = (1 << 5);
-Mtrl.CLAMP_T = (1 << 6); // TODO: move this elsewhere.
-Mtrl.CLAMP_S = (1 << 7); // TODO: move this elsewhere.
+Mtrl.CULL_FACE_BACK = (1 << 5);
+Mtrl.CULL_FACE_FRONT = (1 << 6);
+Mtrl.CLAMP_T = (1 << 7); // TODO: move this elsewhere.
+Mtrl.CLAMP_S = (1 << 8); // TODO: move this elsewhere.
+
+/**
+ * Count passes for this material.
+ */
+function getPassCountFromSolMtrl(solMtrl) {
+  var passCount = 1;
+  var solFlags = solMtrl.fl;
+
+  if (solFlags & Solid.MTRL_TWO_SIDED_SEPARATE) {
+    passCount = 2;
+  }
+
+  return passCount;
+}
 
 /**
  * Break down SOL material flags into GL state changes.
  */
-Mtrl.getFlagsFromSolMtrl = function (solMtrl) {
+function getFlagsFromSolMtrl (solMtrl, passIndex = 0) {
   var solFlags = solMtrl.fl;
   var flags = Mtrl.DEPTH_TEST;
 
@@ -79,8 +100,21 @@ Mtrl.getFlagsFromSolMtrl = function (solMtrl) {
     flags |= Mtrl.POLYGON_OFFSET;
   }
 
-  if (!(solFlags & Solid.TWO_SIDED)) {
-    flags |= Mtrl.CULL_FACE;
+  if (solFlags & Solid.MTRL_TWO_SIDED_SEPARATE) {
+    if (passIndex === 0) {
+      // First pass: cull front-facing polygons.
+      flags |= Mtrl.CULL_FACE_FRONT;
+    } else {
+      // Second pass: cull back-facing polygons.
+      flags |= Mtrl.CULL_FACE_BACK;
+    }
+  } else {
+    if (solFlags & Solid.MTRL_TWO_SIDED) {
+      // No culling.
+    } else {
+      // Default culling.
+      flags |= Mtrl.CULL_FACE_BACK;
+    }
   }
 
   if (solFlags & Solid.MTRL_CLAMP_T) {
@@ -102,15 +136,17 @@ Mtrl.prototype.createTexture = function (state) {
     throw Error('Attempted to create material texture without image data')
   }
 
+  var flags = this.flagsPerPass[0]; // TODO
+
   var gl = state.gl;
   var tex = gl.createTexture();
 
   gl.bindTexture(gl.TEXTURE_2D, tex);
 
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S,
-    this.flags & Mtrl.CLAMP_S ? gl.CLAMP_TO_EDGE : gl.REPEAT);
+    flags & Mtrl.CLAMP_S ? gl.CLAMP_TO_EDGE : gl.REPEAT);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T,
-    this.flags & Mtrl.CLAMP_T ? gl.CLAMP_TO_EDGE : gl.REPEAT);
+    flags & Mtrl.CLAMP_T ? gl.CLAMP_TO_EDGE : gl.REPEAT);
 
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
@@ -125,7 +161,7 @@ Mtrl.prototype.createTexture = function (state) {
 /*
  * Apply material state.
  */
-Mtrl.prototype.apply = function (state) {
+Mtrl.prototype.apply = function (state, passIndex = 0) {
   var mtrl = this;
   var gl = state.gl;
 
@@ -146,31 +182,33 @@ Mtrl.prototype.apply = function (state) {
   uniforms.uEmissive.value = mtrl.emission;
   uniforms.uShininess.value = mtrl.shininess;
 
-  if (mtrl.flags & Mtrl.DEPTH_WRITE) {
+  var flags = mtrl.flagsPerPass[passIndex];
+
+  if (flags & Mtrl.DEPTH_WRITE) {
     state.depthMask(true);
   } else {
     state.depthMask(false);
   }
 
-  if (mtrl.flags & Mtrl.DEPTH_TEST) {
+  if (flags & Mtrl.DEPTH_TEST) {
     state.enable(gl.DEPTH_TEST);
   } else {
     state.disable(gl.DEPTH_TEST);
   }
 
-  if (mtrl.flags & Mtrl.BLEND) {
+  if (flags & Mtrl.BLEND) {
     state.enable(gl.BLEND);
   } else {
     state.disable(gl.BLEND);
   }
 
-  if (mtrl.flags & Mtrl.ADDITIVE) {
+  if (flags & Mtrl.ADDITIVE) {
     state.blendFunc(gl.SRC_ALPHA, gl.ONE);
   } else {
     state.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
   }
 
-  if (mtrl.flags & Mtrl.POLYGON_OFFSET) {
+  if (flags & Mtrl.POLYGON_OFFSET) {
     state.enable(gl.POLYGON_OFFSET_FILL);
     state.polygonOffset(-1.0, -2.0);
   } else {
@@ -178,8 +216,9 @@ Mtrl.prototype.apply = function (state) {
     state.disable(gl.POLYGON_OFFSET_FILL);
   }
 
-  if (mtrl.flags & Mtrl.CULL_FACE) {
+  if ((flags & Mtrl.CULL_FACE_BACK) || (flags & Mtrl.CULL_FACE_FRONT)) {
     state.enable(gl.CULL_FACE);
+    state.cullFace((flags & Mtrl.CULL_FACE_FRONT) ? gl.FRONT : gl.BACK);
   } else {
     state.disable(gl.CULL_FACE);
   }

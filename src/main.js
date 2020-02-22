@@ -39,8 +39,8 @@ Parabola.createGradientModel = function (pool, entities, sol) {
   // Create the material object.
   var gradMtrl = Mtrl.fromSolMtrl(sol, 0);
   // Disable depth testing and depth writes on the material.
-  gradMtrl.flags &= ~Mtrl.DEPTH_TEST;
-  gradMtrl.flags &= ~Mtrl.DEPTH_WRITE;
+  gradMtrl.flagsPerPass[0] &= ~Mtrl.DEPTH_TEST;
+  gradMtrl.flagsPerPass[0] &= ~Mtrl.DEPTH_WRITE;
   // Cache it manually to keep our flag changes from being overwritten.
   pool._cacheMtrl(gradMtrl);
 
@@ -140,6 +140,14 @@ function init() {
 
   for (let modelName in modelPaths) {
     data.fetchSol(modelPaths[modelName])
+      .then(function (sol) {
+        if (sol.dicts.drawback === '1') {
+          for (var mi = 0, mc = sol.mtrls.length; mi < mc; ++mi) {
+            sol.mtrls[mi].fl |= Solid.MTRL_TWO_SIDED_SEPARATE;
+          }
+        }
+        return sol;
+      })
       .then(function (sol) {
         // Hack.
         if (modelName === 'level') {

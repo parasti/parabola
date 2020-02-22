@@ -15,6 +15,9 @@ function Mesh() {
   // Texture/state
   this.mtrl = null;
 
+  // Material pass index.
+  this.passIndex = 0;
+
   // Shader program
   this.shader = null;
 
@@ -45,7 +48,7 @@ Mesh.prototype.draw = function (state) {
   meshData.bindVertexArray(state);
 
   // Apply material state.
-  mtrl.apply(state);
+  mtrl.apply(state, this.passIndex);
 
   // Bind shader.
   shader.use(state);
@@ -60,7 +63,12 @@ Mesh.prototype.draw = function (state) {
 };
 
 /*
- * TODO
+ * 1111 1111 1111 1111
+ * ^^^
+ * | |
+ * | |
+ * |  `- Blend (1 bit)
+ *  `-- Layer (2 bits)
  */
 
 Mesh.LAYER_GRADIENT = 0;
@@ -73,22 +81,26 @@ Mesh.BLEND_TRANSPARENT = 1;
 Mesh.prototype.defaultSortBits = function () {
   var mesh = this;
   var mtrl = mesh.mtrl;
-  var flags = mtrl.flags;
+  var flags = mtrl.flagsPerPass[this.passIndex];
 
   this.setSortLayer(Mesh.LAYER_FOREGROUND);
   this.setSortBlend((flags & Mtrl.DEPTH_WRITE) ? Mesh.BLEND_OPAQUE : Mesh.BLEND_TRANSPARENT);
 };
 
+Mesh._MAX_BITS = 16;
+
 Mesh.prototype._setSortBits = function (firstBit, bitLength, value) {
-  if (firstBit < 0 || firstBit > 31) {
+  const MAX_BITS = Mesh._MAX_BITS;
+
+  if (firstBit < 0 || firstBit >= MAX_BITS) {
     throw new Error('Invalid first bit');
   }
 
-  if (bitLength < 1 || firstBit + bitLength > 32) {
+  if (bitLength < 1 || firstBit + bitLength > MAX_BITS) {
     throw new Error('Invalid bit length');
   }
 
-  var bitShift = 31 - (firstBit + bitLength);
+  var bitShift = MAX_BITS - (firstBit + bitLength);
   var bitMask = Math.pow(2, bitLength) - 1;
 
   this.sortBits = (this.sortBits & ~(bitMask << bitShift)) | (value & bitMask) << bitShift;
@@ -103,7 +115,7 @@ Mesh.prototype.setSortBlend = function (blend) {
 };
 
 Mesh.prototype.setSortExceptLayer = function (value) {
-  this._setSortBits(2, 31 - 2, value);
+  this._setSortBits(2, Mesh._MAX_BITS - 2, value);
 };
 
 function compareMeshes(mesh0, mesh1) {

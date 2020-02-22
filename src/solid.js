@@ -13,6 +13,13 @@ var Solid = module.exports = require('neverball-solid');
 Solid.BILL_BACK = 0x10;
 
 /**
+ * Material flag for a two-pass back-face-first/front-face-second render.
+ *
+ * Not in Neverball.
+ */
+Solid.MTRL_TWO_SIDED_SEPARATE = (1 << 12);
+
+/**
  * Create an empty SOL.
  */
 Solid.empty = function () {

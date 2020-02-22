@@ -31,6 +31,7 @@ function GLState(canvas) {
     blendSrcRGB: gl.getParameter(gl.BLEND_SRC_RGB),
     blendDstRGB: gl.getParameter(gl.BLEND_DST_RGB),
     depthMask: gl.getParameter(gl.DEPTH_WRITEMASK),
+    cullFaceMode: gl.getParameter(gl.CULL_FACE_MODE),
     polygonOffsetFactor: gl.getParameter(gl.POLYGON_OFFSET_FACTOR),
     polygonOffsetUnits: gl.getParameter(gl.POLYGON_OFFSET_UNITS)
   };
@@ -51,6 +52,13 @@ function GLState(canvas) {
   };
 
   this.createDefaultObjects();
+}
+
+GLState.prototype.cullFace = function (mode) {
+  if (this.shadowState.cullFaceMode !== mode) {
+    this.gl.cullFace(mode);
+    this.shadowState.cullFaceMode = mode;
+  }
 }
 
 GLState.prototype.depthMask = function (mask) {
