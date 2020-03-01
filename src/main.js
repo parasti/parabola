@@ -76,9 +76,9 @@ Parabola.createBackgroundModel = function (pool, entities, sol) {
 }
 
 Parabola.BACKGROUNDS = [
-  // { sol: 'map-back/alien.sol', gradient: 'back/alien' },
+  { sol: 'map-back/alien.sol', gradient: 'back/alien' },
   // { sol: 'map-back/city.sol', gradient: 'back/city' },
-  { sol: 'map-back/clouds.sol', gradient: 'back/land' },
+  // { sol: 'map-back/clouds.sol', gradient: 'back/land' },
   // { sol: 'map-back/jupiter.sol', gradient: 'back/space' },
   // { sol: 'map-back/ocean.sol', gradient: 'back/ocean' },
   // { sol: 'map-back/volcano.sol', gradient: 'back/volcano' }
@@ -122,7 +122,7 @@ function init() {
     });
 
   var modelPaths = {
-    level: 'map-easy/easy.sol',
+    level: 'map-fwp/adventure.sol',
     coin: 'item/coin/coin.sol',
     coin5: 'item/coin/coin5.sol',
     coin10: 'item/coin/coin10.sol',
@@ -340,6 +340,13 @@ function init() {
       this.setAttribute('max', scene._meshes.length);
       scene._maxRenderedMeshes = this.value;
     });
+  }
+
+  var sceneTimeInput = document.getElementById('scene-time');
+  if (sceneTimeInput) {
+    sceneTimeInput.addEventListener('change', function (event) {
+      scene.fixedTime = parseFloat(this.value);
+    })
   }
 }
 

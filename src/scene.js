@@ -22,6 +22,8 @@ function Scene() {
   this.view = View();
   this.time = 0.0;
 
+  this.fixedTime = -1.0;
+
   // Named SolidModel slots (a SolidModel can be in multiple slots).
   this.models = {
     gradient: null,
@@ -232,9 +234,18 @@ Scene.prototype.step = function (dt) {
   var scene = this;
   var view = this.view;
 
-  scene.time += dt;
+  if (scene.fixedTime >= 0.0) {
+    var fakeDt = scene.fixedTime - scene.time;
 
-  this.updateSystems(dt);
+    scene.time = scene.fixedTime;
+
+    this.updateSystems(fakeDt);
+  } else {
+    scene.time += dt;
+
+    this.updateSystems(dt);
+  }
+
 
   view.step(dt);
 };

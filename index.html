@@ -27,10 +27,11 @@
 
     #canvas {
       position: fixed;
-      top: 0;
-      left: 0;
+      top: 50%;
+      left: 50%;
       width: 100vw;
       height: 100vh;
+      transform: translate(-50%, -50%);
     }
 
     #overlay {
@@ -72,20 +73,23 @@
       JavaScript and an HTML5 canvas.
     </canvas>
     <div id="overlay">
-      <label for="show-overlay"><span>Show overlay</span></label>
-      <input id="show-overlay" type="checkbox" checked>
+      <form autocomplete="off">
+        <label for="show-overlay"><span>Show overlay</span></label>
+        <input id="show-overlay" type="checkbox" checked>
 
-      <div class="overlay-content">
-        <div class="overlay-input"><label>Fullscreen <input id="toggle-fullscreen" type="checkbox"></label></div>
-        <div class="overlay-input"><label for="set-view-position">Fly-by <input id="set-view-position" type="range" min="-1" max="1" step="0.005" value="1"></label></div>
-        <div class="overlay-input"><label>Textures <input id="toggle-textures" type="checkbox" checked></label></div>
-        <div class="overlay-input"><label>Max batches <input id="max-batches" type="number" min="-1" step="1" value="-1"></label></div>
-        <div class="overlay-input">
-          Models:
-          <ul id="model-list">
-          </ul>
+        <div class="overlay-content">
+          <div class="overlay-input"><label>Fullscreen <input id="toggle-fullscreen" type="checkbox"></label></div>
+          <div class="overlay-input"><label for="set-view-position">Fly-by <input id="set-view-position" type="range" min="-1" max="1" step="0.005" value="1"></label></div>
+          <div class="overlay-input"><label>Textures <input id="toggle-textures" type="checkbox" checked></label></div>
+          <div class="overlay-input"><label>Max batches <input id="max-batches" type="number" min="-1" step="1" value="-1"></label></div>
+          <div class="overlay-input"><label>Scene time <input id="scene-time" type="number" step="0.100" value="-1"></label></div>
+          <div class="overlay-input">
+            Models:
+            <ul id="model-list">
+            </ul>
+          </div>
         </div>
-      </div>
+      </form>
     </div>
   </div>
   <script src="parabola.js"></script>
