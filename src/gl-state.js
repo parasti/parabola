@@ -43,6 +43,7 @@ function GLState(canvas) {
   this.uniforms = {
     uTexture: Uniform.i(),
     ProjectionMatrix: Uniform.mat4(),
+    ViewMatrix: Uniform.mat4(),
     uDiffuse: Uniform.vec4(),
     uAmbient: Uniform.vec4(),
     uSpecular: Uniform.vec4(),

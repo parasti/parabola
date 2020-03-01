@@ -1,4 +1,5 @@
 uniform mat4 ProjectionMatrix;
+uniform mat4 ViewMatrix;
 
 attribute vec3 aPosition;
 attribute vec3 aNormal;
@@ -47,9 +48,10 @@ varying vec4 vLightColor;
 vec4 calcLight(Light light, vec4 eyeNormal) {
   // Assume directional lights.
   // TODO specular
+  vec4 lightPos = ViewMatrix * light.position;
   return
     uAmbient * light.ambient +
-    max(0.0, dot(eyeNormal, normalize(light.position))) * uDiffuse * light.diffuse;
+    max(0.0, dot(eyeNormal, normalize(lightPos))) * uDiffuse * light.diffuse;
 }
 #endif // M_LIT
 

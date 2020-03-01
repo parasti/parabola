@@ -297,6 +297,7 @@ Scene.prototype.draw = function (state) {
   // Set some uniforms.
 
   state.uniforms.ProjectionMatrix.value = this.view._projectionMatrix;
+  state.uniforms.ViewMatrix.value = this.view.getMatrix();
 
   // Draw stuff.
 
