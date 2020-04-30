@@ -1,6 +1,6 @@
 'use strict';
 
-var Parabola = module.exports = {};
+module.exports = Parabola;
 
 var screenfull = require('screenfull');
 var data = require('./data.js');
@@ -12,6 +12,10 @@ var SolidModel = require('./solid-model.js');
 var Mtrl = require('./mtrl.js');
 var Mesh = require('./mesh.js');
 var Solid = require('./solid.js');
+
+function Parabola(opts) {
+
+}
 
 var getDeltaTime = (function () {
   var lastTime = 0.0;
@@ -75,13 +79,17 @@ Parabola.createBackgroundModel = function (pool, entities, sol) {
   return model;
 }
 
-Parabola.BACKGROUNDS = [
-  { sol: 'map-back/alien.sol', gradient: 'back/alien' },
-  // { sol: 'map-back/city.sol', gradient: 'back/city' },
-  // { sol: 'map-back/clouds.sol', gradient: 'back/land' },
-  // { sol: 'map-back/jupiter.sol', gradient: 'back/space' },
-  // { sol: 'map-back/ocean.sol', gradient: 'back/ocean' },
-  // { sol: 'map-back/volcano.sol', gradient: 'back/volcano' }
+Parabola.backgrounds = {
+  'alien': { sol: 'map-back/alien.sol', gradient: 'back/alien' },
+  'city': { sol: 'map-back/city.sol', gradient: 'back/city' },
+  'clouds': { sol: 'map-back/clouds.sol', gradient: 'back/land' },
+  'jupiter': { sol: 'map-back/jupiter.sol', gradient: 'back/space' },
+  'ocean': { sol: 'map-back/ocean.sol', gradient: 'back/ocean' },
+  'volcano': { sol: 'map-back/volcano.sol', gradient: 'back/volcano' },
+}
+
+Parabola.backgroundNames = [
+  'alien', 'city', 'clouds', 'jupiter', 'ocean', 'volcano',
 ];
 
 function init() {
@@ -92,7 +100,8 @@ function init() {
   var gl = state.gl;
   var solFile = null;
 
-  var background = Parabola.BACKGROUNDS[Math.floor(Math.random() * (Parabola.BACKGROUNDS.length))];
+  var backgroundName = Parabola.backgroundNames[Math.floor(Math.random() * (Parabola.backgroundNames.length))];
+  var background = Parabola.backgrounds[backgroundName];
 
   function createObjects(res) {
     res.createObjects(state);
