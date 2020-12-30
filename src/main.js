@@ -100,7 +100,7 @@ function init() {
   var gl = state.gl;
   var solFile = null;
 
-  var backgroundName = Parabola.backgroundNames[Math.floor(Math.random() * (Parabola.backgroundNames.length))];
+  var backgroundName = 'alien';//Parabola.backgroundNames[Math.floor(Math.random() * (Parabola.backgroundNames.length))];
   var background = Parabola.backgrounds[backgroundName];
 
   function createObjects(res) {
@@ -135,9 +135,9 @@ function init() {
     coin: 'item/coin/coin.sol',
     coin5: 'item/coin/coin5.sol',
     coin10: 'item/coin/coin10.sol',
-    // grow: 'item/grow/grow.sol',
-    // shrink: 'item/shrink/shrink.sol',
-    // jump: 'geom/beam/beam.sol',
+    grow: 'item/grow/grow.sol',
+    shrink: 'item/shrink/shrink.sol',
+    jump: 'geom/beam/beam.sol',
     // ballInner: 'ball/reactor/reactor-inner.sol',
     ballSolid: 'ball/basic-ball/basic-ball-solid.sol',
     // ballOuter: 'ball/reactor/reactor-outer.sol'
