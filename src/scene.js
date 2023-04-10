@@ -6,7 +6,7 @@ var mat4 = require('gl-matrix').mat4;
 
 var SceneNode = require('./scene-node.js');
 var View = require('./view.js');
-var Mesh = require('./mesh.js');
+var Batch = require('./batch.js');
 var EC = require('./entity-components.js');
 var utils = require('./utils.js');
 
@@ -54,7 +54,7 @@ function Scene() {
 
   // TODO
   this._bodyModels = [];
-  this._meshes = [];
+  this._batches = [];
 
   // TODO this is a tough one.
   // Key: BodyModel
@@ -64,7 +64,7 @@ function Scene() {
   this._instanceMatrices = new Map();
   this._modelSceneNodes = Object.create(null);
 
-  this._maxRenderedMeshes = -1;
+  this._maxRenderedBatches = -1;
 }
 
 Scene.prototype._createWorldEntity = function (modelSlot) {
@@ -106,9 +106,9 @@ Scene.prototype._updateReachableInstances = function () {
       }
     }
 
-    for (var meshIndex = 0, meshCount = bodyModel.meshes.length; meshIndex < meshCount; ++meshIndex) {
-      var mesh = bodyModel.meshes[meshIndex];
-      mesh.instanceCount = reachableInstances.length;
+    for (var batchIndex = 0, batchCount = bodyModel.batches.length; batchIndex < batchCount; ++batchIndex) {
+      var batch = bodyModel.batches[batchIndex];
+      batch.instanceCount = reachableInstances.length;
     }
 
     this._reachableInstances.set(bodyModel, reachableInstances);
@@ -124,7 +124,7 @@ Scene.prototype._addBodyModels = function (solidModel) {
       if (this._bodyModels.indexOf(bodyModel) < 0) {
         this._bodyModels.push(bodyModel);
 
-        this._addMeshes(bodyModel.meshes);
+        this._addBatches(bodyModel.batches);
       }
     }
   }
@@ -140,23 +140,23 @@ Scene.prototype._removeBodyModels = function (solidModel) {
       if (index >= 0) {
         this._bodyModels.splice(index, 1);
 
-        this._removeMeshes(bodyModel.meshes);
+        this._removeBatches(bodyModel.batches);
       }
     }
   }
 }
 
-Scene.prototype._addMeshes = function (meshes) {
-  Array.prototype.push.apply(this._meshes, meshes);
+Scene.prototype._addBatches = function (batches) {
+  Array.prototype.push.apply(this._batches, batches);
 }
 
-Scene.prototype._removeMeshes = function (meshes) {
-  for (var i = 0, n = meshes.length; i < n; ++i) {
-    var mesh = meshes[i];
-    var index = this._meshes.indexOf(mesh);
+Scene.prototype._removeBatches = function (batches) {
+  for (var i = 0, n = batches.length; i < n; ++i) {
+    var batch = batches[i];
+    var index = this._batches.indexOf(batch);
 
     if (index >= 0) {
-      this._meshes.splice(index, 1);
+      this._batches.splice(index, 1);
     }
   }
 }
@@ -303,7 +303,7 @@ Scene.prototype._uploadModelViewMatrices = (function () {
 Scene.prototype.draw = function (state) {
   this._uploadModelViewMatrices(state);
 
-  Mesh.sortMeshes(this._meshes);
+  Batch.sortBatches(this._batches);
 
   // Set some uniforms.
 
@@ -312,26 +312,26 @@ Scene.prototype.draw = function (state) {
 
   // Draw stuff.
 
-  this._drawFrame(state, this._meshes);
+  this._drawFrame(state, this._batches);
 };
 
-Scene.prototype._drawFrame = function (state, meshes) {
+Scene.prototype._drawFrame = function (state, batches) {
   var gl = state.gl;
 
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-  for (var i = 0, n = meshes.length; i < n; ++i) {
-    if (this._maxRenderedMeshes >= 0 && i >= this._maxRenderedMeshes) {
+  for (var i = 0, n = batches.length; i < n; ++i) {
+    if (this._maxRenderedBatches >= 0 && i >= this._maxRenderedBatches) {
       break;
     }
 
-    var mesh = meshes[i];
+    var batch = batches[i];
 
-    if (mesh.instanceCount === 0) {
+    if (batch.instanceCount === 0) {
       break;
     }
 
-    mesh.draw(state);
+    batch.draw(state);
   }
 };
 

@@ -1,7 +1,7 @@
 'use strict';
 
 var SceneNode = require('./scene-node.js');
-var Mesh = require('./mesh.js');
+var Batch = require('./batch.js');
 var MeshData = require('./mesh-data.js');
 var Solid = require('./solid.js');
 
@@ -10,7 +10,7 @@ module.exports = BodyModel;
 var _modelIndex = 0;
 
 /**
- * BodyModel is vertex data + a bunch of draw calls (meshes) + transform matrices (scene node).
+ * BodyModel is vertex data + a bunch of draw calls (batches) + transform matrices (scene node).
  */
 function BodyModel () {
   if (!(this instanceof BodyModel)) {
@@ -21,7 +21,7 @@ function BodyModel () {
   this.id = 'default_' + (_modelIndex++).toString();
 
   // Also known as draw calls.
-  this.meshes = null;
+  this.batches = null;
 
   // Also known as a vertex array object.
   this.meshData = MeshData();
@@ -57,7 +57,7 @@ BodyModel.fromSolBody = function (sol, bodyIndex) {
 
   model.id = BodyModel.getIdFromSolBody(sol, bodyIndex);
 
-  model.getMeshesFromSol(sol, solBody);
+  model.getBatchesFromSol(sol, solBody);
 
   return model;
 };
@@ -82,7 +82,7 @@ BodyModel.fromSolBill = function (sol, billIndex) {
   var meshData = model.meshData;
   var verts = meshData.verts = new Float32Array(4 * stride); // 4 vertices
   var elems = meshData.elems = new Uint16Array(2 * 3); // 2 triangles
-  var meshes = model.meshes = [];
+  var batches = model.batches = [];
 
   function addBillVert (i, x, y, s, t) {
     // position
@@ -122,25 +122,25 @@ BodyModel.fromSolBill = function (sol, billIndex) {
   elems[4] = 3;
   elems[5] = 2;
 
-  // TODO create/get mesh for billboard
+  // TODO create/get batch for billboard
 
-  var mesh = Mesh();
+  var batch = Batch();
 
-  mesh.mtrl = sol._materials[bill.mi];
-  mesh.shader = sol._shaders[bill.mi];
-  mesh.meshData = meshData;
-  mesh.elemBase = 0;
-  mesh.elemCount = 6;
+  batch.mtrl = sol._materials[bill.mi];
+  batch.shader = sol._shaders[bill.mi];
+  batch.meshData = meshData;
+  batch.elemBase = 0;
+  batch.elemCount = 6;
 
   // Sort background billboards by order of appearance, and nothing else.
   if (bill.fl & Solid.BILL_BACK) {
-    mesh.setSortLayer(Mesh.LAYER_BACKGROUND);
-    mesh.setSortExceptLayer(billIndex);
+    batch.setSortLayer(Batch.LAYER_BACKGROUND);
+    batch.setSortExceptLayer(billIndex);
   } else {
-    mesh.defaultSortBits();
+    batch.defaultSortBits();
   }
 
-  meshes.push(mesh);
+  batches.push(batch);
 
   return model;
 };
@@ -227,9 +227,9 @@ function getVertAttribs (verts, pos, sol, offs) {
 }
 
 /**
- * Create meshes for a SOL body, one mesh per material.
+ * Create batches for a SOL body, one batch per material.
  */
-BodyModel.prototype.getMeshesFromSol = function (sol, body) {
+BodyModel.prototype.getBatchesFromSol = function (sol, body) {
   var model = this;
 
   const stride = (3 + 3 + 2); // p + n + t
@@ -248,7 +248,7 @@ BodyModel.prototype.getMeshesFromSol = function (sol, body) {
   var elemsTotal = 0;
 
   var meshData = model.meshData;
-  var meshes = [];
+  var batches = [];
 
   // Add a single SOL vertex to the vertex store.
   function addVert (sol, offs) {
@@ -257,20 +257,20 @@ BodyModel.prototype.getMeshesFromSol = function (sol, body) {
     vertsTotal++;
   }
 
-  // Create a mesh (draw call) for each material, using forEach to iterate over a sparse array.
+  // Create a batch (draw call) for each material, using forEach to iterate over a sparse array.
   geomsByMtrl.forEach(function (geoms, mi) {
     var mtrl = sol._materials[mi];
     var shader = sol._shaders[mi];
 
-    var mesh = Mesh();
+    var batch = Batch();
 
-    mesh.mtrl = mtrl;
-    mesh.shader = shader;
-    mesh.meshData = meshData;
-    mesh.elemBase = elemsTotal;
-    mesh.elemCount = 0;
+    batch.mtrl = mtrl;
+    batch.shader = shader;
+    batch.meshData = meshData;
+    batch.elemBase = elemsTotal;
+    batch.elemCount = 0;
 
-    mesh.defaultSortBits();
+    batch.defaultSortBits();
 
     var offsToVert = [];
 
@@ -292,27 +292,27 @@ BodyModel.prototype.getMeshesFromSol = function (sol, body) {
         addVert(sol, sol.ov[geom.ok]);
       }
 
-      elems[mesh.elemBase + i * 3 + 0] = offsToVert[geom.oi];
-      elems[mesh.elemBase + i * 3 + 1] = offsToVert[geom.oj];
-      elems[mesh.elemBase + i * 3 + 2] = offsToVert[geom.ok];
+      elems[batch.elemBase + i * 3 + 0] = offsToVert[geom.oi];
+      elems[batch.elemBase + i * 3 + 1] = offsToVert[geom.oj];
+      elems[batch.elemBase + i * 3 + 2] = offsToVert[geom.ok];
 
       elemsTotal += 3;
     }
 
-    mesh.elemCount = elemsTotal - mesh.elemBase;
+    batch.elemCount = elemsTotal - batch.elemBase;
 
-    meshes.push(mesh);
+    batches.push(batch);
 
     // Insert additional draw calls for multi-pass rendering.
 
     for (var passIndex = 1, passCount = mtrl.flagsPerPass.length; passIndex < passCount; ++passIndex) {
-      // Copy mesh, but set a different pass index.
+      // Copy batch, but set a different pass index.
 
-      var extraMesh = Mesh();
-      Object.assign(extraMesh, mesh);
-      extraMesh.passIndex = passIndex;
+      var extraBatch = Batch();
+      Object.assign(extraBatch, batch);
+      extraBatch.passIndex = passIndex;
 
-      meshes.push(extraMesh);
+      batches.push(extraBatch);
     }
   });
 
@@ -320,5 +320,5 @@ BodyModel.prototype.getMeshesFromSol = function (sol, body) {
   meshData.elems = elems;
 
   model.meshData = meshData;
-  model.meshes = meshes;
+  model.batches = batches;
 };

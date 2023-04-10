@@ -9,7 +9,7 @@ var GLPool = require('./gl-pool.js');
 var Scene = require('./scene.js');
 var SolidModel = require('./solid-model.js');
 var Mtrl = require('./mtrl.js');
-var Mesh = require('./mesh.js');
+var Batch = require('./batch.js');
 var Solid = require('./solid.js');
 
 function Parabola(opts) {
@@ -58,7 +58,7 @@ Parabola.createGradientModel = function (pool, entities, sol) {
   model.sceneNode.setLocalMatrix([0, 0, 0], [0, 0, 0, 1], [-BACK_DIST, BACK_DIST, -BACK_DIST]);
 
   // Set the sort layer for the entire model.
-  model.setMeshSortLayer(Mesh.LAYER_GRADIENT);
+  model.setBatchSortLayer(Batch.LAYER_GRADIENT);
 
   return model;
 };
@@ -74,7 +74,7 @@ Parabola.createBackgroundModel = function (pool, entities, sol) {
 
   pool.cacheSol(sol);
   var model = SolidModel.fromSol(sol, entities);
-  model.setMeshSortLayer(Mesh.LAYER_BACKGROUND);
+  model.setBatchSortLayer(Batch.LAYER_BACKGROUND);
   return model;
 }
 
@@ -350,8 +350,8 @@ function init() {
   var maxBatchesInput = document.getElementById('max-batches');
   if (maxBatchesInput) {
     maxBatchesInput.addEventListener('change', function (event) {
-      this.setAttribute('max', scene._meshes.length);
-      scene._maxRenderedMeshes = this.value;
+      this.setAttribute('max', scene._batches.length);
+      scene._maxRenderedBatches = this.value;
     });
   }
 

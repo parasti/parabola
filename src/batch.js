@@ -2,14 +2,14 @@
 
 var Mtrl = require('./mtrl.js');
 
-module.exports = Mesh;
+module.exports = Batch;
 
 /**
- * Mesh is a fully specified draw call. That's it.
+ * Batch is a fully specified draw call. That's it.
  */
-function Mesh() {
-  if (!(this instanceof Mesh)) {
-    return new Mesh();
+function Batch() {
+  if (!(this instanceof Batch)) {
+    return new Batch();
   }
 
   // Texture/state
@@ -31,18 +31,18 @@ function Mesh() {
   // Value passed to DrawElementsInstanced.
   this.instanceCount = 0;
 
-  // Mesh sort order/draw order.
+  // Batch sort order/draw order.
   this.sortBits = 0;
 }
 
-Mesh.prototype.draw = function (state) {
+Batch.prototype.draw = function (state) {
   var gl = state.gl;
 
-  var mesh = this;
-  var mtrl = mesh.mtrl;
-  var shader = mesh.shader;
-  var meshData = mesh.meshData;
-  var count = mesh.instanceCount;
+  var batch = this;
+  var mtrl = batch.mtrl;
+  var shader = batch.shader;
+  var meshData = batch.meshData;
+  var count = batch.instanceCount;
 
   // Bind vertex array object.
   meshData.bindVertexArray(state);
@@ -57,7 +57,7 @@ Mesh.prototype.draw = function (state) {
   shader.uploadUniforms(state);
 
   // PSA: glDrawElements offset is in bytes.
-  state.drawElementsInstanced(gl.TRIANGLES, mesh.elemCount, gl.UNSIGNED_SHORT, mesh.elemBase * 2, count);
+  state.drawElementsInstanced(gl.TRIANGLES, batch.elemCount, gl.UNSIGNED_SHORT, batch.elemBase * 2, count);
 
   state.bindVertexArray(null);
 };
@@ -71,27 +71,27 @@ Mesh.prototype.draw = function (state) {
  *  `-- Layer (2 bits)
  */
 
-Mesh._MAX_SORT_BITS = 16;
+Batch._MAX_SORT_BITS = 16;
 
-Mesh.LAYER_GRADIENT = 0;
-Mesh.LAYER_BACKGROUND = 1;
-Mesh.LAYER_FOREGROUND = 2;
+Batch.LAYER_GRADIENT = 0;
+Batch.LAYER_BACKGROUND = 1;
+Batch.LAYER_FOREGROUND = 2;
 
-Mesh.BLEND_OPAQUE = 0;
-Mesh.BLEND_TRANSPARENT = 1;
+Batch.BLEND_OPAQUE = 0;
+Batch.BLEND_TRANSPARENT = 1;
 
-Mesh.prototype.defaultSortBits = function () {
-  var mesh = this;
-  var mtrl = mesh.mtrl;
+Batch.prototype.defaultSortBits = function () {
+  var batch = this;
+  var mtrl = batch.mtrl;
   var flags = mtrl.flagsPerPass[this.passIndex];
 
-  this.setSortLayer(Mesh.LAYER_FOREGROUND);
-  this.setSortBlend((flags & Mtrl.DEPTH_WRITE) ? Mesh.BLEND_OPAQUE : Mesh.BLEND_TRANSPARENT);
+  this.setSortLayer(Batch.LAYER_FOREGROUND);
+  this.setSortBlend((flags & Mtrl.DEPTH_WRITE) ? Batch.BLEND_OPAQUE : Batch.BLEND_TRANSPARENT);
   this.setSortDecal(!!(flags & Mtrl.POLYGON_OFFSET));
 };
 
-Mesh.prototype._setSortBits = function (firstBit, bitLength, value) {
-  const MAX_BITS = Mesh._MAX_SORT_BITS;
+Batch.prototype._setSortBits = function (firstBit, bitLength, value) {
+  const MAX_BITS = Batch._MAX_SORT_BITS;
 
   if (firstBit < 0 || firstBit >= MAX_BITS) {
     throw new Error('Invalid first bit');
@@ -107,32 +107,32 @@ Mesh.prototype._setSortBits = function (firstBit, bitLength, value) {
   this.sortBits = (this.sortBits & ~(bitMask << bitShift)) | (value & bitMask) << bitShift;
 }
 
-Mesh.prototype.setSortLayer = function (layer) {
+Batch.prototype.setSortLayer = function (layer) {
   this._setSortBits(0, 2, layer);
 };
 
-Mesh.prototype.setSortBlend = function (blend) {
+Batch.prototype.setSortBlend = function (blend) {
   this._setSortBits(2, 1, blend);
 };
 
-Mesh.prototype.setSortDecal = function (decal) {
+Batch.prototype.setSortDecal = function (decal) {
   this._setSortBits(3, 1, decal ? 0 : 1);
 }
 
-Mesh.prototype.setSortExceptLayer = function (value) {
-  this._setSortBits(2, Mesh._MAX_SORT_BITS - 2, value);
+Batch.prototype.setSortExceptLayer = function (value) {
+  this._setSortBits(2, Batch._MAX_SORT_BITS - 2, value);
 };
 
-function compareMeshes(mesh0, mesh1) {
-  if (mesh0.instanceCount === 0) {
+function compareBatches(batch0, batch1) {
+  if (batch0.instanceCount === 0) {
     return +1;
   }
-  if (mesh1.instanceCount === 0) {
+  if (batch1.instanceCount === 0) {
     return -1;
   }
 
-  var a = mesh0.sortBits;
-  var b = mesh1.sortBits;
+  var a = batch0.sortBits;
+  var b = batch1.sortBits;
 
   if (a < b) {
     return -1;
@@ -143,8 +143,8 @@ function compareMeshes(mesh0, mesh1) {
 
   // Work around unstable sort on Chrome.
 
-  a = mesh0.mtrl.id;
-  b = mesh1.mtrl.id;
+  a = batch0.mtrl.id;
+  b = batch1.mtrl.id;
 
   if (a < b) {
     return -1;
@@ -155,6 +155,6 @@ function compareMeshes(mesh0, mesh1) {
   return 0;
 };
 
-Mesh.sortMeshes = function (meshes) {
-  meshes.sort(compareMeshes);
+Batch.sortBatches = function (batches) {
+  batches.sort(compareBatches);
 };

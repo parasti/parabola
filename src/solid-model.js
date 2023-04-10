@@ -198,17 +198,17 @@ SolidModel.fromSol = function (sol, entities) {
   return solidModel;
 };
 
-SolidModel.prototype.setMeshSortLayer = function (layer) {
+SolidModel.prototype.setBatchSortLayer = function (layer) {
   var bodyModels = this.models;
 
   for (var i = 0, n = bodyModels.length; i < n; ++i) {
     var bodyModel = bodyModels[i];
-    var meshes = bodyModel.meshes;
+    var batches = bodyModel.batches;
 
-    for (var j = 0, m = meshes.length; j < m; ++j) {
-      var mesh = meshes[j];
+    for (var j = 0, m = batches.length; j < m; ++j) {
+      var batch = batches[j];
 
-      mesh.setSortLayer(layer);
+      batch.setSortLayer(layer);
     }
   }
 }
