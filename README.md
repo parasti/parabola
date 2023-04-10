@@ -1,6 +1,6 @@
 # Parabola
 
-Parabola is a WebGL rewrite of the Neverball renderer in plain old Javascript.
+Parabola is a WebGL rewrite of the Neverball renderer in plain old Javascript. See the [demo](https://www.sirde.lv/parabola/).
 
 [Neverball](https://neverball.org/) is a tilt-and-roll action game. Check it out.
 
