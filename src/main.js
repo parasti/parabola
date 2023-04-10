@@ -2,7 +2,6 @@
 
 module.exports = Parabola;
 
-var screenfull = require('screenfull');
 var data = require('./data.js');
 
 var GLState = require('./gl-state.js');
@@ -281,21 +280,26 @@ function init() {
   }
 
   var toggleFullscreenInput = document.getElementById('toggle-fullscreen');
+  var mainElement = document.getElementById('main');
 
   if (toggleFullscreenInput) {
     toggleFullscreenInput.addEventListener('change', function () {
-      if (screenfull.enabled) {
-        screenfull.toggle(document.getElementById('main'));
+      if (document.fullscreenEnabled) {
+          if (document.fullscreenElement) {
+            document.exitFullscreen();
+          } else {
+            mainElement.requestFullscreen();
+          }
       }
     });
   }
 
-  if (screenfull.enabled) {
-    screenfull.on('change', function () {
+  if (document.fullscreenEnabled) {
+    mainElement.addEventListener('fullscreenchange', function (event) {
       if (toggleFullscreenInput) {
-        toggleFullscreenInput.checked = screenfull.isFullscreen;
+        toggleFullscreenInput.checked = !!document.fullscreenElement;
       }
-      if (screenfull.isFullscreen) {
+      if (document.fullscreenElement) {
         // TODO add body class
       } else {
         // TODO remove body class

@@ -19,8 +19,7 @@
     "gl-matrix": "^2.8.1",
     "glslify": "^7.1.1",
     "nano-ecs": "^2.4.0",
-    "neverball-solid": "^1.0.0",
-    "screenfull": "^3.3.3"
+    "neverball-solid": "^1.0.0"
   },
   "devDependencies": {
     "browserify": "^14.4.0",
