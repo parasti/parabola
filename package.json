@@ -24,6 +24,6 @@
   },
   "devDependencies": {
     "browserify": "^14.4.0",
-    "budo": "^11.6.4"
+    "budo": "^11.8.4"
   }
 }
