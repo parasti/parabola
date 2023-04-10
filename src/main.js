@@ -240,6 +240,44 @@ function init() {
     }
   });
 
+  var slotLoadButton = document.getElementById('slot-load');
+  var slotFileInput = document.getElementById('slot-file');
+  var slotNameInput = document.getElementById('slot-name');
+
+  slotLoadButton.addEventListener('click', function (event) {
+        if (!slotFileInput.files.length) {
+      return;
+    }
+
+    var slotName = slotNameInput.value;
+    var fileReader = new FileReader();
+
+    fileReader.addEventListener('load', function (event) {
+      // Parse the selected SOL, create a SolidModel from it, and assign the SolidModel to the selected slot name.
+
+      var sol = Solid(fileReader.result);
+
+      sol.id = slotFileInput.files[0].name;
+
+      if (sol.dicts.drawback === '1') {
+        for (var mi = 0, mc = sol.mtrls.length; mi < mc; ++mi) {
+          sol.mtrls[mi].fl |= Solid.MTRL_TWO_SIDED_SEPARATE;
+        }
+      }
+
+      // Hack.
+      if (slotName === 'level') {
+        solFile = sol;
+      }
+
+      pool.cacheSol(sol);
+      var model = SolidModel.fromSol(sol, scene.entities);
+      scene.setModel(state, slotName, model);
+    });
+
+    fileReader.readAsArrayBuffer(slotFileInput.files[0]);
+  });
+
   function mouseMove(e) {
     scene.view.mouseLook(e.movementX, e.movementY);
   }
