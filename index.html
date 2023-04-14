@@ -7,20 +7,12 @@
   <title>Parabola</title>
 
   <style>
-    .center {
+    canvas {
       position: absolute;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .center > canvas {
-      width: 100%;
-      height: 100%;
     }
   </style>
 </head>
@@ -30,16 +22,10 @@
     document.documentElement.classList.remove('no-js');
   </script>
 
-  <canvas width="250" height="250" data-level="map-easy/easy.sol">
+  <canvas width="400" height="400" data-level="parabola/test1" data-background="map-back/jupiter.sol" data-gradient-image="back/space">
   </canvas>
 
-  <canvas width="250" height="250" data-level="map-fwp/adventure.sol">
-  </canvas>
-
-  <canvas width="250" height="250" data-level="map-fwp/museum.sol">
-  </canvas>
-
-  <script src="parabola.js?v=1"></script>
+  <script src="parabola.js?v=3"></script>
   <script>
     const parabolas = [];
 
@@ -47,12 +33,16 @@
 
     for (const canvas of canvases) {
       const level = canvas.dataset.level || 'map-easy/easy.sol';
+      const background = canvas.dataset.background || 'map-back/alien.sol';
+      const gradientImage = canvas.dataset.gradientImage || 'back/alien';
 
       const parabola = Parabola({
         canvas: canvas,
         // isInteractive: false,
+        gradientImage: gradientImage,
         modelPaths: {
-          level: level
+          level: level,
+          background: background,
         }
       });
 

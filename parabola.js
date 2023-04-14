@@ -5787,7 +5787,13 @@ Parabola.prototype.setup = function () {
   // Asset downloads.
 
   var fetchModel = async (modelName, modelPath) => {
-    const sol = await data.fetchSol(modelPath);
+    let sol;
+
+    if (modelPath === 'parabola/test1') {
+      sol = Solid.genTestMap();
+    } else {
+      sol = await data.fetchSol(modelPath);
+    }
 
     if (modelName === 'gradient') {
       // Replace the first SOL material with a gradient image.
@@ -5802,7 +5808,9 @@ Parabola.prototype.setup = function () {
   }
 
   for (const modelName in this.options.modelPaths) {
-    fetchModel(modelName, modelPaths[modelName]).then(function (sol) {
+    const modelPath = modelPaths[modelName];
+
+    fetchModel(modelName, modelPath).then(function (sol) {
       let model;
 
       if (modelName === 'gradient') {
@@ -7685,7 +7693,7 @@ Solid.genTestMap = function () {
         for (var j = 0; j < 20; ++j) {
             for (var k = 0; k < 20; ++k) {
                 sol.items.push({
-                    p: [Math.random() * 25, Math.random() * 25, Math.random() * 25],
+                    p: [(Math.random() - 0.5) * 25, (Math.random() - 0.5) * 25, (Math.random() - 0.5) * 25],
                     t: Math.random() > 0.5 ? Solid.ITEM_COIN : (Math.random() > 0.5 ? Solid.ITEM_GROW : Solid.ITEM_SHRINK),
                     n: Math.random() * 15
                 });
