@@ -17,8 +17,6 @@ function Mtrl(name) {
 
   // DOM image
   this._image = null;
-  // DOM image promise;
-  this._imageProm = null;
   // GL texture
   this.texture = null;
 
@@ -158,6 +156,10 @@ Mtrl.prototype.createTexture = function (state) {
   this.texture = tex;
 };
 
+Mtrl.prototype.setImage = function (img) {
+  this._image = img;
+}
+
 /*
  * Apply material state.
  */
@@ -231,19 +233,4 @@ Mtrl.prototype.createObjects = function (state) {
   var mtrl = this;
 
   mtrl.createTexture(state);
-};
-
-Mtrl.prototype.fetchImage = function () {
-  var mtrl = this;
-
-  if (!mtrl._imageProm) {
-    mtrl._imageProm = data.fetchImageForMtrl(mtrl).then(function (image) {
-      mtrl._image = image;
-      return image;
-    }).catch(function (reason) {
-      console.warn(reason);
-    });
-  }
-
-  return mtrl._imageProm;
 };

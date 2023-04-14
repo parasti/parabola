@@ -12,24 +12,246 @@ var Mtrl = require('./mtrl.js');
 var Batch = require('./batch.js');
 var Solid = require('./solid.js');
 
-function Parabola(opts) {
+function Parabola(options) {
+  if (!(this instanceof Parabola)) {
+    return new Parabola(options);
+  }
 
+  this.options = Object.assign(
+    Object.create(null),
+    Parabola.defaultOptions,
+    options,
+  );
+
+  this.options.modelPaths = Object.assign(
+    Object.create(null),
+    Parabola.defaultOptions.modelPaths,
+    options.modelPaths || null
+  );
+
+  this.canvas = this.options.canvas;
+  this.state = GLState(this.canvas);
+  this.pool = GLPool();
+  this.scene = Scene();
+  this.images = Object.create(null);
+
+  this.setup();
 }
 
-var getDeltaTime = (function () {
-  var lastTime = 0.0;
+Parabola.defaultOptions = {
+  canvas: null,
+  dataUrl: '/data/',
+  isInteractive: true,
+  gradientImage: 'back/alien',
+  modelPaths: {
+    gradient: 'geom/back/back.sol',
+    background: 'map-back/alien.sol',
+    level: 'map-fwp/adventure.sol',
+    coin: 'item/coin/coin.sol',
+    coin5: 'item/coin/coin5.sol',
+    coin10: 'item/coin/coin10.sol',
+    grow: 'item/grow/grow.sol',
+    shrink: 'item/shrink/shrink.sol',
+    jump: 'geom/beam/beam.sol',
+    ballInner: 'ball/reactor/reactor-inner.sol',
+    ballSolid: 'ball/reactor/reactor-solid.sol',
+    ballOuter: 'ball/reactor/reactor-outer.sol'
+  },
+};
 
-  return function (currTime) {
-    var dt = (currTime - lastTime) / 1000.0;
+Parabola.prototype.setup = function () {
+  var canvas = this.canvas;
+  var state = this.state;
+  var pool = this.pool;
+  var scene = this.scene;
+  var gl = state.gl;
 
-    if (dt > 1.0) {
-      dt = 0.0;
+  // GL object creation.
+
+  function createObjects(resource) {
+    resource.createObjects(state);
+  }
+
+  pool.emitter.on('mtrl', (mtrl) => {
+    mtrl.setImage(this.images[mtrl.name]);
+    mtrl.createObjects(state);
+  });
+
+  pool.emitter.on('model', createObjects);
+  pool.emitter.on('shader', createObjects);
+
+  var modelPaths = this.options.modelPaths;
+  var gradientImage = this.options.gradientImage;
+
+  // Asset downloads.
+
+  var fetchModel = async (modelName, modelPath) => {
+    const sol = await data.fetchSol(modelPath);
+
+    if (modelName === 'gradient') {
+      // Replace the first SOL material with a gradient image.
+      sol.mv[0].f = gradientImage;
     }
 
-    lastTime = currTime;
-    return dt;
-  };
-})();
+    for (const solMtrl of sol.mv) {
+      this.images[solMtrl.f] = await data.fetchImageForMtrl(solMtrl.f);
+    }
+
+    return sol;
+  }
+
+  for (const modelName in this.options.modelPaths) {
+    fetchModel(modelName, modelPaths[modelName]).then(function (sol) {
+      let model;
+
+      if (modelName === 'gradient') {
+        model = createGradientModel(pool, scene.entities, sol);
+      } else if (modelName === 'background') {
+        model = createBackgroundModel(pool, scene.entities, sol);
+      } else {
+        if (sol.dicts.drawback === '1') {
+          for (var mi = 0, mc = sol.mtrls.length; mi < mc; ++mi) {
+            sol.mtrls[mi].fl |= Solid.MTRL_TWO_SIDED_SEPARATE;
+          }
+        }
+        pool.cacheSol(sol);
+        model = SolidModel.fromSol(sol, scene.entities);
+      }
+
+      // TODO: this could be a separate step from downloading.
+
+      scene.setModel(state, modelName, model);
+    });
+  }
+
+  /**
+   * Get time in seconds since last invocation.
+   *
+   * This is a closure so that multiple Parabola instances can animate simultaneously.
+   */
+  var getDeltaTime = (function () {
+    var lastTime = 0.0;
+
+    return function (currTime) {
+      var dt = (currTime - lastTime) / 1000.0;
+
+      if (dt > 1.0) {
+        dt = 0.0;
+      }
+
+      lastTime = currTime;
+      return dt;
+    };
+  })();
+
+  /*
+   * Basic requestAnimationFrame loop.
+   */
+  function processFrame(currTime) {
+    window.requestAnimationFrame(processFrame);
+
+    var dt = getDeltaTime(currTime);
+
+    if (dt < 1.0) {
+      step(dt);
+    }
+  }
+
+  window.requestAnimationFrame(processFrame);
+
+  var currWidth = 0;
+  var currHeight = 0;
+
+  function step(dt) {
+    if (currWidth !== canvas.clientWidth || currHeight !== canvas.clientHeight) {
+      var w = canvas.clientWidth;
+      var h = canvas.clientHeight;
+
+      // Update projection matrix with CSS dimensions.
+      scene.view.setProjection(w, h, 50);
+
+      // Resize drawing buffer to CSS dimensions.
+      canvas.width = w;
+      canvas.height = h;
+
+      // Update viewport.
+      gl.viewport(0, 0, w, h);
+
+      // Save values.
+      currWidth = w;
+      currHeight = h;
+    }
+
+    scene.view.mouseLook(0, 0);
+    scene.step(dt);
+    scene.draw(state);
+  }
+
+  if (this.options.isInteractive) {
+    function mouseMove(e) {
+      scene.view.mouseLook(e.movementX, e.movementY);
+    }
+
+    function pointerLockChange(e) {
+      if (document.pointerLockElement === canvas) {
+        document.addEventListener('mousemove', mouseMove);
+
+        window.addEventListener('keydown', keyDown);
+        window.addEventListener('keyup', keyUp);
+      } else {
+        document.removeEventListener('mousemove', mouseMove);
+
+        window.removeEventListener('keydown', keyDown);
+        window.removeEventListener('keyup', keyUp);
+      }
+    }
+
+    function togglePointerLock(e) {
+      if (document.pointerLockElement) {
+        document.exitPointerLock();
+      } else {
+        canvas.requestPointerLock();
+      }
+    }
+
+    function keyDown(e) {
+      var code = e.code; // Not very portable.
+
+      if (code === 'KeyW') {
+        scene.view.moveForward(true);
+      } else if (code === 'KeyA') {
+        scene.view.moveLeft(true);
+      } else if (code === 'KeyS') {
+        scene.view.moveBackward(true);
+      } else if (code === 'KeyD') {
+        scene.view.moveRight(true);
+      }
+    }
+
+    function keyUp(e) {
+      var code = e.code;
+
+      if (code === 'KeyW') {
+        scene.view.moveForward(false);
+      } else if (code === 'KeyA') {
+        scene.view.moveLeft(false);
+      } else if (code === 'KeyS') {
+        scene.view.moveBackward(false);
+      } else if (code === 'KeyD') {
+        scene.view.moveRight(false);
+      }
+    }
+
+    canvas.addEventListener('click', togglePointerLock);
+    document.addEventListener('pointerlockchange', pointerLockChange);
+
+    canvas.addEventListener('wheel', function (e) {
+      scene.view.setMoveSpeed(-Math.sign(e.deltaY));
+      e.preventDefault();
+    }, { passive: false });
+  }
+
+}
 
 /**
  * Create a SolidModel to serve as background gradient.
@@ -38,7 +260,7 @@ var getDeltaTime = (function () {
  * given gradient material/image into it, and sets up
  * an appropriate transform matrix.
  */
-Parabola.createGradientModel = function (pool, entities, sol) {
+function createGradientModel(pool, entities, sol) {
   // Create the material object.
   var gradMtrl = Mtrl.fromSolMtrl(sol, 0);
   // Disable depth testing and depth writes on the material.
@@ -66,7 +288,7 @@ Parabola.createGradientModel = function (pool, entities, sol) {
 /**
  * Mark all billboards as background billboards.
  */
-Parabola.createBackgroundModel = function (pool, entities, sol) {
+function createBackgroundModel(pool, entities, sol) {
   for (var i = 0, n = sol.bills.length; i < n; ++i) {
     var bill = sol.bills[i];
     bill.fl |= Solid.BILL_BACK;
@@ -77,328 +299,3 @@ Parabola.createBackgroundModel = function (pool, entities, sol) {
   model.setBatchSortLayer(Batch.LAYER_BACKGROUND);
   return model;
 }
-
-Parabola.backgrounds = {
-  'alien': { sol: 'map-back/alien.sol', gradient: 'back/alien' },
-  'city': { sol: 'map-back/city.sol', gradient: 'back/city' },
-  'clouds': { sol: 'map-back/clouds.sol', gradient: 'back/land' },
-  'jupiter': { sol: 'map-back/jupiter.sol', gradient: 'back/space' },
-  'ocean': { sol: 'map-back/ocean.sol', gradient: 'back/ocean' },
-  'volcano': { sol: 'map-back/volcano.sol', gradient: 'back/volcano' },
-}
-
-Parabola.backgroundNames = [
-  'alien', 'city', 'clouds', 'jupiter', 'ocean', 'volcano',
-];
-
-function init() {
-  var canvas = document.getElementById('canvas');
-  var state = GLState(canvas);
-  var pool = GLPool();
-  var scene = Scene();
-  var gl = state.gl;
-  var solFile = null;
-
-  var backgroundName = 'alien';//Parabola.backgroundNames[Math.floor(Math.random() * (Parabola.backgroundNames.length))];
-  var background = Parabola.backgrounds[backgroundName];
-
-  function createObjects(res) {
-    res.createObjects(state);
-  }
-
-  pool.emitter.on('mtrl', createObjects);
-  pool.emitter.on('model', createObjects);
-  pool.emitter.on('shader', createObjects);
-
-  data.fetchSol('geom/back/back.sol')
-    .then(function (sol) {
-      // Replace the first SOL material with a gradient image.
-      sol.mv[0].f = background.gradient;
-      return sol;
-    })
-    .then(function (sol) {
-      var model = Parabola.createGradientModel(pool, scene.entities, sol);
-      scene.setModel(state, 'gradient', model);
-      return model;
-    });
-
-  data.fetchSol(background.sol)
-    .then(function (sol) {
-      var model = Parabola.createBackgroundModel(pool, scene.entities, sol);
-      scene.setModel(state, 'background', model);
-      return model;
-    });
-
-  var modelPaths = {
-    level: 'map-fwp/adventure.sol',
-    coin: 'item/coin/coin.sol',
-    coin5: 'item/coin/coin5.sol',
-    coin10: 'item/coin/coin10.sol',
-    grow: 'item/grow/grow.sol',
-    shrink: 'item/shrink/shrink.sol',
-    jump: 'geom/beam/beam.sol',
-    // ballInner: 'ball/reactor/reactor-inner.sol',
-    ballSolid: 'ball/basic-ball/basic-ball-solid.sol',
-    // ballOuter: 'ball/reactor/reactor-outer.sol'
-  };
-
-  // var testSol = Solid.genTestMap2();
-  // var testModel = SolidModel.fromSol(testSol, scene.entities);
-  // scene.setModel('level', testModel);
-
-  for (let modelName in modelPaths) {
-    data.fetchSol(modelPaths[modelName])
-      .then(function (sol) {
-        if (sol.dicts.drawback === '1') {
-          for (var mi = 0, mc = sol.mtrls.length; mi < mc; ++mi) {
-            sol.mtrls[mi].fl |= Solid.MTRL_TWO_SIDED_SEPARATE;
-          }
-        }
-        return sol;
-      })
-      .then(function (sol) {
-        // Hack.
-        if (modelName === 'level') {
-          solFile = sol;
-        }
-
-        pool.cacheSol(sol);
-        var model = SolidModel.fromSol(sol, scene.entities);
-        scene.setModel(state, modelName, model);
-        return model;
-      });
-  }
-
-  /*
-   * Basic requestAnimationFrame loop.
-   */
-  function animationFrame(currTime) {
-    window.requestAnimationFrame(animationFrame);
-
-    var dt = getDeltaTime(currTime);
-
-    if (dt < 1.0) {
-      step(dt);
-    }
-  }
-  window.requestAnimationFrame(animationFrame);
-
-  var currWidth = 0;
-  var currHeight = 0;
-  function step(dt) {
-    if (currWidth !== canvas.clientWidth || currHeight !== canvas.clientHeight) {
-      var w = canvas.clientWidth;
-      var h = canvas.clientHeight;
-
-      // Update projection matrix with CSS dimensions.
-      scene.view.setProjection(w, h, 50);
-
-      // Resize drawing buffer to CSS dimensions.
-      canvas.width = w;
-      canvas.height = h;
-
-      // Update viewport.
-      gl.viewport(0, 0, w, h);
-
-      // Save values.
-      currWidth = w;
-      currHeight = h;
-    }
-
-    scene.view.mouseLook(0, 0);
-    scene.step(dt);
-    scene.draw(state);
-  }
-
-  var modelListElem = document.getElementById('model-list');
-
-  scene.emitter.on('model-added', function (model) {
-    var li = document.createElement('li');
-
-    li.textContent = model.id;
-    li.dataset.modelId = model.id;
-
-    modelListElem.appendChild(li);
-  });
-
-  scene.emitter.on('model-assigned', function (slotName, model) {
-    for (var i = 0, n = modelListElem.children.length; i < n; ++i) {
-      var li = modelListElem.children[i];
-
-      if (model) {
-        if (li.dataset.modelId === model.id) {
-          li.dataset.slotName = slotName;
-          li.textContent += ' (' + slotName + ')';
-          break;
-        }
-      } else {
-        if (li.dataset.slotName === slotName) {
-          li.textContent = li.textContent.replace(' (' + slotName + ')', '');
-          break;
-        }
-      }
-    }
-  });
-
-  var slotLoadButton = document.getElementById('slot-load');
-  var slotFileInput = document.getElementById('slot-file');
-  var slotNameInput = document.getElementById('slot-name');
-
-  slotLoadButton.addEventListener('click', function (event) {
-        if (!slotFileInput.files.length) {
-      return;
-    }
-
-    var slotName = slotNameInput.value;
-    var fileReader = new FileReader();
-
-    fileReader.addEventListener('load', function (event) {
-      // Parse the selected SOL, create a SolidModel from it, and assign the SolidModel to the selected slot name.
-
-      var sol = Solid(fileReader.result);
-
-      sol.id = slotFileInput.files[0].name;
-
-      if (sol.dicts.drawback === '1') {
-        for (var mi = 0, mc = sol.mtrls.length; mi < mc; ++mi) {
-          sol.mtrls[mi].fl |= Solid.MTRL_TWO_SIDED_SEPARATE;
-        }
-      }
-
-      // Hack.
-      if (slotName === 'level') {
-        solFile = sol;
-      }
-
-      pool.cacheSol(sol);
-      var model = SolidModel.fromSol(sol, scene.entities);
-      scene.setModel(state, slotName, model);
-    });
-
-    fileReader.readAsArrayBuffer(slotFileInput.files[0]);
-  });
-
-  function mouseMove(e) {
-    scene.view.mouseLook(e.movementX, e.movementY);
-  }
-
-  function pointerLockChange(e) {
-    if (document.pointerLockElement === canvas) {
-      document.addEventListener('mousemove', mouseMove);
-
-      window.addEventListener('keydown', keyDown);
-      window.addEventListener('keyup', keyUp);
-    } else {
-      document.removeEventListener('mousemove', mouseMove);
-
-      window.removeEventListener('keydown', keyDown);
-      window.removeEventListener('keyup', keyUp);
-    }
-  }
-
-  function togglePointerLock(e) {
-    if (document.pointerLockElement) {
-      document.exitPointerLock();
-    } else {
-      canvas.requestPointerLock();
-    }
-  }
-
-  canvas.addEventListener('click', togglePointerLock);
-  document.addEventListener('pointerlockchange', pointerLockChange);
-
-  var setViewPositionInput = document.getElementById('set-view-position');
-
-  if (setViewPositionInput) {
-    setViewPositionInput.addEventListener('input', function () {
-      if (solFile) {
-        scene.view.setFromSol(solFile, this.value);
-      }
-    });
-  }
-
-  var toggleFullscreenInput = document.getElementById('toggle-fullscreen');
-  var mainElement = document.getElementById('main');
-
-  if (toggleFullscreenInput) {
-    toggleFullscreenInput.addEventListener('change', function () {
-      if (document.fullscreenEnabled) {
-          if (document.fullscreenElement) {
-            document.exitFullscreen();
-          } else {
-            mainElement.requestFullscreen();
-          }
-      }
-    });
-  }
-
-  if (document.fullscreenEnabled) {
-    mainElement.addEventListener('fullscreenchange', function (event) {
-      if (toggleFullscreenInput) {
-        toggleFullscreenInput.checked = !!document.fullscreenElement;
-      }
-      if (document.fullscreenElement) {
-        // TODO add body class
-      } else {
-        // TODO remove body class
-      }
-    });
-  }
-
-  function keyDown(e) {
-    var code = e.code; // Not very portable.
-
-    if (code === 'KeyW') {
-      scene.view.moveForward(true);
-    } else if (code === 'KeyA') {
-      scene.view.moveLeft(true);
-    } else if (code === 'KeyS') {
-      scene.view.moveBackward(true);
-    } else if (code === 'KeyD') {
-      scene.view.moveRight(true);
-    }
-  }
-  function keyUp(e) {
-    var code = e.code;
-
-    if (code === 'KeyW') {
-      scene.view.moveForward(false);
-    } else if (code === 'KeyA') {
-      scene.view.moveLeft(false);
-    } else if (code === 'KeyS') {
-      scene.view.moveBackward(false);
-    } else if (code === 'KeyD') {
-      scene.view.moveRight(false);
-    }
-  }
-
-  canvas.addEventListener('wheel', function (e) {
-    scene.view.setMoveSpeed(-Math.sign(e.deltaY));
-    e.preventDefault();
-  }, { passive: false });
-
-  var toggleTexturesInput = document.getElementById('toggle-textures');
-
-  if (toggleTexturesInput) {
-    toggleTexturesInput.addEventListener('change', function (e) {
-      state.enableTextures = this.checked;
-    });
-  }
-
-  var maxBatchesInput = document.getElementById('max-batches');
-  if (maxBatchesInput) {
-    maxBatchesInput.addEventListener('change', function (event) {
-      this.setAttribute('max', scene._batches.length);
-      scene._maxRenderedBatches = this.value;
-    });
-  }
-
-  var sceneTimeInput = document.getElementById('scene-time');
-  if (sceneTimeInput) {
-    sceneTimeInput.addEventListener('change', function (event) {
-      scene.fixedTime = parseFloat(this.value);
-    })
-  }
-}
-
-init();

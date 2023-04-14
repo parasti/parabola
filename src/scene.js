@@ -212,12 +212,14 @@ Scene.prototype._clearModelSlot = function (modelSlot) {
 /**
  * Add SolidModel to our list if not yet added.
  */
-Scene.prototype._addModel = function (model) {
-  var index = this.allModels.indexOf(model);
+Scene.prototype._addModel = function (solidModel) {
+  if (solidModel) {
+    var index = this.allModels.indexOf(solidModel);
 
-  if (index < 0) {
-    this.allModels.push(model);
-    this.emitter.emit('model-added', model);
+    if (index < 0) {
+      this.allModels.push(solidModel);
+      this.emitter.emit('model-added', solidModel);
+    }
   }
 };
 
@@ -352,16 +354,18 @@ Scene.prototype._updateModelSlots = function () {
     var solidModel = this.models[modelSlot];
 
     if (solidModel) {
-      // This is all very complicated.
+      // Create an instance of the entity's scene node.
+      var entityInstance = ent.sceneGraph.node.createInstance();
 
-      var instance = ent.sceneGraph.node.createInstance();
-      instance.setParent(this.sceneRoot);
-      solidModel.attachInstance(instance);
+      // Attach the entity-instance to the scene root.
+      entityInstance.setParent(this.sceneRoot);
 
-      // Here's the weird part: removeTag changes the array we loop over. So, we adjust.
+      // 1. Create an instance of the model's scene node.
+      // 2. Attach the model-instance to the entity-instance.
+      solidModel.attachInstance(entityInstance);
 
+      // removeTag() changes the array in-place. Adjust some loop variables to compensate.
       ent.removeTag('needsModel');
-
       n = ents.length;
       i = i - 1;
     }

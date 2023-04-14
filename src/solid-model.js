@@ -213,6 +213,12 @@ SolidModel.prototype.setBatchSortLayer = function (layer) {
   }
 }
 
+/**
+ * Create an instance of the model's scene node and attach it to the given parent node.
+ *
+ * @param {SceneNode} parent parent scene node
+ * @returns {SceneNode} model scene node
+ */
 SolidModel.prototype.attachInstance = function (parent) {
   var instance = this.sceneNode.createInstance();
   instance.setParent(parent);

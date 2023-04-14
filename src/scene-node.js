@@ -210,7 +210,7 @@ SceneNode.prototype.getMaster = function () {
 SceneNode.prototype.createInstance = function () {
   var node = SceneNode();
   var master = this.getMaster();
-  node._id = master._id + ' instance';
+  // node._id = master._id + ' instance';
 
   node._setMaster(master);
 
@@ -304,7 +304,7 @@ SceneNode.prototype.dump = function (depth = 0) {
   var str = this._id;
 
   if (this.master) {
-    str += ' instance';
+    str += ' instance of "' + this.master._id + '"';
   }
 
   if (this.children.length) {
@@ -315,11 +315,17 @@ SceneNode.prototype.dump = function (depth = 0) {
     str += ', ' + this.instances.length + ' instances';
   }
 
-  str = ' '.repeat(depth * 2) + str;
-
-  console.log(str);
+  if (this.children.length) {
+    console.groupCollapsed(str);
+  } else {
+    console.log(str);
+  }
 
   for (var i = 0; i < this.children.length; ++i) {
     this.children[i].dump(depth + 1);
+  }
+
+  if (this.children.length) {
+    console.groupEnd();
   }
 }

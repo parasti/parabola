@@ -65,14 +65,13 @@ GLPool.prototype._getMeshData = function (id) {
   return this.meshData.get(id);
 }
 
+/**
+ *
+ * @param {Mtrl} mtrl material
+ */
 GLPool.prototype._cacheMtrl = function (mtrl) {
-  var pool = this;
-
   this.materials.set(mtrl.name, mtrl);
-
-  mtrl.fetchImage().then(function () {
-    pool.emitter.emit('mtrl', mtrl);
-  })
+  this.emitter.emit('mtrl', mtrl);
 };
 
 GLPool.prototype._cacheShader = function (shader) {

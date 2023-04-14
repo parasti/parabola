@@ -35,13 +35,18 @@ data.fetchSol = function (path) {
   });
 };
 
-data.fetchImageForMtrl = function (mtrl) {
-  var imagePath = mtrlImages[mtrl.name];
+/**
+ *
+ * @param {string} mtrlName material name
+ * @returns Promise
+ */
+data.fetchImageForMtrl = function (mtrlName) {
+  var imagePath = mtrlImages[mtrlName];
 
   if (imagePath) {
     return data.fetchImage(imagePath);
   } else {
-    return Promise.reject(Error('Material image for ' + mtrl.name + ' is unknown'));
+    return Promise.reject(Error('Material image for ' + mtrlName + ' is unknown'));
   }
 }
 

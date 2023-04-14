@@ -5,128 +5,64 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Parabola</title>
+
   <style>
-    body {
-      font-family: sans-serif;
-      font-size: 12px;
-      line-height: 1.2;
-    }
-
-    ul {
-      margin: 1em 0;
-      padding: 0 0 0 1.5em;
-    }
-
-    input {
-      vertical-align: middle;
-    }
-
-    #main {
-      position: relative;
-    }
-
-    #canvas {
-      position: fixed;
-      top: 50%;
-      left: 50%;
+    .center {
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 100vw;
       height: 100vh;
-      transform: translate(-50%, -50%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    #overlay {
-      position: absolute;
-      top: 5px;
-      left: 5px;
-      padding: 10px;
-      background-color: rgba(127, 127, 127, 0.4);
-      color: white;
-      display: none;
-    }
-
-    body.with-overlay #overlay {
-      display: block;
-    }
-
-    .overlay-content {
-      display: none;
-    }
-
-    #show-overlay + .overlay-content {
-      display: none;
-    }
-
-    #show-overlay:checked + .overlay-content {
-      display: block;
-    }
-
-    #controls {
-      max-width: 250px;
-    }
-
-    #controls strong {
-      color: #ffff00;
+    .center > canvas {
+      width: 100%;
+      height: 100%;
     }
   </style>
 </head>
 
-<body class="with-overlay">
+<body>
   <script>
     document.documentElement.classList.remove('no-js');
   </script>
 
-  <div id="main">
-    <canvas id="canvas" width="400" height="400">
-      Parabola is a WebGL port of <a href="https://neverball.org">Neverball</a>. As such, it requires a browser with
-      JavaScript and an HTML5 canvas.
+  <div class="center">
+    <canvas width="250" height="250" data-level="map-easy/easy.sol" data-ball-solid="ball/basic-ball/basic-ball-solid.sol">
     </canvas>
-    <div id="overlay">
-      <form autocomplete="off">
-        <label for="show-overlay"><span>Show overlay</span></label>
-        <input id="show-overlay" type="checkbox" checked>
-
-        <div class="overlay-content">
-          <div id="controls">
-            <strong>Click</strong> to grab pointer, <strong>WASD</strong> to fly around, <strong>mouse</strong> to look around, <strong>mouse wheel</strong> to change flying speed.
-          </div>
-          <div class="overlay-input"><label>Fullscreen <input id="toggle-fullscreen" type="checkbox"></label></div>
-          <div class="overlay-input"><label for="set-view-position">Fly-by <input id="set-view-position" type="range" min="-1" max="1" step="0.005" value="1"></label></div>
-          <div class="overlay-input"><label>Textures <input id="toggle-textures" type="checkbox" checked></label></div>
-          <div class="overlay-input"><label>Max batches <input id="max-batches" type="number" min="-1" step="1" value="-1"></label></div>
-          <div class="overlay-input"><label>Scene time <input id="scene-time" type="number" step="0.100" value="-1"></label></div>
-          <div class="overlay-input">
-            Models:
-            <ul id="model-list">
-            </ul>
-          </div>
-          <div class="overlay-input">
-            <div>
-              SOL file: <input type="file" id="slot-file">
-            </div>
-            <div>
-              Slot: <select id="slot-name">
-                <option value="background">background</option>
-                <option value="gradient">gradient</option>
-                <option value="level">level</option>
-                <option value="ballInner">ballInner</option>
-                <option value="ballSolid">ballSolid</option>
-                <option value="ballOuter">ballOuter</option>
-                <option value="beam">beam</option>
-                <option value="coin">coin</option>
-                <option value="coin5">coin5</option>
-                <option value="coin10">coin10</option>
-                <option value="grow">grow</option>
-                <option value="jump">jump</option>
-                <option value="shrink">shrink</option>
-              </select>
-            </div>
-            <button type="button" id="slot-load">Load SOL into named slot</button>
-          </div>
-        </div>
-      </form>
-    </div>
   </div>
+
   <script src="parabola.js"></script>
+  <script>
+    const parabolas = [];
+
+    const canvases = document.querySelectorAll('canvas');
+
+    for (const canvas of canvases) {
+      const level = canvas.dataset.level || 'map-easy/easy.sol';
+
+      const ballInner = canvas.dataset.ballInner || null;
+      const ballSolid = canvas.dataset.ballSolid || 'ball/basic-ball/basic-ball-solid.sol';
+      const ballOuter = canvas.dataset.ballOuter || null;
+
+      const parabola = Parabola({
+        canvas: canvas,
+        // isInteractive: false,
+        modelPaths: {
+          level: level,
+          ballInner: ballInner,
+          ballSolid: ballSolid,
+          ballOuter: ballOuter
+        }
+      });
+
+      parabolas.push(parabola);
+    }
+
+  </script>
 </body>
 
 </html>
