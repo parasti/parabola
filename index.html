@@ -30,12 +30,16 @@
     document.documentElement.classList.remove('no-js');
   </script>
 
-  <div class="center">
-    <canvas width="250" height="250" data-level="map-easy/easy.sol" data-ball-solid="ball/basic-ball/basic-ball-solid.sol">
-    </canvas>
-  </div>
+  <canvas width="250" height="250" data-level="map-easy/easy.sol">
+  </canvas>
 
-  <script src="parabola.js"></script>
+  <canvas width="250" height="250" data-level="map-fwp/adventure.sol">
+  </canvas>
+
+  <canvas width="250" height="250" data-level="map-fwp/museum.sol">
+  </canvas>
+
+  <script src="parabola.js?v=1"></script>
   <script>
     const parabolas = [];
 
@@ -44,18 +48,11 @@
     for (const canvas of canvases) {
       const level = canvas.dataset.level || 'map-easy/easy.sol';
 
-      const ballInner = canvas.dataset.ballInner || null;
-      const ballSolid = canvas.dataset.ballSolid || 'ball/basic-ball/basic-ball-solid.sol';
-      const ballOuter = canvas.dataset.ballOuter || null;
-
       const parabola = Parabola({
         canvas: canvas,
         // isInteractive: false,
         modelPaths: {
-          level: level,
-          ballInner: ballInner,
-          ballSolid: ballSolid,
-          ballOuter: ballOuter
+          level: level
         }
       });
 
