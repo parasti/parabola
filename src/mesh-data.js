@@ -1,5 +1,7 @@
 'use strict';
 
+var GLState = require('./gl-state.js');
+
 module.exports = MeshData;
 
 /**
@@ -26,6 +28,11 @@ function MeshData() {
   this.vao = null;
 }
 
+/**
+ * Upload mesh data and wrap it into a vertex array object.
+ *
+ * @param {GLState} state
+ */
 MeshData.prototype.createObjects = function (state) {
   var meshData = this;
   var gl = state.gl;

@@ -23,12 +23,6 @@ function Parabola(options) {
     options,
   );
 
-  this.options.modelPaths = Object.assign(
-    Object.create(null),
-    Parabola.defaultOptions.modelPaths,
-    options.modelPaths || null
-  );
-
   this.canvas = this.options.canvas;
   this.state = GLState(this.canvas);
   this.pool = GLPool();

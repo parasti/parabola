@@ -129,8 +129,11 @@ GLState.prototype.drawElementsInstanced = function (mode, count, type, offset, p
   this.instancedArrays.drawElementsInstancedANGLE(mode, count, type, offset, primcount);
 };
 
-/*
- * Obtain a WebGL context. Now IE compatible, whoo.
+/**
+ * Obtain a WebGL context.
+ *
+ * @param {HTMLCanvasElement} canvas canvas element
+ * @returns {?WebGLRenderingContext}
  */
 function getContext(canvas) {
   var opts = { depth: true, alpha: false };
@@ -138,6 +141,11 @@ function getContext(canvas) {
   return gl;
 }
 
+/**
+ * Set up some defaults.
+ *
+ * @param {WebGLRenderingContext} gl
+ */
 function setupContext(gl) {
   // Straight alpha vs premultiplied alpha:
   // https://limnu.com/webgl-blending-youre-probably-wrong/

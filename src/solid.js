@@ -55,6 +55,8 @@ Solid.empty = function () {
 Solid.genTestMap = function () {
     var sol = Solid.empty();
 
+    sol.id = 'parabola/test1';
+
     for (var i = 0; i < 20; ++i) {
         for (var j = 0; j < 20; ++j) {
             for (var k = 0; k < 20; ++k) {

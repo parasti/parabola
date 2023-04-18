@@ -160,8 +160,10 @@ Mtrl.prototype.setImage = function (img) {
   this._image = img;
 }
 
-/*
+/**
  * Apply material state.
+ *
+ * @param {GLState} state
  */
 Mtrl.prototype.apply = function (state, passIndex = 0) {
   var mtrl = this;
