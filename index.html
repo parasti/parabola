@@ -7,6 +7,10 @@
   <title>Parabola</title>
 
   <style>
+    body {
+      margin: 0;
+    }
+
     canvas {
       position: absolute;
       top: 0;
@@ -60,8 +64,13 @@
         canvas: canvas,
         // isInteractive: false,
         hasOverlay: true,
+        gradientImage: 'back/alien',
         modelPaths: {
-          level: 'map-easy/easy.sol',
+          ballSolid: 'ball/basic-ball/basic-ball-solid.sol',
+          level: 'map-fwp/adventure.sol',
+          gradient: 'geom/back/back.sol',
+          background: 'map-back/alien.sol',
+          coin: 'item/coin/coin.sol'
         }
       });
 
