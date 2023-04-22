@@ -195,6 +195,16 @@ SolidModel.fromSol = function (sol, entities) {
     ent.spatial.scale = [1.0, 1.0, 1.0];
   }
 
+  for (i = 0, n = sol.wv.length; i < n; ++i) {
+    var solView = sol.wv[i];
+
+    ent = ents.createEntity();
+
+    ent.addComponent(EC.Viewpoint);
+
+    ent.viewpoint.fromSolView(sol, solView);
+  }
+
   return solidModel;
 };
 

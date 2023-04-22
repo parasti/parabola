@@ -14,6 +14,28 @@
       width: 100vw;
       height: 100vh;
     }
+
+    .parabola-overlay {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      padding: 8px;
+      background-color: rgba(127, 127, 127, 0.4);
+      color: #fff;
+      user-select: none;
+    }
+
+    .parabola-overlay input[type=number] {
+      width: 64px;
+    }
+
+    .parabola-controls {
+      max-width: 250px;
+    }
+
+    .parabola-controls strong {
+      color: #ffff00;
+    }
   </style>
 </head>
 
@@ -22,8 +44,10 @@
     document.documentElement.classList.remove('no-js');
   </script>
 
-  <canvas width="400" height="400">
-  </canvas>
+  <div style="position: relative;">
+    <canvas width="400" height="400">
+    </canvas>
+  </div>
 
   <script src="parabola.js?v=3"></script>
   <script>
@@ -35,6 +59,7 @@
       const parabola = Parabola({
         canvas: canvas,
         // isInteractive: false,
+        hasOverlay: true,
         modelPaths: {
           level: 'map-easy/easy.sol',
         }

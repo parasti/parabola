@@ -234,7 +234,6 @@ Scene.prototype.setModel = function (state, modelSlot, solidModel) {
 
 Scene.prototype.step = function (dt) {
   var scene = this;
-  var view = this.view;
 
   if (scene.fixedTime >= 0.0) {
     var fakeDt = scene.fixedTime - scene.time;
@@ -247,9 +246,6 @@ Scene.prototype.step = function (dt) {
 
     this.updateSystems(dt);
   }
-
-
-  view.step(dt);
 };
 
 /**
@@ -437,6 +433,18 @@ Scene.prototype._updateSceneGraph = function () {
   }
 }
 
+Scene.prototype._updateCamera = function (dt) {
+  // var ents = this.entities.queryComponents();
+  this.view.step(dt);
+}
+
+Scene.prototype.fly = function (k) {
+  var balls = this.entities.queryTag('ballSolid');
+  var viewPositions = this.entities.queryComponents([EC.Viewpoint]).map(function (ent) { return ent.viewpoint; });
+
+  this.view.fly(balls.length ? balls[0].spatial.position : null, viewPositions, k);
+}
+
 /**
  * Update entity systems.
  */
@@ -445,4 +453,5 @@ Scene.prototype.updateSystems = function (dt) {
   this._updateMovers(dt);
   this._updateBillboards();
   this._updateSceneGraph();
+  this._updateCamera(dt);
 };

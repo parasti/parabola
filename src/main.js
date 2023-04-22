@@ -36,6 +36,7 @@ Parabola.defaultOptions = {
   canvas: null,
   dataUrl: '/data/',
   isInteractive: true,
+  hasOverlay: false,
   gradientImage: 'back/alien',
   modelPaths: {
     gradient: 'geom/back/back.sol',
@@ -118,6 +119,10 @@ Parabola.prototype.setup = function () {
         }
         pool.cacheSol(sol);
         model = SolidModel.fromSol(sol, scene.entities);
+
+        if (modelName === 'level') {
+          scene.fly(1.0);
+        }
       }
 
       // TODO: this could be a separate step from downloading.
@@ -253,6 +258,82 @@ Parabola.prototype.setup = function () {
     }, { passive: false });
   }
 
+  if (this.options.hasOverlay) {
+    if (canvas.parentElement) {
+      const overlayElement = this.getOverlay();
+      canvas.parentElement.appendChild(overlayElement);
+    }
+  }
+}
+
+/**
+ * Build a document fragment with the Parabola overlay.
+ * 
+ * @returns {DocumentFragment}
+ */
+Parabola.prototype.getOverlay = function () {
+  const state = this.state;
+  const scene = this.scene;
+
+  const fragment = document.createDocumentFragment();
+  const overlayElement = document.createElement('div');
+
+  // Get a unique element ID for label/input association.
+  const overlayId = randomId();
+
+  fragment.append(overlayElement);
+
+  // Build the DOM.
+
+  overlayElement.innerHTML = `
+    <div class="parabola-overlay">
+      <div class="parabola-controls">
+        <strong>Click</strong> to grab pointer, <strong>WASD</strong> to fly around, <strong>mouse</strong> to look around, <strong>mouse wheel</strong> to change flying speed.
+      </div>
+      <div>
+        <label for="toggle-textures-${overlayId}">Toggle textures</label>
+        <input id="toggle-textures-${overlayId}" type="checkbox" ${this.state.enableTextures ? "checked" : ""}>
+      </div>
+      <div>
+        <label for="max-batches-${overlayId}">Max batches</label>
+        <input id="max-batches-${overlayId}" type="number" min="-1" step="1" value="-1">
+      </div>
+      <div>
+        <label for="scene-time-${overlayId}">Scene time</label>
+        <input id="scene-time-${overlayId}" type="number" min="-0.1" step="0.1" value="-0.1">
+      </div>
+      <div>
+        <label for="flyby-${overlayId}">Fly-by</label>
+        <input id="flyby-${overlayId}" type="range" min="-1" max="1" step="0.005" value="1">
+      </div>
+    </div>
+  `;
+
+  // Setup event listeners.
+
+  const toggleTexturesInput = fragment.getElementById('toggle-textures-' + overlayId);
+  const maxBatchesInput = fragment.getElementById('max-batches-' + overlayId);
+  const sceneTimeInput = fragment.getElementById('scene-time-' + overlayId);
+  const flybyInput = fragment.getElementById('flyby-' + overlayId);
+
+  toggleTexturesInput.addEventListener('change', function (event) {
+    state.enableTextures = this.checked;
+  });
+
+  maxBatchesInput.addEventListener('input', function (event) {
+    scene._maxRenderedBatches = this.value;
+    this.max = scene._batches.length;
+  });
+
+  sceneTimeInput.addEventListener('input', function (event) {
+    scene.fixedTime = this.value;
+  });
+
+  flybyInput.addEventListener('input', function (event) {
+    scene.fly(this.value);
+  });
+
+  return fragment;
 }
 
 /**
@@ -300,4 +381,54 @@ function createBackgroundModel(pool, entities, sol) {
   var model = SolidModel.fromSol(sol, entities);
   model.setBatchSortLayer(Batch.LAYER_BACKGROUND);
   return model;
+}
+
+/**
+ * Get a random number between the given values.
+ * 
+ * @param {number} a lower bound
+ * @param {number} b upper bound
+ * @returns {number}
+ */
+function randomBetween(a, b) {
+  return a + (b - a) * Math.random();
+}
+
+/**
+ * Get a random printable ASCII character.
+ * 
+ * @returns 
+ */
+function randomPrintable() {
+  return String.fromCodePoint(Math.floor(randomBetween(32, 122)));
+}
+
+/**
+ * Get a random string of given length.
+ * 
+ * @param {number} length 
+ * @returns 
+ */
+function randomString(length) {
+  var str = '';
+
+  for (var i = 0; i < length; ++i) {
+    str += randomPrintable();
+  }
+
+  return str;
+}
+
+/**
+ * Get a random unused element ID.
+ * 
+ * @returns {string}
+ */
+function randomId() {
+  do {
+    var id = randomString(16).replace(/[^a-zA-Z]/g, '');
+    // Length check ensures we have at least that many printable characters.
+  } while (id.length < 8 || document.getElementById(id) !== null);
+
+  return id;
 }

@@ -121,36 +121,33 @@ View.prototype.getMatrix = (function () {
   };
 })();
 
-/*
- * Calculate a fly-in view from the available SOL entities.
- */
-View.prototype.setFromSol = (function () {
+View.prototype.fly = (function () {
   // game_view_fly
 
-  var ball = View();
-  var view = View();
+  var ballView = View();
+  var viewView = View();
 
-  return function (sol, k) {
-    if (sol.uv.length) {
-      ball.overhead(sol.uv[0].p);
+  return function (ballPosition, viewpoints, k) {
+    if (ballPosition) {
+      ballView.overhead(ballPosition);
     }
 
-    if (k >= 0 && sol.wv.length > 0) {
-      vec3.copy(view.p, sol.wv[0].p);
-      vec3.copy(view.c, sol.wv[0].q);
+    if (k >= 0 && viewpoints.length > 0) {
+      vec3.copy(viewView.p, viewpoints[0].position);
+      vec3.copy(viewView.c, viewpoints[0].target);
     }
-    if (k <= 0 && sol.wv.length > 1) {
-      vec3.copy(view.p, sol.wv[1].p);
-      vec3.copy(view.c, sol.wv[1].q);
+    if (k <= 0 && viewpoints.length > 1) {
+      vec3.copy(viewView.p, viewpoints[1].position);
+      vec3.copy(viewView.c, viewpoints[1].target);
     } else if (k <= 0) { // TOOD
       k = 0;
     }
 
     // Interpolate the views.
 
-    vec3.lerp(this.p, ball.p, view.p, k * k);
-    vec3.lerp(this.c, ball.c, view.c, k * k);
-  };
+    vec3.lerp(this.p, ballView.p, viewView.p, k * k);
+    vec3.lerp(this.c, ballView.c, viewView.c, k * k);
+  }
 })();
 
 /*

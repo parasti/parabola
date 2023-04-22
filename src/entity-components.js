@@ -207,3 +207,13 @@ EC.Billboard.prototype.getBackgroundTransform = (function () {
     vec3.set(out_scale, w, h, 1.0);
   };
 })();
+
+EC.Viewpoint = function viewpoint() {
+  this.position = vec3.create();
+  this.target = vec3.create();
+};
+
+EC.Viewpoint.prototype.fromSolView = function (sol, solView) {
+  vec3.copy(this.position, solView.p);
+  vec3.copy(this.target, solView.q);
+};
