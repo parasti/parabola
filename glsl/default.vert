@@ -45,13 +45,16 @@ uniform bool uEnvironment;
 
 varying vec4 vLightColor;
 
-vec4 calcLight(Light light, vec4 eyeNormal) {
-  // Assume directional lights.
-  // TODO specular
+vec4 calcLight(Light light, vec4 n) {
+  // Assume directional lights (w = 0).
   vec4 lightPos = ViewMatrix * light.position;
+  vec4 VP = normalize(lightPos);
+  float f = max(0.0, dot(n, VP)) != 0.0 ? 1.0 : 0.0;
+  vec4 h = VP + vec4(0, 0, 1, 0);
   return
     uAmbient * light.ambient +
-    max(0.0, dot(eyeNormal, normalize(lightPos))) * uDiffuse * light.diffuse;
+    max(0.0, dot(n, VP)) * uDiffuse * light.diffuse +
+    f * pow(max(0.0, dot(n, normalize(h))), uShininess) * uSpecular * light.specular;
 }
 #endif // M_LIT
 
