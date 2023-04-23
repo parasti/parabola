@@ -13,7 +13,7 @@ varying vec2 vTexCoord;
 //
 // Lighting
 //
-const float Light_GlobalAmbient = 0.2;
+const vec4 sceneAmbient = vec4(0.2, 0.2, 0.2, 1.0);
 
 struct Light {
   vec4 position;
@@ -44,17 +44,28 @@ uniform float uShininess;
 uniform bool uEnvironment;
 
 varying vec4 vLightColor;
+varying vec3 vLightSpecular;
 
 vec4 calcLight(Light light, vec4 n) {
   // Assume directional lights (w = 0).
+
+  vec4 lightPos = ViewMatrix * light.position;
+  vec4 VP = normalize(lightPos);
+  vec4 color = uAmbient * light.ambient + max(0.0, dot(n, VP)) * uDiffuse * light.diffuse;
+
+  return color;
+}
+
+vec4 calcSpecular(Light light, vec4 n) {
+  // Assume directional lights (w = 0)
+
   vec4 lightPos = ViewMatrix * light.position;
   vec4 VP = normalize(lightPos);
   float f = max(0.0, dot(n, VP)) != 0.0 ? 1.0 : 0.0;
   vec4 h = VP + vec4(0, 0, 1, 0);
-  return
-    uAmbient * light.ambient +
-    max(0.0, dot(n, VP)) * uDiffuse * light.diffuse +
-    f * pow(max(0.0, dot(n, normalize(h))), uShininess) * uSpecular * light.specular;
+  vec4 specular = f * pow(max(0.0, dot(n, normalize(h))), uShininess) * uSpecular * light.specular;
+
+  return specular;
 }
 #endif // M_LIT
 
@@ -73,13 +84,11 @@ void main() {
   vec4 eyePos = aModelViewMatrix * vec4(aPosition, 1.0);
 
 #ifdef M_LIT
-  vec4 lightColor =
-    uEmissive +
-    uAmbient * Light_GlobalAmbient +
-    calcLight(Light0, vec4(eyeNormal, 1.0)) +
-    calcLight(Light1, vec4(eyeNormal, 1.0));
+  vec4 lightColor = uEmissive + uAmbient * sceneAmbient + calcLight(Light0, vec4(eyeNormal, 1.0)) + calcLight(Light1, vec4(eyeNormal, 1.0));
+  vec4 lightSpecular = calcSpecular(Light0, vec4(eyeNormal, 1.0)) + calcSpecular(Light1, vec4(eyeNormal, 1.0));
 
   vLightColor = clamp(vec4(lightColor.rgb, uDiffuse.a), 0.0, 1.0);
+  vLightSpecular = lightSpecular.rgb;
   //vLightColor.rgb = vLightColor.rgb * vLightColor.a; // Premultiply.
 #endif
 
