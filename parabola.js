@@ -5320,6 +5320,15 @@ EC.Billboard.prototype.getBackgroundTransform = (function () {
   };
 })();
 
+EC.Viewpoint = function viewpoint() {
+  this.position = vec3.create();
+  this.target = vec3.create();
+};
+
+EC.Viewpoint.prototype.fromSolView = function (sol, solView) {
+  vec3.copy(this.position, solView.p);
+  vec3.copy(this.target, solView.q);
+};
 },{"./mover.js":31,"./scene-node.js":34,"./solid.js":38,"gl-matrix":5}],26:[function(require,module,exports){
 'use strict';
 
@@ -5631,8 +5640,11 @@ GLState.prototype.drawElementsInstanced = function (mode, count, type, offset, p
   this.instancedArrays.drawElementsInstancedANGLE(mode, count, type, offset, primcount);
 };
 
-/*
- * Obtain a WebGL context. Now IE compatible, whoo.
+/**
+ * Obtain a WebGL context.
+ *
+ * @param {HTMLCanvasElement} canvas canvas element
+ * @returns {?WebGLRenderingContext}
  */
 function getContext(canvas) {
   var opts = { depth: true, alpha: false };
@@ -5640,6 +5652,11 @@ function getContext(canvas) {
   return gl;
 }
 
+/**
+ * Set up some defaults.
+ *
+ * @param {WebGLRenderingContext} gl
+ */
 function setupContext(gl) {
   // Straight alpha vs premultiplied alpha:
   // https://limnu.com/webgl-blending-youre-probably-wrong/
@@ -5695,7 +5712,7 @@ GLState.prototype.createDefaultTexture = function (gl) {
 
 var glslify = require('glslify');
 
-exports.defaultVertexShader = glslify(["#define GLSLIFY 1\nuniform mat4 ProjectionMatrix;\nuniform mat4 ViewMatrix;\n\nattribute vec3 aPosition;\nattribute vec3 aNormal;\nattribute vec2 aTexCoord;\nattribute mat4 aModelViewMatrix;\n\nvarying vec2 vTexCoord;\n\n#ifdef M_LIT\n\n//\n// Lighting\n//\nconst float Light_GlobalAmbient = 0.2;\n\nstruct Light {\n  vec4 position;\n  vec4 diffuse;\n  vec4 ambient;\n  vec4 specular;\n};\n\nconst Light Light0 = Light(\n  vec4(-8.0, +32.0, -8.0, 0.0),\n  vec4(1.0, 0.8, 0.8, 1.0),\n  vec4(0.7, 0.7, 0.7, 1.0),\n  vec4(1.0, 0.8, 0.8, 1.0)\n);\n\nconst Light Light1 = Light(\n  vec4(+8.0, +32.0, +8.0, 0.0),\n  vec4(0.8, 1.0, 0.8, 1.0),\n  vec4(0.7, 0.7, 0.7, 1.0),\n  vec4(0.8, 1.0, 0.8, 1.0)\n);\n\nuniform vec4 uDiffuse;\nuniform vec4 uAmbient;\nuniform vec4 uSpecular;\nuniform vec4 uEmissive;\nuniform float uShininess;\nuniform bool uEnvironment;\n\nvarying vec4 vLightColor;\n\nvec4 calcLight(Light light, vec4 eyeNormal) {\n  // Assume directional lights.\n  // TODO specular\n  vec4 lightPos = ViewMatrix * light.position;\n  return\n    uAmbient * light.ambient +\n    max(0.0, dot(eyeNormal, normalize(lightPos))) * uDiffuse * light.diffuse;\n}\n#endif // M_LIT\n\n#ifdef M_ENVIRONMENT\nvec2 genSphereMap(vec3 p, vec3 n) {\n  vec3 u = normalize(p);\n  vec3 r = reflect(u, n);\n  r.z += 1.0;\n  float m = 2.0 * length(r);\n  return vec2(r.x / m + 0.5, r.y / m + 0.5);\n}\n#endif\n\nvoid main() {\n  vec3 eyeNormal = normalize(mat3(aModelViewMatrix) * aNormal);\n  vec4 eyePos = aModelViewMatrix * vec4(aPosition, 1.0);\n\n#ifdef M_LIT\n  vec4 lightColor =\n    uEmissive +\n    uAmbient * Light_GlobalAmbient +\n    calcLight(Light0, vec4(eyeNormal, 1.0)) +\n    calcLight(Light1, vec4(eyeNormal, 1.0));\n\n  vLightColor = clamp(vec4(lightColor.rgb, uDiffuse.a), 0.0, 1.0);\n  //vLightColor.rgb = vLightColor.rgb * vLightColor.a; // Premultiply.\n#endif\n\n#if defined(M_ENVIRONMENT)\n  vTexCoord = genSphereMap(eyePos.xyz, eyeNormal);\n#else\n  vTexCoord = aTexCoord;\n#endif\n\n  gl_Position = ProjectionMatrix * eyePos;\n}\n"]);
+exports.defaultVertexShader = glslify(["#define GLSLIFY 1\nuniform mat4 ProjectionMatrix;\nuniform mat4 ViewMatrix;\n\nattribute vec3 aPosition;\nattribute vec3 aNormal;\nattribute vec2 aTexCoord;\nattribute mat4 aModelViewMatrix;\n\nvarying vec2 vTexCoord;\n\n#ifdef M_LIT\n\n//\n// Lighting\n//\nconst float Light_GlobalAmbient = 0.2;\n\nstruct Light {\n  vec4 position;\n  vec4 diffuse;\n  vec4 ambient;\n  vec4 specular;\n};\n\nconst Light Light0 = Light(\n  vec4(-8.0, +32.0, -8.0, 0.0),\n  vec4(1.0, 0.8, 0.8, 1.0),\n  vec4(0.7, 0.7, 0.7, 1.0),\n  vec4(1.0, 0.8, 0.8, 1.0)\n);\n\nconst Light Light1 = Light(\n  vec4(+8.0, +32.0, +8.0, 0.0),\n  vec4(0.8, 1.0, 0.8, 1.0),\n  vec4(0.7, 0.7, 0.7, 1.0),\n  vec4(0.8, 1.0, 0.8, 1.0)\n);\n\nuniform vec4 uDiffuse;\nuniform vec4 uAmbient;\nuniform vec4 uSpecular;\nuniform vec4 uEmissive;\nuniform float uShininess;\nuniform bool uEnvironment;\n\nvarying vec4 vLightColor;\n\nvec4 calcLight(Light light, vec4 n) {\n  // Assume directional lights (w = 0).\n  vec4 lightPos = ViewMatrix * light.position;\n  vec4 VP = normalize(lightPos);\n  float f = max(0.0, dot(n, VP)) != 0.0 ? 1.0 : 0.0;\n  vec4 h = VP + vec4(0, 0, 1, 0);\n  return\n    uAmbient * light.ambient +\n    max(0.0, dot(n, VP)) * uDiffuse * light.diffuse +\n    f * pow(max(0.0, dot(n, normalize(h))), uShininess) * uSpecular * light.specular;\n}\n#endif // M_LIT\n\n#ifdef M_ENVIRONMENT\nvec2 genSphereMap(vec3 p, vec3 n) {\n  vec3 u = normalize(p);\n  vec3 r = reflect(u, n);\n  r.z += 1.0;\n  float m = 2.0 * length(r);\n  return vec2(r.x / m + 0.5, r.y / m + 0.5);\n}\n#endif\n\nvoid main() {\n  vec3 eyeNormal = normalize(mat3(aModelViewMatrix) * aNormal);\n  vec4 eyePos = aModelViewMatrix * vec4(aPosition, 1.0);\n\n#ifdef M_LIT\n  vec4 lightColor =\n    uEmissive +\n    uAmbient * Light_GlobalAmbient +\n    calcLight(Light0, vec4(eyeNormal, 1.0)) +\n    calcLight(Light1, vec4(eyeNormal, 1.0));\n\n  vLightColor = clamp(vec4(lightColor.rgb, uDiffuse.a), 0.0, 1.0);\n  //vLightColor.rgb = vLightColor.rgb * vLightColor.a; // Premultiply.\n#endif\n\n#if defined(M_ENVIRONMENT)\n  vTexCoord = genSphereMap(eyePos.xyz, eyeNormal);\n#else\n  vTexCoord = aTexCoord;\n#endif\n\n  gl_Position = ProjectionMatrix * eyePos;\n}\n"]);
 exports.defaultFragmentShader = glslify(["precision highp float;\n#define GLSLIFY 1\n\nuniform sampler2D uTexture;\n\nvarying vec2 vTexCoord;\n#ifdef M_LIT\nvarying vec4 vLightColor;\n#endif\n\nvoid main() {\n#ifdef M_LIT\n  gl_FragColor = texture2D(uTexture, vTexCoord) * vLightColor;\n#else\n  gl_FragColor = texture2D(uTexture, vTexCoord);\n#endif\n}\n"]);
 
 },{"glslify":6}],29:[function(require,module,exports){
@@ -5724,12 +5741,6 @@ function Parabola(options) {
     options,
   );
 
-  this.options.modelPaths = Object.assign(
-    Object.create(null),
-    Parabola.defaultOptions.modelPaths,
-    options.modelPaths || null
-  );
-
   this.canvas = this.options.canvas;
   this.state = GLState(this.canvas);
   this.pool = GLPool();
@@ -5743,6 +5754,7 @@ Parabola.defaultOptions = {
   canvas: null,
   dataUrl: '/data/',
   isInteractive: true,
+  hasOverlay: false,
   gradientImage: 'back/alien',
   modelPaths: {
     gradient: 'geom/back/back.sol',
@@ -5825,6 +5837,10 @@ Parabola.prototype.setup = function () {
         }
         pool.cacheSol(sol);
         model = SolidModel.fromSol(sol, scene.entities);
+
+        if (modelName === 'level') {
+          scene.fly(1.0);
+        }
       }
 
       // TODO: this could be a separate step from downloading.
@@ -5960,6 +5976,82 @@ Parabola.prototype.setup = function () {
     }, { passive: false });
   }
 
+  if (this.options.hasOverlay) {
+    if (canvas.parentElement) {
+      const overlayElement = this.getOverlay();
+      canvas.parentElement.appendChild(overlayElement);
+    }
+  }
+}
+
+/**
+ * Build a document fragment with the Parabola overlay.
+ * 
+ * @returns {DocumentFragment}
+ */
+Parabola.prototype.getOverlay = function () {
+  const state = this.state;
+  const scene = this.scene;
+
+  const fragment = document.createDocumentFragment();
+  const overlayElement = document.createElement('div');
+
+  // Get a unique element ID for label/input association.
+  const overlayId = randomId();
+
+  fragment.append(overlayElement);
+
+  // Build the DOM.
+
+  overlayElement.innerHTML = `
+    <div class="parabola-overlay">
+      <div class="parabola-controls">
+        <strong>Click</strong> to grab pointer, <strong>WASD</strong> to fly around, <strong>mouse</strong> to look around, <strong>mouse wheel</strong> to change flying speed.
+      </div>
+      <div>
+        <label for="toggle-textures-${overlayId}">Toggle textures</label>
+        <input id="toggle-textures-${overlayId}" type="checkbox" ${this.state.enableTextures ? "checked" : ""}>
+      </div>
+      <div>
+        <label for="max-batches-${overlayId}">Max batches</label>
+        <input id="max-batches-${overlayId}" type="number" min="-1" step="1" value="-1">
+      </div>
+      <div>
+        <label for="scene-time-${overlayId}">Scene time</label>
+        <input id="scene-time-${overlayId}" type="number" min="-0.1" step="0.1" value="-0.1">
+      </div>
+      <div>
+        <label for="flyby-${overlayId}">Fly-by</label>
+        <input id="flyby-${overlayId}" type="range" min="-1" max="1" step="0.005" value="1">
+      </div>
+    </div>
+  `;
+
+  // Setup event listeners.
+
+  const toggleTexturesInput = fragment.getElementById('toggle-textures-' + overlayId);
+  const maxBatchesInput = fragment.getElementById('max-batches-' + overlayId);
+  const sceneTimeInput = fragment.getElementById('scene-time-' + overlayId);
+  const flybyInput = fragment.getElementById('flyby-' + overlayId);
+
+  toggleTexturesInput.addEventListener('change', function (event) {
+    state.enableTextures = this.checked;
+  });
+
+  maxBatchesInput.addEventListener('input', function (event) {
+    scene._maxRenderedBatches = this.value;
+    this.max = scene._batches.length;
+  });
+
+  sceneTimeInput.addEventListener('input', function (event) {
+    scene.fixedTime = this.value;
+  });
+
+  flybyInput.addEventListener('input', function (event) {
+    scene.fly(this.value);
+  });
+
+  return fragment;
 }
 
 /**
@@ -6008,8 +6100,60 @@ function createBackgroundModel(pool, entities, sol) {
   model.setBatchSortLayer(Batch.LAYER_BACKGROUND);
   return model;
 }
+
+/**
+ * Get a random number between the given values.
+ * 
+ * @param {number} a lower bound
+ * @param {number} b upper bound
+ * @returns {number}
+ */
+function randomBetween(a, b) {
+  return a + (b - a) * Math.random();
+}
+
+/**
+ * Get a random printable ASCII character.
+ * 
+ * @returns 
+ */
+function randomPrintable() {
+  return String.fromCodePoint(Math.floor(randomBetween(32, 122)));
+}
+
+/**
+ * Get a random string of given length.
+ * 
+ * @param {number} length 
+ * @returns 
+ */
+function randomString(length) {
+  var str = '';
+
+  for (var i = 0; i < length; ++i) {
+    str += randomPrintable();
+  }
+
+  return str;
+}
+
+/**
+ * Get a random unused element ID.
+ * 
+ * @returns {string}
+ */
+function randomId() {
+  do {
+    var id = randomString(16).replace(/[^a-zA-Z]/g, '');
+    // Length check ensures we have at least that many printable characters.
+  } while (id.length < 8 || document.getElementById(id) !== null);
+
+  return id;
+}
 },{"./batch.js":22,"./data.js":24,"./gl-pool.js":26,"./gl-state.js":27,"./mtrl.js":33,"./scene.js":35,"./solid-model.js":37,"./solid.js":38}],30:[function(require,module,exports){
 'use strict';
+
+var GLState = require('./gl-state.js');
 
 module.exports = MeshData;
 
@@ -6037,6 +6181,11 @@ function MeshData() {
   this.vao = null;
 }
 
+/**
+ * Upload mesh data and wrap it into a vertex array object.
+ *
+ * @param {GLState} state
+ */
 MeshData.prototype.createObjects = function (state) {
   var meshData = this;
   var gl = state.gl;
@@ -6108,7 +6257,7 @@ MeshData.prototype.bindVertexArray = function (state) {
   }
 };
 
-},{}],31:[function(require,module,exports){
+},{"./gl-state.js":27}],31:[function(require,module,exports){
 'use strict';
 
 var vec3 = require('gl-matrix').vec3;
@@ -6400,8 +6549,10 @@ Mtrl.prototype.setImage = function (img) {
   this._image = img;
 }
 
-/*
+/**
  * Apply material state.
+ *
+ * @param {GLState} state
  */
 Mtrl.prototype.apply = function (state, passIndex = 0) {
   var mtrl = this;
@@ -7043,7 +7194,6 @@ Scene.prototype.setModel = function (state, modelSlot, solidModel) {
 
 Scene.prototype.step = function (dt) {
   var scene = this;
-  var view = this.view;
 
   if (scene.fixedTime >= 0.0) {
     var fakeDt = scene.fixedTime - scene.time;
@@ -7056,9 +7206,6 @@ Scene.prototype.step = function (dt) {
 
     this.updateSystems(dt);
   }
-
-
-  view.step(dt);
 };
 
 /**
@@ -7246,6 +7393,18 @@ Scene.prototype._updateSceneGraph = function () {
   }
 }
 
+Scene.prototype._updateCamera = function (dt) {
+  // var ents = this.entities.queryComponents();
+  this.view.step(dt);
+}
+
+Scene.prototype.fly = function (k) {
+  var balls = this.entities.queryTag('ballSolid');
+  var viewPositions = this.entities.queryComponents([EC.Viewpoint]).map(function (ent) { return ent.viewpoint; });
+
+  this.view.fly(balls.length ? balls[0].spatial.position : null, viewPositions, k);
+}
+
 /**
  * Update entity systems.
  */
@@ -7254,6 +7413,7 @@ Scene.prototype.updateSystems = function (dt) {
   this._updateMovers(dt);
   this._updateBillboards();
   this._updateSceneGraph();
+  this._updateCamera(dt);
 };
 
 },{"./batch.js":22,"./entity-components.js":25,"./scene-node.js":34,"./utils.js":40,"./view.js":41,"events":4,"gl-matrix":5,"nano-ecs":8}],36:[function(require,module,exports){
@@ -7602,6 +7762,16 @@ SolidModel.fromSol = function (sol, entities) {
     ent.spatial.scale = [1.0, 1.0, 1.0];
   }
 
+  for (i = 0, n = sol.wv.length; i < n; ++i) {
+    var solView = sol.wv[i];
+
+    ent = ents.createEntity();
+
+    ent.addComponent(EC.Viewpoint);
+
+    ent.viewpoint.fromSolView(sol, solView);
+  }
+
   return solidModel;
 };
 
@@ -7688,6 +7858,8 @@ Solid.empty = function () {
 
 Solid.genTestMap = function () {
     var sol = Solid.empty();
+
+    sol.id = 'parabola/test1';
 
     for (var i = 0; i < 20; ++i) {
         for (var j = 0; j < 20; ++j) {
@@ -7926,36 +8098,33 @@ View.prototype.getMatrix = (function () {
   };
 })();
 
-/*
- * Calculate a fly-in view from the available SOL entities.
- */
-View.prototype.setFromSol = (function () {
+View.prototype.fly = (function () {
   // game_view_fly
 
-  var ball = View();
-  var view = View();
+  var ballView = View();
+  var viewView = View();
 
-  return function (sol, k) {
-    if (sol.uv.length) {
-      ball.overhead(sol.uv[0].p);
+  return function (ballPosition, viewpoints, k) {
+    if (ballPosition) {
+      ballView.overhead(ballPosition);
     }
 
-    if (k >= 0 && sol.wv.length > 0) {
-      vec3.copy(view.p, sol.wv[0].p);
-      vec3.copy(view.c, sol.wv[0].q);
+    if (k >= 0 && viewpoints.length > 0) {
+      vec3.copy(viewView.p, viewpoints[0].position);
+      vec3.copy(viewView.c, viewpoints[0].target);
     }
-    if (k <= 0 && sol.wv.length > 1) {
-      vec3.copy(view.p, sol.wv[1].p);
-      vec3.copy(view.c, sol.wv[1].q);
+    if (k <= 0 && viewpoints.length > 1) {
+      vec3.copy(viewView.p, viewpoints[1].position);
+      vec3.copy(viewView.c, viewpoints[1].target);
     } else if (k <= 0) { // TOOD
       k = 0;
     }
 
     // Interpolate the views.
 
-    vec3.lerp(this.p, ball.p, view.p, k * k);
-    vec3.lerp(this.c, ball.c, view.c, k * k);
-  };
+    vec3.lerp(this.p, ballView.p, viewView.p, k * k);
+    vec3.lerp(this.c, ballView.c, viewView.c, k * k);
+  }
 })();
 
 /*
