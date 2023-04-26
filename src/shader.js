@@ -74,11 +74,6 @@ Shader.prototype.createObjects = function (state) {
   var gl = state.gl;
   var attrs = state.vertexAttrs;
 
-  if (shader.program) {
-    console.warn('Shader program already exists');
-    return;
-  }
-
   var vs = compileShaderSource(gl, gl.VERTEX_SHADER, shader.vertexShader);
   var fs = compileShaderSource(gl, gl.FRAGMENT_SHADER, shader.fragmentShader);
 

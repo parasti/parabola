@@ -21,25 +21,8 @@ function GLState(canvas) {
 
   this.boundTextures = [];
   this.enabledCapabilities = [];
+  this.shadowState = {};
 
-  var gl = this.gl = getContext(canvas);
-
-  setupContext(this.gl);
-
-  this.shadowState = {
-    currentProgram: gl.getParameter(gl.CURRENT_PROGRAM),
-    blendSrcRGB: gl.getParameter(gl.BLEND_SRC_RGB),
-    blendDstRGB: gl.getParameter(gl.BLEND_DST_RGB),
-    depthMask: gl.getParameter(gl.DEPTH_WRITEMASK),
-    cullFaceMode: gl.getParameter(gl.CULL_FACE_MODE),
-    polygonOffsetFactor: gl.getParameter(gl.POLYGON_OFFSET_FACTOR),
-    polygonOffsetUnits: gl.getParameter(gl.POLYGON_OFFSET_UNITS)
-  };
-
-  this.instancedArrays = this.gl.getExtension('ANGLE_instanced_arrays');
-  this.vertexArrayObject = this.gl.getExtension('OES_vertex_array_object');
-
-  // TODO
   this.uniforms = {
     uTexture: Uniform.i(),
     ProjectionMatrix: Uniform.mat4(),
@@ -51,6 +34,29 @@ function GLState(canvas) {
     uShininess: Uniform.f(),
     uEnvironment: Uniform.i()
   };
+
+  this.init(canvas);
+}
+
+GLState.prototype.init = function (canvas) {
+  var gl = this.gl = getContext(canvas);
+
+  setupContext(gl);
+
+  this.shadowState = {
+    currentProgram: gl.getParameter(gl.CURRENT_PROGRAM),
+    blendSrcRGB: gl.getParameter(gl.BLEND_SRC_RGB),
+    blendDstRGB: gl.getParameter(gl.BLEND_DST_RGB),
+    depthMask: gl.getParameter(gl.DEPTH_WRITEMASK),
+    cullFaceMode: gl.getParameter(gl.CULL_FACE_MODE),
+    polygonOffsetFactor: gl.getParameter(gl.POLYGON_OFFSET_FACTOR),
+    polygonOffsetUnits: gl.getParameter(gl.POLYGON_OFFSET_UNITS)
+  };
+
+  // Extensions.
+  this.instancedArrays = this.gl.getExtension('ANGLE_instanced_arrays');
+  this.vertexArrayObject = this.gl.getExtension('OES_vertex_array_object');
+  this.loseContext = this.gl.getExtension('WEBGL_lose_context');
 
   this.createDefaultObjects();
 }
@@ -166,18 +172,13 @@ function setupContext(gl) {
 GLState.prototype.createDefaultObjects = function () {
   var gl = this.gl;
 
-  this.createDefaultTexture(gl);
+  this.defaultTexture = this.createDefaultTexture(gl);
 };
 
 /*
  * WebGL spams console when sampling an unbound texture, so we bind this.
  */
 GLState.prototype.createDefaultTexture = function (gl) {
-  if (this.defaultTexture) {
-    console.warn('Attempted to remake default texture');
-    return;
-  }
-
   var data = [
     0xff, 0xff, 0xff, 0xff,
     0xff, 0xff, 0xff, 0xff,
@@ -191,5 +192,5 @@ GLState.prototype.createDefaultTexture = function (gl) {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 2, 2, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(data));
   this.bindTexture(gl.TEXTURE_2D, null);
-  this.defaultTexture = tex;
+  return tex;
 };

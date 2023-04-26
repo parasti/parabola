@@ -32,7 +32,6 @@ function GLPool () {
   this.materials = makeCache(Object.create(null)); // Keyed by name (string).
   this.shaders = makeCache([]); // Keyed by flags (integer).
   this.models = makeCache(Object.create(null)); // Keyed by id (string).
-  this.meshData = makeCache(Object.create(null)); // Keyed by id (string).
 }
 
 function makeCache (store) {
@@ -61,10 +60,6 @@ GLPool.prototype._getModel = function (id) {
   return this.models.get(id);
 };
 
-GLPool.prototype._getMeshData = function (id) {
-  return this.meshData.get(id);
-}
-
 /**
  *
  * @param {Mtrl} mtrl material
@@ -83,11 +78,6 @@ GLPool.prototype._cacheModel = function (model) {
   this.models.set(model.id, model);
   this.emitter.emit('model', model);
 };
-
-GLPool.prototype._cacheMeshData = function (meshData) {
-  this.meshData.set(meshData.id, meshData);
-  this.emitter.emit('meshdata', meshData);
-}
 
 /**
  * Cache materials and add a SOL-to-cache map to the SOL.
@@ -175,3 +165,17 @@ GLPool.prototype.cacheSol = function (sol) {
   this.cacheMtrlsFromSol(sol);
   this.cacheModelsFromSol(sol);
 };
+
+GLPool.prototype.createObjects = function () {
+  for (var mtrlId in this.materials.store) { // Object
+    this.emitter.emit('mtrl', this.materials.get(mtrlId));
+  }
+
+  for (var shaderId in this.shaders.store) { // Sparse array
+    this.emitter.emit('shader', this.shaders.get(shaderId));
+  }
+
+  for (var modelId in this.models.store) { // Object
+    this.emitter.emit('model', this.models.get(modelId));
+  }
+}

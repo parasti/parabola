@@ -5364,7 +5364,6 @@ function GLPool () {
   this.materials = makeCache(Object.create(null)); // Keyed by name (string).
   this.shaders = makeCache([]); // Keyed by flags (integer).
   this.models = makeCache(Object.create(null)); // Keyed by id (string).
-  this.meshData = makeCache(Object.create(null)); // Keyed by id (string).
 }
 
 function makeCache (store) {
@@ -5393,10 +5392,6 @@ GLPool.prototype._getModel = function (id) {
   return this.models.get(id);
 };
 
-GLPool.prototype._getMeshData = function (id) {
-  return this.meshData.get(id);
-}
-
 /**
  *
  * @param {Mtrl} mtrl material
@@ -5415,11 +5410,6 @@ GLPool.prototype._cacheModel = function (model) {
   this.models.set(model.id, model);
   this.emitter.emit('model', model);
 };
-
-GLPool.prototype._cacheMeshData = function (meshData) {
-  this.meshData.set(meshData.id, meshData);
-  this.emitter.emit('meshdata', meshData);
-}
 
 /**
  * Cache materials and add a SOL-to-cache map to the SOL.
@@ -5508,6 +5498,19 @@ GLPool.prototype.cacheSol = function (sol) {
   this.cacheModelsFromSol(sol);
 };
 
+GLPool.prototype.createObjects = function () {
+  for (var mtrlId in this.materials.store) { // Object
+    this.emitter.emit('mtrl', this.materials.get(mtrlId));
+  }
+
+  for (var shaderId in this.shaders.store) { // Sparse array
+    this.emitter.emit('shader', this.shaders.get(shaderId));
+  }
+
+  for (var modelId in this.models.store) { // Object
+    this.emitter.emit('model', this.models.get(modelId));
+  }
+}
 },{"./body-model.js":23,"./mtrl.js":33,"./shader.js":36,"events":4}],27:[function(require,module,exports){
 'use strict';
 
@@ -5532,25 +5535,8 @@ function GLState(canvas) {
 
   this.boundTextures = [];
   this.enabledCapabilities = [];
+  this.shadowState = {};
 
-  var gl = this.gl = getContext(canvas);
-
-  setupContext(this.gl);
-
-  this.shadowState = {
-    currentProgram: gl.getParameter(gl.CURRENT_PROGRAM),
-    blendSrcRGB: gl.getParameter(gl.BLEND_SRC_RGB),
-    blendDstRGB: gl.getParameter(gl.BLEND_DST_RGB),
-    depthMask: gl.getParameter(gl.DEPTH_WRITEMASK),
-    cullFaceMode: gl.getParameter(gl.CULL_FACE_MODE),
-    polygonOffsetFactor: gl.getParameter(gl.POLYGON_OFFSET_FACTOR),
-    polygonOffsetUnits: gl.getParameter(gl.POLYGON_OFFSET_UNITS)
-  };
-
-  this.instancedArrays = this.gl.getExtension('ANGLE_instanced_arrays');
-  this.vertexArrayObject = this.gl.getExtension('OES_vertex_array_object');
-
-  // TODO
   this.uniforms = {
     uTexture: Uniform.i(),
     ProjectionMatrix: Uniform.mat4(),
@@ -5562,6 +5548,29 @@ function GLState(canvas) {
     uShininess: Uniform.f(),
     uEnvironment: Uniform.i()
   };
+
+  this.init(canvas);
+}
+
+GLState.prototype.init = function (canvas) {
+  var gl = this.gl = getContext(canvas);
+
+  setupContext(gl);
+
+  this.shadowState = {
+    currentProgram: gl.getParameter(gl.CURRENT_PROGRAM),
+    blendSrcRGB: gl.getParameter(gl.BLEND_SRC_RGB),
+    blendDstRGB: gl.getParameter(gl.BLEND_DST_RGB),
+    depthMask: gl.getParameter(gl.DEPTH_WRITEMASK),
+    cullFaceMode: gl.getParameter(gl.CULL_FACE_MODE),
+    polygonOffsetFactor: gl.getParameter(gl.POLYGON_OFFSET_FACTOR),
+    polygonOffsetUnits: gl.getParameter(gl.POLYGON_OFFSET_UNITS)
+  };
+
+  // Extensions.
+  this.instancedArrays = this.gl.getExtension('ANGLE_instanced_arrays');
+  this.vertexArrayObject = this.gl.getExtension('OES_vertex_array_object');
+  this.loseContext = this.gl.getExtension('WEBGL_lose_context');
 
   this.createDefaultObjects();
 }
@@ -5677,18 +5686,13 @@ function setupContext(gl) {
 GLState.prototype.createDefaultObjects = function () {
   var gl = this.gl;
 
-  this.createDefaultTexture(gl);
+  this.defaultTexture = this.createDefaultTexture(gl);
 };
 
 /*
  * WebGL spams console when sampling an unbound texture, so we bind this.
  */
 GLState.prototype.createDefaultTexture = function (gl) {
-  if (this.defaultTexture) {
-    console.warn('Attempted to remake default texture');
-    return;
-  }
-
   var data = [
     0xff, 0xff, 0xff, 0xff,
     0xff, 0xff, 0xff, 0xff,
@@ -5702,7 +5706,7 @@ GLState.prototype.createDefaultTexture = function (gl) {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 2, 2, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(data));
   this.bindTexture(gl.TEXTURE_2D, null);
-  this.defaultTexture = tex;
+  return tex;
 };
 },{"./uniform.js":39}],28:[function(require,module,exports){
 'use strict';
@@ -5778,6 +5782,20 @@ Parabola.prototype.setup = function () {
   var pool = this.pool;
   var scene = this.scene;
   var gl = state.gl;
+
+  var animationRequestId = 0;
+
+  canvas.addEventListener('webglcontextlost', function (event) {
+    event.preventDefault();
+    window.cancelAnimationFrame(animationRequestId);
+    animationRequestId = 0;
+  });
+
+  canvas.addEventListener('webglcontextrestored', function (event) {
+    state.init(canvas);
+    pool.createObjects();
+    animationRequestId = window.requestAnimationFrame(processFrame);
+  });
 
   // GL object creation.
 
@@ -5873,7 +5891,7 @@ Parabola.prototype.setup = function () {
    * Basic requestAnimationFrame loop.
    */
   function processFrame(currTime) {
-    window.requestAnimationFrame(processFrame);
+    animationRequestId = window.requestAnimationFrame(processFrame);
 
     var dt = getDeltaTime(currTime);
 
@@ -5882,7 +5900,7 @@ Parabola.prototype.setup = function () {
     }
   }
 
-  window.requestAnimationFrame(processFrame);
+  animationRequestId = window.requestAnimationFrame(processFrame);
 
   var currWidth = 0;
   var currHeight = 0;
@@ -6024,6 +6042,11 @@ Parabola.prototype.getOverlay = function () {
         <label for="flyby-${overlayId}">Fly-by</label>
         <input id="flyby-${overlayId}" type="range" min="-1" max="1" step="0.005" value="1">
       </div>
+      <div>
+        <span>GL context</span>
+        <button type="button" id="lose-context-${overlayId}">Lose</button>
+        <button type="button" id="restore-context-${overlayId}">Restore</button>
+      </div>
     </div>
   `;
 
@@ -6033,6 +6056,8 @@ Parabola.prototype.getOverlay = function () {
   const maxBatchesInput = fragment.getElementById('max-batches-' + overlayId);
   const sceneTimeInput = fragment.getElementById('scene-time-' + overlayId);
   const flybyInput = fragment.getElementById('flyby-' + overlayId);
+  const loseContextButton = fragment.getElementById('lose-context-' + overlayId);
+  const restoreContextButton = fragment.getElementById('restore-context-' + overlayId);
 
   toggleTexturesInput.addEventListener('change', function (event) {
     state.enableTextures = this.checked;
@@ -6049,6 +6074,14 @@ Parabola.prototype.getOverlay = function () {
 
   flybyInput.addEventListener('input', function (event) {
     scene.fly(this.value);
+  });
+
+  loseContextButton.addEventListener('click', function (event) {
+    state.loseContext.loseContext();
+  });
+
+  restoreContextButton.addEventListener('click', function (event) {
+    state.loseContext.restoreContext();
   });
 
   return fragment;
@@ -7492,11 +7525,6 @@ Shader.prototype.createObjects = function (state) {
   var shader = this;
   var gl = state.gl;
   var attrs = state.vertexAttrs;
-
-  if (shader.program) {
-    console.warn('Shader program already exists');
-    return;
-  }
 
   var vs = compileShaderSource(gl, gl.VERTEX_SHADER, shader.vertexShader);
   var fs = compileShaderSource(gl, gl.FRAGMENT_SHADER, shader.fragmentShader);

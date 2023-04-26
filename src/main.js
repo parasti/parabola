@@ -61,6 +61,20 @@ Parabola.prototype.setup = function () {
   var scene = this.scene;
   var gl = state.gl;
 
+  var animationRequestId = 0;
+
+  canvas.addEventListener('webglcontextlost', function (event) {
+    event.preventDefault();
+    window.cancelAnimationFrame(animationRequestId);
+    animationRequestId = 0;
+  });
+
+  canvas.addEventListener('webglcontextrestored', function (event) {
+    state.init(canvas);
+    pool.createObjects();
+    animationRequestId = window.requestAnimationFrame(processFrame);
+  });
+
   // GL object creation.
 
   function createObjects(resource) {
@@ -155,7 +169,7 @@ Parabola.prototype.setup = function () {
    * Basic requestAnimationFrame loop.
    */
   function processFrame(currTime) {
-    window.requestAnimationFrame(processFrame);
+    animationRequestId = window.requestAnimationFrame(processFrame);
 
     var dt = getDeltaTime(currTime);
 
@@ -164,7 +178,7 @@ Parabola.prototype.setup = function () {
     }
   }
 
-  window.requestAnimationFrame(processFrame);
+  animationRequestId = window.requestAnimationFrame(processFrame);
 
   var currWidth = 0;
   var currHeight = 0;
@@ -306,6 +320,11 @@ Parabola.prototype.getOverlay = function () {
         <label for="flyby-${overlayId}">Fly-by</label>
         <input id="flyby-${overlayId}" type="range" min="-1" max="1" step="0.005" value="1">
       </div>
+      <div>
+        <span>GL context</span>
+        <button type="button" id="lose-context-${overlayId}">Lose</button>
+        <button type="button" id="restore-context-${overlayId}">Restore</button>
+      </div>
     </div>
   `;
 
@@ -315,6 +334,8 @@ Parabola.prototype.getOverlay = function () {
   const maxBatchesInput = fragment.getElementById('max-batches-' + overlayId);
   const sceneTimeInput = fragment.getElementById('scene-time-' + overlayId);
   const flybyInput = fragment.getElementById('flyby-' + overlayId);
+  const loseContextButton = fragment.getElementById('lose-context-' + overlayId);
+  const restoreContextButton = fragment.getElementById('restore-context-' + overlayId);
 
   toggleTexturesInput.addEventListener('change', function (event) {
     state.enableTextures = this.checked;
@@ -331,6 +352,14 @@ Parabola.prototype.getOverlay = function () {
 
   flybyInput.addEventListener('input', function (event) {
     scene.fly(this.value);
+  });
+
+  loseContextButton.addEventListener('click', function (event) {
+    state.loseContext.loseContext();
+  });
+
+  restoreContextButton.addEventListener('click', function (event) {
+    state.loseContext.restoreContext();
   });
 
   return fragment;
