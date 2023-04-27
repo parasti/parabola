@@ -9,7 +9,6 @@ function GLState(canvas) {
     return new GLState(canvas);
   }
 
-  this.defaultTexture = null;
   this.enableTextures = true;
 
   this.vertexAttrs = {
@@ -18,10 +17,6 @@ function GLState(canvas) {
     TexCoord: 2,
     ModelViewMatrix: 3 // and 4, 5, 6. Maximum is 8 attribute locations.
   };
-
-  this.boundTextures = [];
-  this.enabledCapabilities = [];
-  this.shadowState = {};
 
   this.uniforms = {
     uTexture: Uniform.i(),
@@ -43,6 +38,9 @@ GLState.prototype.init = function (canvas) {
 
   setupContext(gl);
 
+  this.defaultTexture = null;
+  this.boundTextures = [];
+  this.enabledCapabilities = [];
   this.shadowState = {
     currentProgram: gl.getParameter(gl.CURRENT_PROGRAM),
     blendSrcRGB: gl.getParameter(gl.BLEND_SRC_RGB),
