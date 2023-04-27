@@ -55,11 +55,14 @@ Parabola.defaultOptions = {
 };
 
 Parabola.prototype.setup = function () {
+  var parabola = this;
   var canvas = this.canvas;
   var state = this.state;
   var pool = this.pool;
   var scene = this.scene;
   var gl = state.gl;
+
+  this.picmip = 1;
 
   var animationRequestId = 0;
 
@@ -182,11 +185,12 @@ Parabola.prototype.setup = function () {
 
   var currWidth = 0;
   var currHeight = 0;
+  var currPicmip = this.picmip;
 
   function step(dt) {
-    if (currWidth !== canvas.clientWidth || currHeight !== canvas.clientHeight) {
-      var w = canvas.clientWidth;
-      var h = canvas.clientHeight;
+    if (currWidth !== canvas.clientWidth || currHeight !== canvas.clientHeight || currPicmip !== parabola.picmip) {
+      var w = canvas.clientWidth / parabola.picmip;
+      var h = canvas.clientHeight / parabola.picmip;
 
       // Update projection matrix with CSS dimensions.
       scene.view.setProjection(w, h, 50);
@@ -201,6 +205,7 @@ Parabola.prototype.setup = function () {
       // Save values.
       currWidth = w;
       currHeight = h;
+      currPicmip = parabola.picmip;
     }
 
     scene.view.mouseLook(0, 0);
@@ -286,6 +291,7 @@ Parabola.prototype.setup = function () {
  * @returns {DocumentFragment}
  */
 Parabola.prototype.getOverlay = function () {
+  const parabola = this;
   const state = this.state;
   const scene = this.scene;
 
@@ -321,6 +327,10 @@ Parabola.prototype.getOverlay = function () {
         <input id="flyby-${overlayId}" type="range" min="-1" max="1" step="0.005" value="1">
       </div>
       <div>
+        <label for="picmip-${overlayId}">Picmip</label>
+        <input id="picmip-${overlayId}" type="range" min="0" max="8" step="1" value="0">
+      </div>
+      <div>
         <span>GL context</span>
         <button type="button" id="lose-context-${overlayId}">Lose</button>
         <button type="button" id="restore-context-${overlayId}">Restore</button>
@@ -336,6 +346,7 @@ Parabola.prototype.getOverlay = function () {
   const flybyInput = fragment.getElementById('flyby-' + overlayId);
   const loseContextButton = fragment.getElementById('lose-context-' + overlayId);
   const restoreContextButton = fragment.getElementById('restore-context-' + overlayId);
+  const picmipInput = fragment.getElementById('picmip-' + overlayId);
 
   toggleTexturesInput.addEventListener('change', function (event) {
     state.enableTextures = this.checked;
@@ -352,6 +363,10 @@ Parabola.prototype.getOverlay = function () {
 
   flybyInput.addEventListener('input', function (event) {
     scene.fly(this.value);
+  });
+
+  picmipInput.addEventListener('input', function (event) {
+    parabola.picmip = Math.pow(2, parseFloat(this.value));
   });
 
   loseContextButton.addEventListener('click', function (event) {
