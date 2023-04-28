@@ -6,7 +6,21 @@ Parabola is a WebGL rewrite of the Neverball renderer in plain old Javascript. S
 
 Parabola is incomplete, but fun to play with.
 
-Parabola uses geometry instancing and vertex array objects to speed up rendering. A scene graph is used to compute modelview matrices. Neverball-style lighting is partially implemented as a vertex shader.
+Parabola uses instanced and vertex array objects to speed up rendering. A scene graph is used to compute modelview matrices. Neverball-style lighting is partially implemented as a vertex shader.
+
+## Missing stuff
+
+* Ball shadow (blob shadow)
+* Mirrors (world mirror on XZ plane)
+* ...
+
+## Opportunities
+
+Not in any specific order:
+
+* Non-moving level geometry (bodies that are not attached to a path) could be merged into a single static mesh. That might significantly reduce the number of modelview matrices that need to be computed and uploaded.
+* Texture atlas support. Wouldn't it be cool if loading a SOL would download just a single additional image instead of N images where N is the number of materials.
+* Sorting batches by distance to camera. A moving camera makes this complicated, but it doesn't have to be instant: a limited number of distance vallues could be computed per frame.
 
 ## Background
 
