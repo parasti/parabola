@@ -5758,6 +5758,7 @@ Parabola.defaultOptions = {
   dataUrl: '/data/',
   isInteractive: true,
   hasOverlay: false,
+  twoSidedBackBills: false,
   gradientImage: 'back/alien',
   modelPaths: {
     gradient: 'geom/back/back.sol',
@@ -5848,6 +5849,12 @@ Parabola.prototype.setup = function () {
       if (modelName === 'gradient') {
         model = createGradientModel(pool, scene.entities, sol);
       } else if (modelName === 'background') {
+        if (parabola.options.twoSidedBackBills) {
+          for (var mi = 0, mc = sol.mtrls.length; mi < mc; ++mi) {
+            sol.mtrls[mi].fl |= Solid.MTRL_TWO_SIDED;
+          }
+        }
+      
         model = createBackgroundModel(pool, scene.entities, sol);
       } else {
         if (sol.dicts.drawback === '1') {

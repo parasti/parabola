@@ -65,13 +65,16 @@
         canvas: canvas,
         // isInteractive: false,
         hasOverlay: true,
-        gradientImage: 'back/alien',
+        twoSidedBackBills: true,
+        gradientImage: 'back/land',
         modelPaths: {
           ballSolid: 'ball/basic-ball/basic-ball-solid.sol',
-          level: 'map-fwp/adventure.sol',
+          level: 'map-easy/easy.sol',
           gradient: 'geom/back/back.sol',
-          background: 'map-back/alien.sol',
-          coin: 'item/coin/coin.sol'
+          background: 'map-back/clouds.sol',
+          coin: 'item/coin/coin.sol',
+          grow: 'item/grow/grow.sol',
+          shrink: 'item/shrink/shrink.sol'
         }
       });
 
