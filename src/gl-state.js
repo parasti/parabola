@@ -55,6 +55,7 @@ GLState.prototype.init = function (canvas) {
   this.instancedArrays = this.gl.getExtension('ANGLE_instanced_arrays');
   this.vertexArrayObject = this.gl.getExtension('OES_vertex_array_object');
   this.loseContext = this.gl.getExtension('WEBGL_lose_context');
+  this.textureFilterAnisotropic = this.gl.getExtension('EXT_texture_filter_anisotropic');
 
   this.createDefaultObjects();
 }
