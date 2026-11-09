@@ -46,25 +46,31 @@ uniform bool uEnvironment;
 varying vec4 vLightColor;
 varying vec3 vLightSpecular;
 
-vec4 calcLight(Light light, vec4 n) {
+vec4 calcLight(Light light, vec3 n) {
   // Assume directional lights (w = 0).
-
-  vec4 lightPos = ViewMatrix * light.position;
-  vec4 VP = normalize(lightPos);
-  vec4 color = uAmbient * light.ambient + max(0.0, dot(n, VP)) * uDiffuse * light.diffuse;
-
+  vec3 VP = normalize((ViewMatrix * light.position).xyz);
+  float nDotVP = max(0.0, dot(n, VP));
+  vec4 color = uAmbient * light.ambient + nDotVP * uDiffuse * light.diffuse;
   return color;
 }
 
-vec4 calcSpecular(Light light, vec4 n) {
+vec4 calcSpecular(Light light, vec3 n) {
   // Assume directional lights (w = 0)
-
-  vec4 lightPos = ViewMatrix * light.position;
-  vec4 VP = normalize(lightPos);
-  float f = max(0.0, dot(n, VP)) != 0.0 ? 1.0 : 0.0;
-  vec4 h = VP + vec4(0, 0, 1, 0);
-  vec4 specular = f * pow(max(0.0, dot(n, normalize(h))), uShininess) * uSpecular * light.specular;
-
+  if (uShininess <= 0.0) {
+    return vec4(0.0);
+  }
+  vec3 VP = normalize((ViewMatrix * light.position).xyz);
+  float nDotVP = dot(n, VP);
+  if (nDotVP <= 0.0) {
+    return vec4(0.0);
+  }
+  // OpenGL 1.5 default: GL_LIGHT_MODEL_LOCAL_VIEWER = GL_FALSE -> viewer = (0, 0, 1)
+  vec3 h = normalize(VP + vec3(0.0, 0.0, 1.0));
+  float nDotH = dot(n, h);
+  if (nDotH <= 0.0) {
+    return vec4(0.0);
+  }
+  vec4 specular = pow(nDotH, uShininess) * uSpecular * light.specular;
   return specular;
 }
 #endif // M_LIT
@@ -80,16 +86,15 @@ vec2 genSphereMap(vec3 p, vec3 n) {
 #endif
 
 void main() {
-  vec3 eyeNormal = normalize(mat3(aModelViewMatrix) * aNormal);
+  vec3 eyeNormal = normalize((aModelViewMatrix * vec4(aNormal, 0.0)).xyz);
   vec4 eyePos = aModelViewMatrix * vec4(aPosition, 1.0);
 
 #ifdef M_LIT
-  vec4 lightColor = uEmissive + uAmbient * sceneAmbient + calcLight(Light0, vec4(eyeNormal, 1.0)) + calcLight(Light1, vec4(eyeNormal, 1.0));
-  vec4 lightSpecular = calcSpecular(Light0, vec4(eyeNormal, 1.0)) + calcSpecular(Light1, vec4(eyeNormal, 1.0));
+  vec4 lightColor = uEmissive + uAmbient * sceneAmbient + calcLight(Light0, eyeNormal) + calcLight(Light1, eyeNormal);
+  vec4 lightSpecular = calcSpecular(Light0, eyeNormal) + calcSpecular(Light1, eyeNormal);
 
   vLightColor = clamp(vec4(lightColor.rgb, uDiffuse.a), 0.0, 1.0);
-  vLightSpecular = lightSpecular.rgb;
-  //vLightColor.rgb = vLightColor.rgb * vLightColor.a; // Premultiply.
+  vLightSpecular = clamp(lightSpecular.rgb, 0.0, 1.0);
 #endif
 
 #if defined(M_ENVIRONMENT)
